@@ -2,7 +2,7 @@
   import { page } from "$app/stores";
   import { client, clearOnAuthError, fetchApiBlob } from "$lib/pocketbase";
   import SurveyPreview from "$lib/components/SurveyPreview.svelte";
-  import MatrixGroupPreview from "$lib/components/MatrixGroupPreview.svelte";
+  import GridPreview from "$lib/components/GridPreview.svelte";
   import QuestionCard from "$lib/components/QuestionCard.svelte";
   import { metadata } from "$lib/metadata";
   import { extractText, extractUri, parseGoValue } from "$lib/ddi";
@@ -52,45 +52,53 @@
     return type.includes('grid') || type.includes('matrix');
   }
 
+  function isSelectType(answerType: string): boolean {
+    return answerType === 'select_one' || answerType === 'select_multiple'
+      || answerType === 'single_choice' || answerType === 'multiple_choice';
+  }
+
   type VariableEntry =
     | { kind: 'single'; variable: any }
-    | { kind: 'grid'; group: any; variables: any[] };
+    | { kind: 'grid'; group: any; variables: any[] }
+    | { kind: 'select_group'; group: any; variables: any[]; answerType: string };
 
   let variableEntries = $derived.by(() => {
     const gridGroups = new Map<string, { group: any; variables: any[] }>();
-    const singles: { index: number; variable: any }[] = [];
-    let idx = 0;
+    const selectGroups = new Map<string, { group: any; variables: any[]; answerType: string }>();
+    const slots: { variable: any; groupId: string | null; groupKind: 'grid' | 'select' | null }[] = [];
 
     for (const v of variables) {
       const g = v.expand?.group;
       if (g && isGridGroup(g)) {
         if (!gridGroups.has(g.id)) {
           gridGroups.set(g.id, { group: g, variables: [] });
-          // Reserve a slot at this position for the grid
-          singles.push({ index: idx, variable: null as any });
+          slots.push({ variable: null as any, groupId: g.id, groupKind: 'grid' });
         }
         gridGroups.get(g.id)!.variables.push(v);
+      } else if (g && g.id && isSelectType(v.answer_type)) {
+        if (!selectGroups.has(g.id)) {
+          selectGroups.set(g.id, { group: g, variables: [], answerType: v.answer_type });
+          slots.push({ variable: null as any, groupId: g.id, groupKind: 'select' });
+        }
+        selectGroups.get(g.id)!.variables.push(v);
       } else {
-        singles.push({ index: idx, variable: v });
+        slots.push({ variable: v, groupId: null, groupKind: null });
       }
-      idx++;
     }
 
-    // Build final list, inserting grid groups at their first occurrence
     const entries: VariableEntry[] = [];
-    const insertedGrids = new Set<string>();
+    const insertedGroups = new Set<string>();
 
-    for (const s of singles) {
-      if (s.variable === null) {
-        // This was a placeholder for a grid group — find it
-        for (const [gid, gdata] of gridGroups) {
-          if (!insertedGrids.has(gid)) {
-            entries.push({ kind: 'grid', group: gdata.group, variables: gdata.variables });
-            insertedGrids.add(gid);
-            break;
-          }
-        }
-      } else {
+    for (const s of slots) {
+      if (s.groupKind === 'grid' && s.groupId && !insertedGroups.has(s.groupId)) {
+        const gdata = gridGroups.get(s.groupId)!;
+        entries.push({ kind: 'grid', group: gdata.group, variables: gdata.variables });
+        insertedGroups.add(s.groupId);
+      } else if (s.groupKind === 'select' && s.groupId && !insertedGroups.has(s.groupId)) {
+        const gdata = selectGroups.get(s.groupId)!;
+        entries.push({ kind: 'select_group', group: gdata.group, variables: gdata.variables, answerType: gdata.answerType });
+        insertedGroups.add(s.groupId);
+      } else if (s.groupKind === null) {
         entries.push({ kind: 'single', variable: s.variable });
       }
     }
@@ -186,15 +194,28 @@
             {#if entry.kind === 'grid'}
               <li id="group-{entry.group.id}">
                 <QuestionCard>
-                  <MatrixGroupPreview group={entry.group} variables={entry.variables} />
+                  <a href="/questions/{entry.variables[0].id}" class="var-name">{entry.group.label || entry.variables[0].concept}</a>
+                  <GridPreview variables={entry.variables} />
+                </QuestionCard>
+              </li>
+            {:else if entry.kind === 'select_group'}
+              <li id="group-{entry.group.id}">
+                <QuestionCard>
+                  <a href="/questions/{entry.variables[0].id}" class="var-name">{entry.group.label || entry.variables[0].concept}</a>
+                  <SurveyPreview variable={{
+                    ...entry.variables[0],
+                    question: entry.variables[0].prequestion_text || entry.group.label,
+                    categories: entry.variables.map(v => ({
+                      label: v.question || v.label || v.concept,
+                      value: v.name || v.id
+                    }))
+                  }} />
                 </QuestionCard>
               </li>
             {:else}
               <li id="q-{entry.variable.id}">
                 <QuestionCard>
-                  <div class="var-header">
-                    <a href="/questions/{entry.variable.id}" class="var-name">{entry.variable.concept}</a>
-                  </div>
+                  <a href="/questions/{entry.variable.id}" class="var-name">{entry.variable.concept}</a>
                   <SurveyPreview variable={entry.variable} />
                 </QuestionCard>
               </li>
@@ -328,25 +349,17 @@
     margin-bottom: var(--spacing-base);
   }
 
-  .var-header {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-2xs);
-  }
-
   .var-name {
     font-weight: var(--font-weight-bold);
     color: var(--color-secondary);
     text-decoration: none;
+    display: block;
+    margin-bottom: var(--spacing-2xs);
   }
 
   .var-name:hover {
     text-decoration: underline;
   }
-
-
 
   .error-box {
     padding: var(--spacing-base);

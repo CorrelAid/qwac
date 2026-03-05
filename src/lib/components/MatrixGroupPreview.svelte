@@ -1,14 +1,15 @@
 <script lang="ts">
   import GridPreview from "$lib/components/GridPreview.svelte";
 
-  let { group, variables, activeId = null }: {
+  let { group, variables, activeId = null, showConcept = true }: {
     group: any;
     variables: any[];
     activeId?: string | null;
+    showConcept?: boolean;
   } = $props();
 </script>
 
-{#if group.label}
+{#if showConcept && group.label}
   <p class="concept-text"><span class="field-label">concept:</span> {group.label}</p>
 {/if}
 {#if variables[0]?.prequestion_text}

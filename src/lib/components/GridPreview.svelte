@@ -2,7 +2,7 @@
   let { variables, activeId = null }: { variables: any[]; activeId?: string | null } = $props();
 
   let categories = $derived(variables[0]?.categories || []);
-  let isMultiple = $derived(variables[0]?.answer_type === 'select_multiple');
+  let isMultiple = $derived(variables[0]?.answer_type === 'select_multiple' || variables[0]?.answer_type === 'multiple_choice');
 </script>
 
 <div class="grid-table-wrapper">
@@ -19,10 +19,7 @@
       {#each variables as variable (variable.id)}
         <tr class:active-row={activeId && variable.id === activeId}>
           <td class="item-cell">
-            <a href="/questions/{variable.id}" class="item-name">{variable.concept}</a>
-            {#if variable.question}
-              <span class="item-label">{variable.question}</span>
-            {/if}
+            <a href="/questions/{variable.id}" class="item-name">{variable.question || variable.concept}</a>
           </td>
           {#each categories as _, i (i)}
             <td class="input-cell">

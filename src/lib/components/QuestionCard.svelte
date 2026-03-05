@@ -13,5 +13,7 @@
     background-color: var(--color-white);
     border-radius: var(--radius-md);
     padding: var(--spacing-base);
+    overflow: hidden;
+    min-width: 0;
   }
 </style>

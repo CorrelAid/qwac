@@ -1,37 +1,22 @@
 <script lang="ts">
   import { page } from "$app/stores";
-  import { client, clearOnAuthError, fetchApiText } from "$lib/pocketbase";
+  import { client, clearOnAuthError, fetchApiText, fetchApiJson } from "$lib/pocketbase";
   import SpreadsheetTable from "$lib/components/SpreadsheetTable.svelte";
   import XmlCodeBlock from "$lib/components/XmlCodeBlock.svelte";
   import SurveyPreview from "$lib/components/SurveyPreview.svelte";
-  import MatrixGroupPreview from "$lib/components/MatrixGroupPreview.svelte";
+  import GridPreview from "$lib/components/GridPreview.svelte";
   import { metadata } from "$lib/metadata";
   import { validatePbId, safeRelationFilter, safePath, safeErrorMessage } from "$lib/validation";
 
-  const answerTypeLabels: Record<string, string> = {
-    'select_one': 'Single Select',
-    'select_multiple': 'Multiple Select',
-    'text': 'Free Text',
-    'integer': 'Integer',
-    'decimal': 'Decimal',
-    'note': 'Note',
-    'date': 'Date',
-    'time': 'Time',
-    'datetime': 'Date & Time',
-    'calculate': 'Calculate',
-    'range': 'Range',
-    'matrix': 'Matrix',
-    'grid': 'Grid',
-  };
-
   function answerTypeLabel(type: string): string {
     if (!type) return '';
-    return answerTypeLabels[type] || type;
+    return type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   }
 
   let variable = $state<any>(null);
   let groupVariables = $state<any[]>([]);
   let variableXml = $state<string | null>(null);
+  let xlsformData = $state<any>(null);
   let error = $state<string | null>(null);
   let activeTab = $state<'preview' | 'xlsform' | 'ddi'>('preview');
 
@@ -40,7 +25,15 @@
     return type.includes('grid') || type.includes('matrix');
   }
 
+  function isSelectType(answerType: string): boolean {
+    return answerType === 'select_one' || answerType === 'select_multiple'
+      || answerType === 'single_choice' || answerType === 'multiple_choice';
+  }
+
   let isMatrix = $derived(isMatrixGroup(variable?.expand?.group));
+  let isSelectGroup = $derived(
+    variable?.expand?.group?.id && isSelectType(variable?.answer_type || '') && !isMatrix
+  );
 
   $effect(() => {
     const rawId = $page.params.id!;
@@ -53,9 +46,23 @@
         });
         $metadata.title = variable.concept;
         $metadata.headline = "";
-        fetchApiText(`/api/variables/${safePath(id)}/xml`).then(xml => { variableXml = xml; }).catch(() => {});
         const groupId = variable.expand?.group?.id;
-        if (groupId && isMatrixGroup(variable.expand?.group)) {
+        const isSelect = groupId && isSelectType(variable.answer_type) && !isMatrixGroup(variable.expand?.group);
+        const shouldLoadSiblings = groupId && (
+          isMatrixGroup(variable.expand?.group) || isSelect
+        );
+
+        if (isSelect) {
+          const validGroupId = validatePbId(groupId);
+          // Use group-level endpoints for select groups
+          fetchApiText(`/api/variable-groups/${safePath(validGroupId)}/codebook`).then(xml => { variableXml = xml; }).catch(() => {});
+          fetchApiJson(`/api/variable-groups/${safePath(validGroupId)}/xlsform`).then(data => { xlsformData = data; }).catch(() => {});
+        } else {
+          fetchApiText(`/api/variables/${safePath(id)}/xml`).then(xml => { variableXml = xml; }).catch(() => {});
+          fetchApiJson(`/api/variables/${safePath(id)}/xlsform`).then(data => { xlsformData = data; }).catch(() => {});
+        }
+
+        if (shouldLoadSiblings) {
           const validGroupId = validatePbId(groupId);
           const siblings = await client.collection("variables").getFullList({
             filter: safeRelationFilter("group", validGroupId),
@@ -79,15 +86,44 @@
     rows: string[][];
   };
 
-  let xlsSheets = $derived.by(() => {
+  function parseApiSheets(data: any): Sheet[] | null {
+    if (!data || typeof data !== 'object') return null;
+
+    // API returns { survey: [{...}, ...], choices: [{...}, ...], settings: {} }
+    // Each key is a sheet name, value is array of row objects
+    const sheetNames = ['survey', 'choices', 'settings'];
+    const sheets: Sheet[] = [];
+
+    for (const name of sheetNames) {
+      const rows = data[name];
+      if (!Array.isArray(rows) || rows.length === 0) continue;
+
+      // Extract headers from the keys of the first row object
+      const headers = Object.keys(rows[0]);
+      const dataRows = rows.map((row: any) => headers.map(h => String(row[h] ?? '')));
+      sheets.push({ name, headers, rows: dataRows });
+    }
+
+    return sheets.length > 0 ? sheets : null;
+  }
+
+  function buildClientSheets(): Sheet[] {
     if (!variable) return [];
 
-    const hasCategories = variable.categories && Array.isArray(variable.categories) && variable.categories.length > 0;
+    // Use group siblings as categories for select groups
+    const groupCategories = isSelectGroup && groupVariables.length > 0
+      ? groupVariables.map((v: any) => ({
+          label: v.question || v.label || v.concept,
+          value: v.name || v.id
+        }))
+      : null;
+
+    const categories = groupCategories || variable.categories;
+    const hasCategories = categories && Array.isArray(categories) && categories.length > 0;
     const listName = variable.name + "_list";
     const qType = variable.answer_type || '';
-    const isMultiple = qType === 'select_multiple';
+    const isMultiple = qType === 'select_multiple' || qType === 'multiple_choice';
 
-    // Determine XLSForm type
     let type: string;
     if (isMultiple && hasCategories) {
       type = `select_multiple ${listName}`;
@@ -100,17 +136,17 @@
     }
 
     const sheets: Sheet[] = [];
-
-    // Survey sheet
+    const questionLabel = isSelectGroup
+      ? (variable.prequestion_text || variable.expand?.group?.label || variable.question || variable.label || "")
+      : (variable.question || variable.label || "");
     sheets.push({
       name: "survey",
       headers: ["type", "name", "label"],
-      rows: [[type, variable.name, variable.question || variable.label || ""]],
+      rows: [[type, variable.name, questionLabel]],
     });
 
-    // Choices sheet (for select types)
     if (hasCategories) {
-      const choiceRows = variable.categories.map((cat: any) => {
+      const choiceRows = categories.map((cat: any) => {
         const val = String(cat.value ?? cat.catValu ?? cat.name ?? "");
         const label = String(cat.label ?? cat.labl ?? val);
         return [listName, val, label];
@@ -123,6 +159,11 @@
     }
 
     return sheets;
+  }
+
+  let xlsSheets = $derived.by((): Sheet[] => {
+    // Prefer API data, fall back to client-side generation
+    return parseApiSheets(xlsformData) || buildClientSheets();
   });
 </script>
 
@@ -134,7 +175,10 @@
   <article class="question-detail">
     <a href="/" class="back-link">&larr; Back to questions</a>
 
-    <h2>{variable.concept}</h2>
+    <p class="concept-line"><span class="field-label">Concept:</span> {variable.concept}</p>
+    {#if variable.long_list_standard}
+      <p class="concept-line"><span class="field-label">Standard:</span> {variable.long_list_standard}</p>
+    {/if}
 
     <div class="meta-row">
       {#if variable.answer_type}
@@ -153,8 +197,17 @@
 
     <div class="tab-content">
       {#if activeTab === 'preview'}
-        {#if isMatrix && groupVariables.length > 0}
-          <MatrixGroupPreview group={variable.expand.group} variables={groupVariables} activeId={variable.id} />
+        {#if isMatrix}
+          <GridPreview variables={[variable]} />
+        {:else if isSelectGroup && groupVariables.length > 0}
+          <SurveyPreview variable={{
+            ...variable,
+            question: variable.prequestion_text || variable.expand?.group?.label || variable.question,
+            categories: groupVariables.map(v => ({
+              label: v.question || v.label || v.concept,
+              value: v.name || v.id
+            }))
+          }} />
         {:else}
           <SurveyPreview {variable} />
         {/if}
@@ -194,9 +247,16 @@
     text-decoration: underline;
   }
 
-  h2 {
-    color: var(--color-secondary);
-    margin: var(--spacing-sm) 0 var(--spacing-xs);
+  .concept-line {
+    font-size: var(--font-size-small-min);
+    margin: 0 0 var(--spacing-xs);
+  }
+
+  .field-label {
+    font-size: var(--font-size-caption-min);
+    color: var(--color-text-primary);
+    opacity: 0.6;
+    font-weight: var(--font-weight-medium);
   }
 
   .meta-row {

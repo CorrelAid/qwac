@@ -1,8 +1,9 @@
 <script lang="ts">
   import { client, clearOnAuthError } from "$lib/pocketbase";
   import type { PageStore } from "$lib/pocketbase";
-  import Sidebar from "$lib/components/Sidebar.svelte";
+  import FilterBar from "$lib/components/FilterBar.svelte";
   import QuestionCard from "$lib/components/QuestionCard.svelte";
+
   import Paginator from "$lib/components/Paginator.svelte";
   import { metadata } from "$lib/metadata";
   import Fuse from "fuse.js";
@@ -18,6 +19,8 @@
   let filters = $state<Record<string, string>>({
     answer_type: "",
     survey_type: "",
+    has_other: "",
+    has_long_list: "",
   });
   let error = $state<string | null>(null);
 
@@ -53,20 +56,54 @@
     [...new Set(variables.flatMap(v => v.expand?.study?.topic_classifications ?? []).filter(Boolean))].sort()
   );
 
-  let filterOptionsList = $derived([
-    { label: "Answer Type", key: "answer_type", values: answerTypeOptions.map(t => answerTypeLabel(t)) },
-    { label: "Kind", key: "survey_type", values: surveyTypeOptions },
-  ]);
+  let isChoiceFilter = $derived(
+    filters.answer_type === 'Single Choice' || filters.answer_type === 'Multiple Choice'
+  );
+
+  // Match a single variable against a specific filter key/value
+  function matchesFilter(v: any, key: string, val: string): boolean {
+    switch (key) {
+      case 'answer_type': return answerTypeLabel(v.answer_type) === val;
+      case 'survey_type': return v.expand?.study?.topic_classifications?.includes(val);
+      case 'has_other': return (v.has_other === true) === (val === 'Yes');
+      case 'has_long_list': return (v.has_long_list === true) === (val === 'Yes');
+      default: return true;
+    }
+  }
+
+  // Apply all active filters except `excludeKey`
+  function applyFilters(data: any[], excludeKey?: string): any[] {
+    let result = data;
+    for (const [key, val] of Object.entries(filters)) {
+      if (!val || key === excludeKey) continue;
+      result = result.filter(v => matchesFilter(v, key, val));
+    }
+    return result;
+  }
+
+  // Compute counts for each filter value (with all other filters applied)
+  function computeCounts(data: any[], key: string, values: string[]): Record<string, number> {
+    const base = applyFilters(data, key);
+    const counts: Record<string, number> = {};
+    for (const val of values) {
+      counts[val] = base.filter(v => matchesFilter(v, key, val)).length;
+    }
+    return counts;
+  }
+
+  let filterOptionsList = $derived.by(() => {
+    const atValues = answerTypeOptions.map(t => answerTypeLabel(t));
+    const boolValues = ["Yes", "No"];
+    return [
+      { label: "Kind", key: "survey_type", values: surveyTypeOptions, counts: computeCounts(variables, "survey_type", surveyTypeOptions) },
+      { label: "Answer Type", key: "answer_type", values: atValues, counts: computeCounts(variables, "answer_type", atValues) },
+      { label: "Other", key: "has_other", values: boolValues, kind: "chip" as const, hidden: !isChoiceFilter, counts: computeCounts(variables, "has_other", boolValues) },
+      { label: "Long List", key: "has_long_list", values: boolValues, kind: "chip" as const, hidden: !isChoiceFilter, counts: computeCounts(variables, "has_long_list", boolValues) },
+    ];
+  });
 
   let filteredVariables = $derived.by(() => {
-    let result = variables;
-
-    if (filters.answer_type) {
-      result = result.filter(v => answerTypeLabel(v.answer_type) === filters.answer_type);
-    }
-    if (filters.survey_type) {
-      result = result.filter(v => v.expand?.study?.topic_classifications?.includes(filters.survey_type));
-    }
+    let result = applyFilters(variables);
 
     if (searchQuery.trim()) {
       const fuse = new Fuse(result, {
@@ -79,25 +116,9 @@
     return result;
   });
 
-  const answerTypeLabels: Record<string, string> = {
-    'select_one': 'Single Select',
-    'select_multiple': 'Multiple Select',
-    'text': 'Free Text',
-    'integer': 'Integer',
-    'decimal': 'Decimal',
-    'note': 'Note',
-    'date': 'Date',
-    'time': 'Time',
-    'datetime': 'Date & Time',
-    'calculate': 'Calculate',
-    'range': 'Range',
-    'matrix': 'Matrix',
-    'grid': 'Grid',
-  };
-
   function answerTypeLabel(type: string): string {
     if (!type) return '';
-    return answerTypeLabels[type] || type;
+    return type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   }
 
   function isMatrixOrGrid(variable: any): boolean {
@@ -105,8 +126,61 @@
     return type.includes('matrix') || type.includes('grid');
   }
 
+  function isSelectType(answerType: string): boolean {
+    return answerType === 'select_one' || answerType === 'select_multiple'
+      || answerType === 'single_choice' || answerType === 'multiple_choice';
+  }
+
+  type ListEntry =
+    | { kind: 'single'; variable: any }
+    | { kind: 'select_group'; group: any; variables: any[]; answerType: string; study: any };
+
+  // Pre-compute all siblings per select group from the full dataset
+  let allSelectGroupSiblings = $derived.by(() => {
+    const selectMap = new Map<string, any[]>();
+    for (const v of variables) {
+      const gId = v.expand?.group?.id;
+      if (!gId) continue;
+      if (isSelectType(v.answer_type) && !isMatrixOrGrid(v)) {
+        if (!selectMap.has(gId)) selectMap.set(gId, []);
+        selectMap.get(gId)!.push(v);
+      }
+    }
+    return selectMap;
+  });
+
+  let groupedEntries = $derived.by(() => {
+    const seenGroups = new Set<string>();
+    const entries: ListEntry[] = [];
+
+    for (const v of filteredVariables) {
+      const g = v.expand?.group;
+      const hasGroup = g && g.id;
+
+      if (hasGroup && isSelectType(v.answer_type) && !isMatrixOrGrid(v)) {
+        if (!seenGroups.has(g.id)) {
+          seenGroups.add(g.id);
+          const allSiblings = allSelectGroupSiblings.get(g.id) || [v];
+          entries.push({ kind: 'select_group', group: g, variables: allSiblings, answerType: v.answer_type, study: v.expand?.study });
+        }
+      } else {
+        entries.push({ kind: 'single', variable: v });
+      }
+    }
+
+    return entries;
+  });
+
   const PER_PAGE = 20;
   let clientPage = $state(1);
+
+  // Clear choice-specific filters when answer type changes away from choice types
+  $effect(() => {
+    if (!isChoiceFilter) {
+      filters.has_other = "";
+      filters.has_long_list = "";
+    }
+  });
 
   // Reset to page 1 whenever search query or filters change
   $effect(() => {
@@ -115,16 +189,16 @@
     clientPage = 1;
   });
 
-  const totalPages = $derived(Math.max(1, Math.ceil(filteredVariables.length / PER_PAGE)));
+  const totalPages = $derived(Math.max(1, Math.ceil(groupedEntries.length / PER_PAGE)));
   const currentPage = $derived(Math.min(Math.max(1, clientPage), totalPages));
-  const paginatedVariables = $derived(
-    filteredVariables.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE)
+  const paginatedEntries = $derived(
+    groupedEntries.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE)
   );
 
   // PageStore-compatible store for Paginator
   const _pageData = writable({ page: 1, perPage: PER_PAGE, totalItems: 0, totalPages: 1, items: [] as any[] });
   $effect(() => {
-    _pageData.set({ page: currentPage, perPage: PER_PAGE, totalItems: filteredVariables.length, totalPages, items: paginatedVariables });
+    _pageData.set({ page: currentPage, perPage: PER_PAGE, totalItems: groupedEntries.length, totalPages, items: paginatedEntries as any[] });
   });
   const pageStore: PageStore = {
     subscribe: _pageData.subscribe,
@@ -135,7 +209,7 @@
 </script>
 
 <div class="explore-container">
-  <Sidebar
+  <FilterBar
     bind:searchQuery
     bind:filters
     filterOptions={filterOptionsList}
@@ -149,32 +223,52 @@
     {:else if filteredVariables.length === 0}
       <p>No questions found.</p>
     {:else}
-      <p class="count">{filteredVariables.length} question{filteredVariables.length === 1 ? '' : 's'}</p>
+      <p class="count">{groupedEntries.length} question{groupedEntries.length === 1 ? '' : 's'}</p>
       <ul class="variable-list">
-        {#each paginatedVariables as variable (variable.id)}
+        {#each paginatedEntries as entry (entry.kind === 'single' ? entry.variable.id : entry.group.id)}
           <li>
-            <QuestionCard>
-              <div class="card-header">
-                <a href="/questions/{variable.id}" class="name">{variable.concept}</a>
-                {#if variable.answer_type}
-                  <span class="type-tag">{answerTypeLabel(variable.answer_type)}</span>
+            {#if entry.kind === 'select_group'}
+              <QuestionCard>
+                {#if entry.variables[0]?.prequestion_text}
+                  <p class="meta-text"><span class="field-label">Question:</span> {entry.variables[0].prequestion_text}</p>
                 {/if}
-                {#if variable.expand?.study}
-                  <a href="/studies/{variable.expand.study.id}#q-{variable.id}" class="study-tag">{variable.expand.study.title}</a>
-                {/if}
-              </div>
+                <p class="meta-text"><span class="field-label">Concept:</span> {entry.group.label || entry.variables[0].concept}</p>
 
-              {#if isMatrixOrGrid(variable) && variable.prequestion_text}
+                <div class="card-tags">
+                  <span class="type-tag">{answerTypeLabel(entry.answerType)}</span>
+                  {#if entry.study}
+                    <a href="/studies/{entry.study.id}" class="study-tag">{entry.study.title}</a>
+                  {/if}
+                </div>
+
+                <p class="categories-summary">{entry.variables.length} categories</p>
+
+                <a href="/questions/{entry.variables[0].id}" class="detail-link">View details &rarr;</a>
+              </QuestionCard>
+            {:else}
+              {@const variable = entry.variable}
+              <QuestionCard>
                 {#if variable.question}
-                  <p class="item-text"><span class="field-label">Item:</span> "{variable.question}"</p>
+                  <p class="meta-text"><span class="field-label">Question:</span> {variable.question}</p>
                 {/if}
-                <p class="question-text"><span class="field-label">Question:</span> "{variable.prequestion_text}"</p>
-              {:else if variable.question}
-                <p class="question-text"><span class="field-label">Question:</span> "{variable.question}"</p>
-              {/if}
+                <p class="meta-text"><span class="field-label">Concept:</span> {variable.concept}</p>
 
-              <a href="/questions/{variable.id}" class="detail-link">View details &rarr;</a>
-            </QuestionCard>
+                <div class="card-tags">
+                  {#if variable.answer_type}
+                    <span class="type-tag">{answerTypeLabel(variable.answer_type)}</span>
+                  {/if}
+                  {#if variable.expand?.study}
+                    <a href="/studies/{variable.expand.study.id}#q-{variable.id}" class="study-tag">{variable.expand.study.title}</a>
+                  {/if}
+                </div>
+
+                {#if variable.long_list_standard}
+                  <p class="meta-text"><span class="field-label">Standard:</span> {variable.long_list_standard}</p>
+                {/if}
+
+                <a href="/questions/{variable.id}" class="detail-link">View details &rarr;</a>
+              </QuestionCard>
+            {/if}
           </li>
         {/each}
       </ul>
@@ -185,15 +279,7 @@
 
 <style>
   .explore-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-base);
     margin-top: var(--spacing-base);
-    align-items: flex-start;
-  }
-
-  .results {
-    flex: 1;
   }
 
   .count {
@@ -211,23 +297,12 @@
     margin-bottom: var(--spacing-lg);
   }
 
-  .card-header {
+  .card-tags {
     display: flex;
     align-items: baseline;
     gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-sm);
+    margin: var(--spacing-xs) 0;
     flex-wrap: wrap;
-  }
-
-  .name {
-    font-weight: var(--font-weight-bold);
-    color: var(--color-secondary);
-    text-decoration: none;
-    font-size: var(--font-size-h4-min);
-  }
-
-  .name:hover {
-    text-decoration: underline;
   }
 
   .type-tag,
@@ -247,22 +322,18 @@
     background-color: var(--color-primary-darker);
     color: var(--color-white);
     text-decoration: none;
+    white-space: normal;
+    word-break: break-word;
   }
 
   .study-tag:hover {
     background-color: var(--color-secondary);
   }
 
-  .question-text {
-    font-size: var(--font-size-body-min);
+  .meta-text {
+    font-size: var(--font-size-small-min);
     line-height: var(--line-height-relaxed);
-    margin: 0 0 var(--spacing-xs);
-  }
-
-  .item-text {
-    font-size: var(--font-size-body-min);
-    line-height: var(--line-height-relaxed);
-    margin: 0 0 var(--spacing-xs);
+    margin: 0 0 var(--spacing-2xs);
   }
 
   .field-label {
@@ -280,6 +351,13 @@
 
   .detail-link:hover {
     text-decoration: underline;
+  }
+
+  .categories-summary {
+    font-size: var(--font-size-small-min);
+    color: var(--color-text-primary);
+    opacity: 0.6;
+    margin: var(--spacing-xs) 0;
   }
 
   .error-box {
