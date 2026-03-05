@@ -2,7 +2,7 @@
   let { variables, activeId = null }: { variables: any[]; activeId?: string | null } = $props();
 
   let categories = $derived(variables[0]?.categories || []);
-  let isMultiple = $derived(variables[0]?.question_type === 'select_multiple');
+  let isMultiple = $derived(variables[0]?.answer_type === 'select_multiple');
 </script>
 
 <div class="grid-table-wrapper">

@@ -8,9 +8,6 @@
   } = $props();
 </script>
 
-<div class="grid-header">
-  <span class="group-label">{group.type}</span>
-</div>
 {#if group.label}
   <p class="concept-text"><span class="field-label">concept:</span> {group.label}</p>
 {/if}
@@ -26,19 +23,6 @@
 <GridPreview {variables} {activeId} />
 
 <style>
-  .grid-header {
-    display: flex;
-    align-items: baseline;
-    gap: var(--spacing-xs);
-    margin-bottom: var(--spacing-sm);
-  }
-
-  .group-label {
-    font-weight: var(--font-weight-bold);
-    font-size: var(--font-size-body-min);
-    color: var(--color-secondary);
-  }
-
   .concept-text {
     font-size: var(--font-size-body-min);
     line-height: var(--line-height-relaxed);

@@ -8,7 +8,7 @@
   import { metadata } from "$lib/metadata";
   import { validatePbId, safeRelationFilter, safePath, safeErrorMessage } from "$lib/validation";
 
-  const questionTypeLabels: Record<string, string> = {
+  const answerTypeLabels: Record<string, string> = {
     'select_one': 'Single Select',
     'select_multiple': 'Multiple Select',
     'text': 'Free Text',
@@ -20,11 +20,13 @@
     'datetime': 'Date & Time',
     'calculate': 'Calculate',
     'range': 'Range',
+    'matrix': 'Matrix',
+    'grid': 'Grid',
   };
 
-  function questionTypeLabel(type: string): string {
+  function answerTypeLabel(type: string): string {
     if (!type) return '';
-    return questionTypeLabels[type] || type;
+    return answerTypeLabels[type] || type;
   }
 
   let variable = $state<any>(null);
@@ -82,7 +84,7 @@
 
     const hasCategories = variable.categories && Array.isArray(variable.categories) && variable.categories.length > 0;
     const listName = variable.name + "_list";
-    const qType = variable.question_type || '';
+    const qType = variable.answer_type || '';
     const isMultiple = qType === 'select_multiple';
 
     // Determine XLSForm type
@@ -135,8 +137,8 @@
     <h2>{variable.concept}</h2>
 
     <div class="meta-row">
-      {#if variable.question_type}
-        <span class="type-tag">{questionTypeLabel(variable.question_type)}</span>
+      {#if variable.answer_type}
+        <span class="type-tag">{answerTypeLabel(variable.answer_type)}</span>
       {/if}
       {#if variable.expand?.study}
         <a href="/studies/{variable.expand.study.id}#q-{variable.id}" class="study-tag">{variable.expand.study.title}</a>
@@ -225,40 +227,6 @@
   }
 
   .study-tag:hover {
-    background-color: var(--color-secondary);
-  }
-
-  .tag-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-2xs);
-    margin-bottom: var(--spacing-base);
-  }
-
-  .concept-text {
-    font-size: var(--font-size-body-min);
-    line-height: var(--line-height-relaxed);
-    margin: 0 0 var(--spacing-xs);
-  }
-
-  .field-label {
-    font-size: var(--font-size-caption-min);
-    color: var(--color-text-primary);
-    opacity: 0.6;
-    font-weight: var(--font-weight-medium);
-  }
-
-  .group-tag {
-    font-size: var(--font-size-caption-min);
-    padding: 1px var(--spacing-xs);
-    border-radius: var(--radius-sm);
-    background-color: var(--color-primary-darker);
-    color: var(--color-white);
-    text-decoration: none;
-    white-space: nowrap;
-  }
-
-  .group-tag:hover {
     background-color: var(--color-secondary);
   }
 

@@ -9,7 +9,7 @@
   import DateTimeInput from "./question-types/DateTimeInput.svelte";
   let { variable }: { variable: any } = $props();
 
-  let questionType = $derived(variable?.question_type || '');
+  let answerType = $derived(variable?.answer_type || '');
   let categories = $derived(variable?.categories || []);
   let hasCategories = $derived(Array.isArray(categories) && categories.length > 0);
 </script>
@@ -35,21 +35,21 @@
   {/if}
 
   <div class="response-area">
-    {#if questionType === 'select_one' && hasCategories}
+    {#if answerType === 'select_one' && hasCategories}
       <SelectOneInput {categories} />
-    {:else if questionType === 'select_multiple' && hasCategories}
+    {:else if answerType === 'select_multiple' && hasCategories}
       <SelectMultipleInput {categories} />
-    {:else if questionType === 'text'}
+    {:else if answerType === 'text'}
       <TextInput />
-    {:else if questionType === 'integer'}
+    {:else if answerType === 'integer'}
       <IntegerInput />
-    {:else if questionType === 'decimal'}
+    {:else if answerType === 'decimal'}
       <DecimalInput />
-    {:else if questionType === 'date'}
+    {:else if answerType === 'date'}
       <DateInput />
-    {:else if questionType === 'time'}
+    {:else if answerType === 'time'}
       <TimeInput />
-    {:else if questionType === 'datetime'}
+    {:else if answerType === 'datetime'}
       <DateTimeInput />
     {/if}
   </div>

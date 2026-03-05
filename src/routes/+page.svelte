@@ -16,7 +16,7 @@
   let loaded = $state(false);
   let searchQuery = $state("");
   let filters = $state<Record<string, string>>({
-    question_type: "",
+    answer_type: "",
     survey_type: "",
   });
   let error = $state<string | null>(null);
@@ -45,8 +45,8 @@
     return () => { unsub?.(); };
   });
 
-  let questionTypeOptions = $derived(
-    [...new Set(variables.map(v => v.question_type).filter(Boolean))].sort()
+  let answerTypeOptions = $derived(
+    [...new Set(variables.map(v => v.answer_type).filter(Boolean))].sort()
   );
 
   let surveyTypeOptions = $derived(
@@ -54,15 +54,15 @@
   );
 
   let filterOptionsList = $derived([
-    { label: "Question Type", key: "question_type", values: questionTypeOptions.map(t => questionTypeLabel(t)) },
+    { label: "Answer Type", key: "answer_type", values: answerTypeOptions.map(t => answerTypeLabel(t)) },
     { label: "Kind", key: "survey_type", values: surveyTypeOptions },
   ]);
 
   let filteredVariables = $derived.by(() => {
     let result = variables;
 
-    if (filters.question_type) {
-      result = result.filter(v => questionTypeLabel(v.question_type) === filters.question_type);
+    if (filters.answer_type) {
+      result = result.filter(v => answerTypeLabel(v.answer_type) === filters.answer_type);
     }
     if (filters.survey_type) {
       result = result.filter(v => v.expand?.study?.topic_classifications?.includes(filters.survey_type));
@@ -79,7 +79,7 @@
     return result;
   });
 
-  const questionTypeLabels: Record<string, string> = {
+  const answerTypeLabels: Record<string, string> = {
     'select_one': 'Single Select',
     'select_multiple': 'Multiple Select',
     'text': 'Free Text',
@@ -91,11 +91,13 @@
     'datetime': 'Date & Time',
     'calculate': 'Calculate',
     'range': 'Range',
+    'matrix': 'Matrix',
+    'grid': 'Grid',
   };
 
-  function questionTypeLabel(type: string): string {
+  function answerTypeLabel(type: string): string {
     if (!type) return '';
-    return questionTypeLabels[type] || type;
+    return answerTypeLabels[type] || type;
   }
 
   function isMatrixOrGrid(variable: any): boolean {
@@ -154,8 +156,8 @@
             <QuestionCard>
               <div class="card-header">
                 <a href="/questions/{variable.id}" class="name">{variable.concept}</a>
-                {#if variable.question_type}
-                  <span class="type-tag">{questionTypeLabel(variable.question_type)}</span>
+                {#if variable.answer_type}
+                  <span class="type-tag">{answerTypeLabel(variable.answer_type)}</span>
                 {/if}
                 {#if variable.expand?.study}
                   <a href="/studies/{variable.expand.study.id}#q-{variable.id}" class="study-tag">{variable.expand.study.title}</a>

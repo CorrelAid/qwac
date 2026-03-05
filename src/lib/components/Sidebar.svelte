@@ -12,7 +12,7 @@
 
 <aside class="sidebar">
   <section class="search-section">
-    <h3>Tiny Search</h3>
+    <h3>Search</h3>
     <input 
       type="search" 
       bind:value={searchQuery} 
