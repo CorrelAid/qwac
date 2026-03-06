@@ -13,7 +13,8 @@
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
 		"test:unit": "vitest",
-		"test": "npm run test:unit -- --run"
+		"test": "npm run test:unit -- --run",
+		"postinstall": "cp node_modules/@correlaid/cdl-design/dist/favicons/* static/"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^2.0.2",
@@ -35,10 +36,8 @@
 		"vitest": "^4.0.18"
 	},
 	"dependencies": {
+		"@correlaid/cdl-design": "github:CorrelAid/cdl-design",
 		"@sveltejs/adapter-static": "^3.0.10",
-		"@terrazzo/cli": "^0.10.5",
-		"@terrazzo/parser": "^0.10.5",
-		"@terrazzo/plugin-css": "^0.10.4",
 		"fuse.js": "^7.1.0",
 		"pocketbase": "^0.26.8",
 		"zod": "^4.3.6"

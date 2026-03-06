@@ -3,7 +3,7 @@
   import type { PageStore } from "$lib/pocketbase";
   import FilterBar from "$lib/components/FilterBar.svelte";
   import QuestionCard from "$lib/components/QuestionCard.svelte";
-
+  import GridPreview from "$lib/components/GridPreview.svelte";
   import Paginator from "$lib/components/Paginator.svelte";
   import { metadata } from "$lib/metadata";
   import Fuse from "fuse.js";
@@ -133,7 +133,8 @@
 
   type ListEntry =
     | { kind: 'single'; variable: any }
-    | { kind: 'select_group'; group: any; variables: any[]; answerType: string; study: any };
+    | { kind: 'select_group'; group: any; variables: any[]; answerType: string; study: any }
+    | { kind: 'grid'; group: any; variables: any[]; study: any };
 
   // Pre-compute all siblings per select group from the full dataset
   let allSelectGroupSiblings = $derived.by(() => {
@@ -149,6 +150,20 @@
     return selectMap;
   });
 
+  // Pre-compute all siblings per grid group from the full dataset
+  let allGridGroupSiblings = $derived.by(() => {
+    const gridMap = new Map<string, any[]>();
+    for (const v of variables) {
+      const gId = v.expand?.group?.id;
+      if (!gId) continue;
+      if (isMatrixOrGrid(v)) {
+        if (!gridMap.has(gId)) gridMap.set(gId, []);
+        gridMap.get(gId)!.push(v);
+      }
+    }
+    return gridMap;
+  });
+
   let groupedEntries = $derived.by(() => {
     const seenGroups = new Set<string>();
     const entries: ListEntry[] = [];
@@ -157,7 +172,13 @@
       const g = v.expand?.group;
       const hasGroup = g && g.id;
 
-      if (hasGroup && isSelectType(v.answer_type) && !isMatrixOrGrid(v)) {
+      if (hasGroup && isMatrixOrGrid(v)) {
+        if (!seenGroups.has(g.id)) {
+          seenGroups.add(g.id);
+          const allSiblings = allGridGroupSiblings.get(g.id) || [v];
+          entries.push({ kind: 'grid', group: g, variables: allSiblings, study: v.expand?.study });
+        }
+      } else if (hasGroup && isSelectType(v.answer_type) && !isMatrixOrGrid(v)) {
         if (!seenGroups.has(g.id)) {
           seenGroups.add(g.id);
           const allSiblings = allSelectGroupSiblings.get(g.id) || [v];
@@ -227,7 +248,22 @@
       <ul class="variable-list">
         {#each paginatedEntries as entry (entry.kind === 'single' ? entry.variable.id : entry.group.id)}
           <li>
-            {#if entry.kind === 'select_group'}
+            {#if entry.kind === 'grid'}
+              <QuestionCard>
+                <p class="meta-text"><span class="field-label">Concept:</span> {entry.group.label || entry.variables[0].concept}</p>
+
+                <div class="card-tags">
+                  <span class="type-tag">Grid</span>
+                  {#if entry.study}
+                    <a href="/studies/{entry.study.id}" class="study-tag">{entry.study.title}</a>
+                  {/if}
+                </div>
+
+                <GridPreview variables={entry.variables} />
+
+                <a href="/questions/{entry.variables[0].id}" class="detail-link">View details &rarr;</a>
+              </QuestionCard>
+            {:else if entry.kind === 'select_group'}
               <QuestionCard>
                 {#if entry.variables[0]?.prequestion_text}
                   <p class="meta-text"><span class="field-label">Question:</span> {entry.variables[0].prequestion_text}</p>

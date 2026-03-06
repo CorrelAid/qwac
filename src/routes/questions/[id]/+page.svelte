@@ -1,8 +1,7 @@
 <script lang="ts">
   import { page } from "$app/stores";
   import { client, clearOnAuthError, fetchApiText, fetchApiJson } from "$lib/pocketbase";
-  import SpreadsheetTable from "$lib/components/SpreadsheetTable.svelte";
-  import XmlCodeBlock from "$lib/components/XmlCodeBlock.svelte";
+  import { XlsFormDisplay, DdiDisplay } from "@correlaid/cdl-design";
   import SurveyPreview from "$lib/components/SurveyPreview.svelte";
   import GridPreview from "$lib/components/GridPreview.svelte";
   import { metadata } from "$lib/metadata";
@@ -80,91 +79,6 @@
     load();
   });
 
-  type Sheet = {
-    name: string;
-    headers: string[];
-    rows: string[][];
-  };
-
-  function parseApiSheets(data: any): Sheet[] | null {
-    if (!data || typeof data !== 'object') return null;
-
-    // API returns { survey: [{...}, ...], choices: [{...}, ...], settings: {} }
-    // Each key is a sheet name, value is array of row objects
-    const sheetNames = ['survey', 'choices', 'settings'];
-    const sheets: Sheet[] = [];
-
-    for (const name of sheetNames) {
-      const rows = data[name];
-      if (!Array.isArray(rows) || rows.length === 0) continue;
-
-      // Extract headers from the keys of the first row object
-      const headers = Object.keys(rows[0]);
-      const dataRows = rows.map((row: any) => headers.map(h => String(row[h] ?? '')));
-      sheets.push({ name, headers, rows: dataRows });
-    }
-
-    return sheets.length > 0 ? sheets : null;
-  }
-
-  function buildClientSheets(): Sheet[] {
-    if (!variable) return [];
-
-    // Use group siblings as categories for select groups
-    const groupCategories = isSelectGroup && groupVariables.length > 0
-      ? groupVariables.map((v: any) => ({
-          label: v.question || v.label || v.concept,
-          value: v.name || v.id
-        }))
-      : null;
-
-    const categories = groupCategories || variable.categories;
-    const hasCategories = categories && Array.isArray(categories) && categories.length > 0;
-    const listName = variable.name + "_list";
-    const qType = variable.answer_type || '';
-    const isMultiple = qType === 'select_multiple' || qType === 'multiple_choice';
-
-    let type: string;
-    if (isMultiple && hasCategories) {
-      type = `select_multiple ${listName}`;
-    } else if (hasCategories) {
-      type = `select_one ${listName}`;
-    } else if (qType && !hasCategories) {
-      type = qType;
-    } else {
-      type = 'text';
-    }
-
-    const sheets: Sheet[] = [];
-    const questionLabel = isSelectGroup
-      ? (variable.prequestion_text || variable.expand?.group?.label || variable.question || variable.label || "")
-      : (variable.question || variable.label || "");
-    sheets.push({
-      name: "survey",
-      headers: ["type", "name", "label"],
-      rows: [[type, variable.name, questionLabel]],
-    });
-
-    if (hasCategories) {
-      const choiceRows = categories.map((cat: any) => {
-        const val = String(cat.value ?? cat.catValu ?? cat.name ?? "");
-        const label = String(cat.label ?? cat.labl ?? val);
-        return [listName, val, label];
-      });
-      sheets.push({
-        name: "choices",
-        headers: ["list_name", "name", "label"],
-        rows: choiceRows,
-      });
-    }
-
-    return sheets;
-  }
-
-  let xlsSheets = $derived.by((): Sheet[] => {
-    // Prefer API data, fall back to client-side generation
-    return parseApiSheets(xlsformData) || buildClientSheets();
-  });
 </script>
 
 {#if error}
@@ -212,15 +126,14 @@
           <SurveyPreview {variable} />
         {/if}
       {:else if activeTab === 'xlsform'}
-        {#if xlsSheets.length > 0}
-          <p class="hint">Copy the sheet data and paste into your spreadsheet program.</p>
-          <SpreadsheetTable sheets={xlsSheets} />
+        {#if xlsformData}
+          <XlsFormDisplay survey={xlsformData.survey} choices={xlsformData.choices} />
         {:else}
-          <p class="hint">No XLSForm data available.</p>
+          <p class="hint">Loading XLSForm data...</p>
         {/if}
       {:else if activeTab === 'ddi'}
         {#if variableXml}
-          <XmlCodeBlock xml={variableXml} />
+          <DdiDisplay ddiXml={variableXml} />
         {:else}
           <p class="hint">Loading DDI XML...</p>
         {/if}

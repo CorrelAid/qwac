@@ -1,4 +1,6 @@
 @import './gen_tokens.css';
+@import '@correlaid/cdl-design/fonts.css';
+@import '@correlaid/cdl-design/typography.css';
 
 /* ===========================
    RESET
@@ -6,66 +8,6 @@
 
 *, *::before, *::after {
     box-sizing: border-box;
-}
-
-/* ===========================
-   FONTS
-   =========================== */
-
-@font-face {
-    font-family: 'PP Fraktion Sans';
-    src: url('/fonts/Sans/PPFraktionSans-Light.otf') format('opentype');
-    font-weight: 300;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: 'PP Fraktion Sans';
-    src: url('/fonts/Sans/PPFraktionSans-LightItalic.otf') format('opentype');
-    font-weight: 300;
-    font-style: italic;
-}
-
-@font-face {
-    font-family: 'PP Fraktion Sans';
-    src: url('/fonts/Sans/PPFraktionSans-Bold.otf') format('opentype');
-    font-weight: 700;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: 'PP Fraktion Sans';
-    src: url('/fonts/Sans/PPFraktionSans-BoldItalic.otf') format('opentype');
-    font-weight: 700;
-    font-style: italic;
-}
-
-@font-face {
-    font-family: 'PP Fraktion Mono';
-    src: url('/fonts/Mono/PPFraktionMono-Regular.otf') format('opentype');
-    font-weight: 400;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: 'PP Fraktion Mono';
-    src: url('/fonts/Mono/PPFraktionMono-RegularItalic.otf') format('opentype');
-    font-weight: 400;
-    font-style: italic;
-}
-
-@font-face {
-    font-family: 'PP Fraktion Mono';
-    src: url('/fonts/Mono/PPFraktionMono-Bold.otf') format('opentype');
-    font-weight: 700;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: 'PP Fraktion Mono';
-    src: url('/fonts/Mono/PPFraktionMono-BoldItalic.ttf') format('truetype');
-    font-weight: 700;
-    font-style: italic;
 }
 
 /* ===========================
