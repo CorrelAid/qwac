@@ -1,5 +1,7 @@
 # QWAC
 
+[![AI-Assisted](https://img.shields.io/badge/AI--assisted-Claude%20Code-blueviolet?logo=anthropic&logoColor=white)](./AI_DISCLOSURE.md)
+
 A web application for exploring studies and research variables. Built with SvelteKit 2 and PocketBase, deployed as a static site.
 
 ## Tech Stack
