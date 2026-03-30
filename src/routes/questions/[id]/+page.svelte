@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from "$app/stores";
-  import { client, clearOnAuthError, fetchApiText, fetchApiJson } from "$lib/pocketbase";
+  import { clearOnAuthError, fetchApiText, fetchApiJson } from "$lib/pocketbase";
   import { XlsFormDisplay, DdiDisplay } from "@correlaid/cdl-design";
   import SurveyPreview from "$lib/components/SurveyPreview.svelte";
   import GridPreview from "$lib/components/GridPreview.svelte";
@@ -10,60 +10,54 @@
   import AnswerTypeTag from "$lib/components/AnswerTypeTag.svelte";
   import { t } from "$lib/i18n";
 
-  function answerTypeLabel(type: string): string {
-    if (!type) return '';
-    return type.replace(/_other$/, '').replace(/_long_list$/, '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-  }
-
-  let variable = $state<any>(null);
-  let group = $state<any>(null);
-  let groupVariables = $state<any[]>([]);
-  let study = $state<any>(null);
+  let questionData = $state<any>(null);
   let variableXml = $state<string | null>(null);
   let xlsformData = $state<any>(null);
-  let apiAnswerType = $state<string>('');
   let error = $state<string | null>(null);
   let activeTab = $state<'preview' | 'xlsform' | 'ddi'>('preview');
 
-  let isGroupQuestion = $derived(!!group);
+  // Derived from the single API response
+  let group = $derived(questionData?.group ?? null);
+  let study = $derived(questionData?.study ?? null);
+  let variables = $derived(questionData?.variables ?? []);
+
+  // For standalone questions, the single variable is variables[0]
+  let variable = $derived(group ? null : (variables[0] ?? null));
+
   let groupType = $derived((group?.type || '').toLowerCase());
   let isMatrix = $derived(groupType.includes('grid') || groupType.includes('matrix'));
-  let isSelectGroup = $derived(isGroupQuestion && !isMatrix);
+  let isSelectGroup = $derived(!!group && !isMatrix);
 
   function isChoiceType(t: string): boolean {
     return /^(single_choice|multiple_choice)(_other|_long_list)?$/.test(t || '');
   }
 
-  // Detect "other" from group variables: a text variable among choice variables in select groups
   let isChoiceGroup = $derived(
-    isGroupQuestion && !isMatrix &&
-    groupVariables.some(v => isChoiceType(v.answer_type))
+    isSelectGroup && variables.some((v: any) => isChoiceType(v.answer_type))
   );
 
   let otherVariable = $derived(
-    isChoiceGroup
-      ? groupVariables.find(v => v.answer_type === 'text') ?? null
-      : null
+    isChoiceGroup ? (variables.find((v: any) => v.answer_type === 'text') ?? null) : null
   );
 
   let hasOther = $derived(!!otherVariable);
 
   let choiceVariables = $derived(
-    hasOther
-      ? groupVariables.filter(v => v.answer_type !== 'text')
-      : groupVariables
+    hasOther ? variables.filter((v: any) => v.answer_type !== 'text') : variables
   );
 
   let otherLabel = $derived(
-    otherVariable?.question || otherVariable?.label || otherVariable?.concept || 'Other'
+    otherVariable?.question || otherVariable?.label || otherVariable?.concept || $t('preview.other')
   );
 
   function normalizeAnswerType(type: string): string {
     return (type || '').replace(/_other$/, '').replace(/_long_list$/, '');
   }
 
-  let rawAnswerType = $derived(apiAnswerType || (() => {
-    if (!isGroupQuestion) return variable?.answer_type || '';
+  let rawAnswerType = $derived((() => {
+    const at = questionData?.answer_type || '';
+    if (at) return at;
+    if (!group) return variable?.answer_type || '';
     if (isMatrix) return 'grid';
     if (groupType === 'multipleresp') return 'multiple_choice';
     return choiceVariables[0]?.answer_type || group?.type || '';
@@ -72,9 +66,13 @@
   let displayAnswerType = $derived(normalizeAnswerType(rawAnswerType));
 
   let displayConcept = $derived(
-    isGroupQuestion
-      ? (group?.concept || groupVariables[0]?.concept || '')
+    group
+      ? (group.concept || variables[0]?.concept || '')
       : (variable?.concept || '')
+  );
+
+  let longListStandard = $derived(
+    !group ? (variable?.long_list_standard || '') : ''
   );
 
   $effect(() => {
@@ -83,79 +81,19 @@
       try {
         const id = validatePbId(rawId);
 
-        // Fetch authoritative question data (answer_type etc) from API
-        const cachedQuestion = getCached<any>(`question:${id}`);
-        const questionData = cachedQuestion ?? await fetchApiJson(`/api/questions/${safePath(id)}`).then((d: any) => { setCached(`question:${id}`, d); return d; }).catch(() => null);
-        apiAnswerType = questionData?.answer_type || '';
+        const cached = getCached<any>(`question:${id}`);
+        const data = cached ?? await fetchApiJson(`/api/questions/${safePath(id)}`)
+          .then((d: any) => { setCached(`question:${id}`, d); return d; });
+        questionData = data;
 
-        // Try loading as a variable first
-        let loadedVariable: any = getCached<any>(`variable:${id}`);
-        if (!loadedVariable) {
-          try {
-            loadedVariable = await client.collection("variables").getOne(id, {
-              expand: "study,group",
-              requestKey: null,
-            });
-            setCached(`variable:${id}`, loadedVariable);
-          } catch (e: any) {
-            if (e?.status !== 404) throw e;
-          }
-        }
-
-        // Fetch DDI XML and XLSForm via question-level endpoints
+        // Lazy-load tabs in background
         const cachedXml = getCached<string>(`xml:${id}`);
         const cachedXls = getCached<any>(`xlsform:${id}`);
         if (cachedXml) { variableXml = cachedXml; } else {
           fetchApiText(`/api/questions/${safePath(id)}/xml`).then(xml => { variableXml = xml; setCached(`xml:${id}`, xml); }).catch(() => {});
         }
         if (cachedXls) { xlsformData = cachedXls; } else {
-          fetchApiJson(`/api/questions/${safePath(id)}/xlsform`).then(data => { xlsformData = data; setCached(`xlsform:${id}`, data); }).catch(() => {});
-        }
-
-        // Fetch group variables by ID using getOne (public) instead of getFullList (auth-only list rule).
-        // variable_ids comes from the /api/questions/{id} response.
-        async function fetchGroupVars(cacheKey: string): Promise<any[]> {
-          const cached = getCached<any[]>(cacheKey);
-          if (cached) return cached;
-          const varIds: string[] = questionData?.variable_ids ?? [];
-          if (varIds.length === 0) return [];
-          const vars = await Promise.all(
-            varIds.map((vid: string) => {
-              const v = validatePbId(vid);
-              const cachedVar = getCached<any>(`variable:${v}`);
-              return cachedVar ?? client.collection("variables").getOne(v, { requestKey: null })
-                .then((d: any) => { setCached(`variable:${v}`, d); return d; });
-            })
-          );
-          setCached(cacheKey, vars);
-          return vars;
-        }
-
-        if (loadedVariable) {
-          // Standalone variable or variable that belongs to a group
-          variable = loadedVariable;
-          study = loadedVariable.expand?.study || null;
-          const g = loadedVariable.expand?.group;
-
-          if (g?.id) {
-            group = g;
-            const validGroupId = validatePbId(g.id);
-            groupVariables = await fetchGroupVars(`group-vars:${validGroupId}`);
-          } else {
-            group = null;
-            groupVariables = [];
-          }
-        } else {
-          // ID is a group ID (from the questions endpoint)
-          const cachedGroup = getCached<any>(`group:${id}`);
-          const grp = cachedGroup ?? await client.collection("variable_groups").getOne(id, {
-            expand: "study",
-            requestKey: null,
-          }).then((d: any) => { setCached(`group:${id}`, d); return d; });
-          group = grp;
-          study = grp.expand?.study || null;
-          variable = null;
-          groupVariables = await fetchGroupVars(`group-vars:${id}`);
+          fetchApiJson(`/api/questions/${safePath(id)}/xlsform`).then(d => { xlsformData = d; setCached(`xlsform:${id}`, d); }).catch(() => {});
         }
 
         $metadata.title = displayConcept;
@@ -172,15 +110,15 @@
 
 {#if error}
   <div class="error-box">{error}</div>
-{:else if !variable && !group}
+{:else if !questionData}
   <p>{$t('question.loading')}</p>
 {:else}
   <article class="question-detail">
     <a href="/" class="back-link">&larr; {$t('question.back')}</a>
 
     <p class="concept-line"><span class="field-label">{$t('question.concept')}</span> {displayConcept}</p>
-    {#if variable?.long_list_standard}
-      <p class="concept-line"><span class="field-label">{$t('question.standard')}</span> {variable.long_list_standard}</p>
+    {#if longListStandard}
+      <p class="concept-line"><span class="field-label">{$t('question.standard')}</span> {longListStandard}</p>
     {/if}
 
     <div class="meta-row">
@@ -200,8 +138,8 @@
 
     <div class="tab-content">
       {#if activeTab === 'preview'}
-        {#if isMatrix && groupVariables.length > 0}
-          <GridPreview variables={groupVariables} question={groupVariables[0]?.prequestion_text || group?.description || group?.concept || ''} />
+        {#if isMatrix && variables.length > 0}
+          <GridPreview {variables} question={variables[0]?.prequestion_text || group?.description || group?.concept || ''} />
         {:else if isSelectGroup && choiceVariables.length > 0}
           {@const firstVar = choiceVariables[0]}
           <SurveyPreview variable={{
@@ -211,7 +149,7 @@
             answer_type: displayAnswerType,
             has_other: hasOther,
             other_label: otherLabel,
-            categories: choiceVariables.map(v => ({
+            categories: choiceVariables.map((v: any) => ({
               label: v.question || v.label || v.concept,
               value: v.name || v.id
             }))
