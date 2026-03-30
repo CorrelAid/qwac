@@ -55,6 +55,7 @@ const securityHeaders = {
   'Permissions-Policy': 'geolocation=(), microphone=(), camera=()',
   'Content-Security-Policy': [
     "default-src 'self'",
+    `script-src 'self' 'unsafe-inline'`,
     `style-src 'self' 'unsafe-inline'`,
     `img-src 'self' data: ${pbUrl}`,
     `font-src 'self'`,
