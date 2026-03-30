@@ -44,10 +44,36 @@ const mimeTypes = {
   '.txt': 'text/plain'
 };
 
+// --- Security headers ---
+const pbUrl = (process.env.PUBLIC_POCKETBASE_URL || '').replace(/\/+$/, '');
+const connectSrc = pbUrl ? `'self' ${pbUrl}` : "'self'";
+
+const securityHeaders = {
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'geolocation=(), microphone=(), camera=()',
+  'Content-Security-Policy': [
+    "default-src 'self'",
+    "script-src 'self'",
+    `style-src 'self' 'unsafe-inline'`,
+    `img-src 'self' data: ${pbUrl}`,
+    `font-src 'self'`,
+    `connect-src ${connectSrc}`,
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join('; '),
+};
+
+function writeHead(res, status, extraHeaders = {}) {
+  res.writeHead(status, { ...securityHeaders, ...extraHeaders });
+}
+
 const server = createServer((req, res) => {
   // Health check endpoint for Coolify
   if (req.url === '/health' || req.url === '/healthz') {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
+    writeHead(res, 200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ status: 'healthy', timestamp: new Date().toISOString() }));
     return;
   }
@@ -56,7 +82,7 @@ const server = createServer((req, res) => {
 
   // Security check to prevent directory traversal
   if (!filePath.startsWith(BUILD_DIR)) {
-    res.writeHead(403);
+    writeHead(res, 403);
     res.end('Forbidden');
     return;
   }
@@ -66,21 +92,21 @@ const server = createServer((req, res) => {
     const contentType = mimeTypes[ext] || 'application/octet-stream';
     const content = readFileSync(filePath);
 
-    res.writeHead(200, { 'Content-Type': contentType });
+    writeHead(res, 200, { 'Content-Type': contentType });
     res.end(content);
   } catch (err) {
     if (err.code === 'ENOENT') {
       // Try to serve index.html for SPA routing
       try {
         const indexContent = readFileSync(join(BUILD_DIR, 'index.html'));
-        res.writeHead(200, { 'Content-Type': 'text/html' });
+        writeHead(res, 200, { 'Content-Type': 'text/html' });
         res.end(indexContent);
       } catch (indexErr) {
-        res.writeHead(404);
+        writeHead(res, 404);
         res.end('Not Found');
       }
     } else {
-      res.writeHead(500);
+      writeHead(res, 500);
       res.end('Server Error');
     }
   }

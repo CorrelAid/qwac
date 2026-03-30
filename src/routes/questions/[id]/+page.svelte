@@ -5,7 +5,7 @@
   import SurveyPreview from "$lib/components/SurveyPreview.svelte";
   import GridPreview from "$lib/components/GridPreview.svelte";
   import { metadata } from "$lib/metadata";
-  import { validatePbId, safeRelationFilter, safePath, safeErrorMessage } from "$lib/validation";
+  import { validatePbId, safePath, safeErrorMessage } from "$lib/validation";
   import { getCached, setCached } from "$lib/cache";
   import AnswerTypeTag from "$lib/components/AnswerTypeTag.svelte";
   import { t } from "$lib/i18n";
@@ -112,6 +112,25 @@
           fetchApiJson(`/api/questions/${safePath(id)}/xlsform`).then(data => { xlsformData = data; setCached(`xlsform:${id}`, data); }).catch(() => {});
         }
 
+        // Fetch group variables by ID using getOne (public) instead of getFullList (auth-only list rule).
+        // variable_ids comes from the /api/questions/{id} response.
+        async function fetchGroupVars(cacheKey: string): Promise<any[]> {
+          const cached = getCached<any[]>(cacheKey);
+          if (cached) return cached;
+          const varIds: string[] = questionData?.variable_ids ?? [];
+          if (varIds.length === 0) return [];
+          const vars = await Promise.all(
+            varIds.map((vid: string) => {
+              const v = validatePbId(vid);
+              const cachedVar = getCached<any>(`variable:${v}`);
+              return cachedVar ?? client.collection("variables").getOne(v, { requestKey: null })
+                .then((d: any) => { setCached(`variable:${v}`, d); return d; });
+            })
+          );
+          setCached(cacheKey, vars);
+          return vars;
+        }
+
         if (loadedVariable) {
           // Standalone variable or variable that belongs to a group
           variable = loadedVariable;
@@ -121,11 +140,7 @@
           if (g?.id) {
             group = g;
             const validGroupId = validatePbId(g.id);
-            const cachedGroupVars = getCached<any[]>(`group-vars:${validGroupId}`);
-            groupVariables = cachedGroupVars ?? await client.collection("variables").getFullList({
-              filter: safeRelationFilter("group", validGroupId),
-              requestKey: null,
-            }).then(d => { setCached(`group-vars:${validGroupId}`, d); return d; });
+            groupVariables = await fetchGroupVars(`group-vars:${validGroupId}`);
           } else {
             group = null;
             groupVariables = [];
@@ -136,15 +151,11 @@
           const grp = cachedGroup ?? await client.collection("variable_groups").getOne(id, {
             expand: "study",
             requestKey: null,
-          }).then(d => { setCached(`group:${id}`, d); return d; });
+          }).then((d: any) => { setCached(`group:${id}`, d); return d; });
           group = grp;
           study = grp.expand?.study || null;
           variable = null;
-          const cachedGroupVars = getCached<any[]>(`group-vars:${id}`);
-          groupVariables = cachedGroupVars ?? await client.collection("variables").getFullList({
-            filter: safeRelationFilter("group", id),
-            requestKey: null,
-          }).then(d => { setCached(`group-vars:${id}`, d); return d; });
+          groupVariables = await fetchGroupVars(`group-vars:${id}`);
         }
 
         $metadata.title = displayConcept;
