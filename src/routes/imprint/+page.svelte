@@ -1,8 +1,7 @@
 <script lang="ts">
   import { locale, t } from "$lib/i18n";
   import { metadata } from "$lib/metadata";
-
-  let { data } = $props();
+  import { content } from 'virtual:cdl-content';
 
   $effect(() => {
     $metadata.title = $t('imprint.title');
@@ -17,7 +16,7 @@
     <p>{@html $t('imprint.text')}</p>
   </section>
 
-  {@html data.liabilityHtml[$locale]}
+  {@html content.liability[$locale]}
 </main>
 
 <style>

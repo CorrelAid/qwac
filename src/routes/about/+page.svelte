@@ -1,8 +1,7 @@
 <script lang="ts">
   import { metadata } from "$lib/metadata";
   import { locale, t } from "$lib/i18n";
-
-  let { data } = $props();
+  import { content } from 'virtual:cdl-content';
 
   $effect(() => {
     $metadata.title = $t('about.title');
@@ -15,7 +14,7 @@
   <h2>{$t('about.title')}</h2>
 
   <section>
-    {@html data.descriptionHtml[$locale]}
+    {@html content.qwac[$locale]}
   </section>
 </article>
 
