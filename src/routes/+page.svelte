@@ -8,7 +8,7 @@
   import Fuse from "fuse.js";
   import { safeErrorMessage } from "$lib/validation";
   import { writable } from "svelte/store";
-  import { getCached, setCached, invalidatePrefix } from "$lib/cache";
+  import { getCached, setCached } from "$lib/cache";
   import AnswerTypeTag from "$lib/components/AnswerTypeTag.svelte";
   import { t } from "$lib/i18n";
 
@@ -45,23 +45,6 @@
       error = safeErrorMessage(e, $t('explore.loadError'));
       loaded = true;
     });
-
-    // Reload on any realtime change to variables or variable_groups
-    let unsubs: (() => void)[] = [];
-    client.collection("variables").subscribe("*", () => {
-      invalidatePrefix("questions:");
-      invalidatePrefix("variable:");
-      invalidatePrefix("group:");
-      loadAll(true).catch(() => {});
-    }).then(fn => unsubs.push(fn));
-    client.collection("variable_groups").subscribe("*", () => {
-      invalidatePrefix("questions:");
-      invalidatePrefix("variable:");
-      invalidatePrefix("group:");
-      loadAll(true).catch(() => {});
-    }).then(fn => unsubs.push(fn));
-
-    return () => { unsubs.forEach(fn => fn()); };
   });
 
   function normalizeAnswerType(type: string): string {
