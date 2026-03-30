@@ -95,8 +95,28 @@ const server = createServer((req, res) => {
     writeHead(res, 200, { 'Content-Type': contentType });
     res.end(content);
   } catch (err) {
-    if (err.code === 'ENOENT') {
-      // Try to serve index.html for SPA routing
+    if (err.code === 'ENOENT' || err.code === 'EISDIR') {
+      const ext = extname(filePath);
+
+      // If no extension, try adding .html for SvelteKit prerendered pages
+      if (!ext) {
+        try {
+          const htmlContent = readFileSync(filePath + '.html');
+          writeHead(res, 200, { 'Content-Type': 'text/html' });
+          res.end(htmlContent);
+          return;
+        } catch (_) {}
+      }
+
+      // Return 404 for missing assets — don't serve index.html for JS/CSS/etc.
+      const assetExtensions = ['.js', '.css', '.json', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.woff', '.woff2', '.ttf', '.otf', '.ico', '.txt'];
+      if (ext && assetExtensions.includes(ext)) {
+        writeHead(res, 404);
+        res.end('Not Found');
+        return;
+      }
+
+      // Fallback to index.html for SPA page routes
       try {
         const indexContent = readFileSync(join(BUILD_DIR, 'index.html'));
         writeHead(res, 200, { 'Content-Type': 'text/html' });
