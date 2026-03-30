@@ -3,8 +3,9 @@
   import { authModel } from "$lib/pocketbase";
   import LoginForm from "$lib/components/LoginForm.svelte";
   import { metadata } from "$lib/metadata";
+  import { t } from "$lib/i18n";
 
-  $metadata.title = "Sign In";
+  $effect(() => { $metadata.title = $t('auth.signIn'); });
   $metadata.headline = "";
 
   $effect(() => {

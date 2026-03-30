@@ -1,5 +1,1 @@
-import { redirect } from "@sveltejs/kit";
-
-export function load() {
-  redirect(301, "https://correlaid.org/impressum/");
-}
+// page config handled by +page.server.ts (prerender + ssr)

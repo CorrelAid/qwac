@@ -1,13 +1,14 @@
 <script lang="ts">
+  import { t } from "$lib/i18n";
   let { concept, standard }: { concept: string; standard?: string } = $props();
 </script>
 
 <div class="long-list">
   <select disabled>
-    <option>{concept || 'Select...'}</option>
+    <option>{concept || $t('longList.select')}</option>
   </select>
   {#if standard}
-    <p class="hint">Standard: {standard}</p>
+    <p class="hint">{$t('longList.standard')} {standard}</p>
   {/if}
 </div>
 

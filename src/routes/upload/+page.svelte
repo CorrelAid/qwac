@@ -3,15 +3,16 @@
   import LoginGuard from "$lib/components/LoginGuard.svelte";
   import LoginForm from "$lib/components/LoginForm.svelte";
   import { metadata } from "$lib/metadata";
+  import { t } from "$lib/i18n";
 
-  $metadata.title = "Upload DDI Codebook";
+  $effect(() => { $metadata.title = $t('upload.title'); });
   $metadata.headline = "";
 
   const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
   function validateFile(f: File): string | null {
-    if (!f.name.endsWith(".xml")) return "File must be an XML file.";
-    if (f.size > MAX_FILE_SIZE) return "File must be smaller than 10 MB.";
+    if (!f.name.endsWith(".xml")) return $t('upload.xmlOnly');
+    if (f.size > MAX_FILE_SIZE) return $t('upload.tooLarge');
     return null;
   }
 
@@ -91,7 +92,7 @@
         // Backend returned validation errors (400)
         result = { valid: false, errors: resp.errors };
       } else {
-        result = { valid: false, message: "Upload failed. Please try again." };
+        result = { valid: false, message: $t('upload.uploadFailed') };
       }
     } finally {
       uploading = false;
@@ -106,14 +107,14 @@
 
 <LoginGuard>
   <div class="upload-page">
-    <a href="/" class="back-link">&larr; Back to questions</a>
+    <a href="/" class="back-link">&larr; {$t('upload.back')}</a>
 
-    <h2>Upload DDI Codebook</h2>
-    <p class="description">Upload a DDI Codebook XML file to import a study with its variables and groups.</p>
+    <h2>{$t('upload.title')}</h2>
+    <p class="description">{$t('upload.description')}</p>
 
     {#if result}
       <div class="result-box" class:success={result.valid} class:error={!result.valid}>
-        <strong>{result.valid ? "Import successful" : "Import failed"}</strong>
+        <strong>{result.valid ? $t('upload.importSuccess') : $t('upload.importFailed')}</strong>
         {#if result.message}
           <p>{result.message}</p>
         {/if}
@@ -136,7 +137,7 @@
             {/each}
           </ul>
         {/if}
-        <button class="reset-btn" onclick={reset}>Upload another file</button>
+        <button class="reset-btn" onclick={reset}>{$t('upload.uploadAnother')}</button>
       </div>
     {:else}
       <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -151,23 +152,23 @@
           <p class="file-name">{file.name}</p>
           <p class="file-size">{(file.size / 1024).toFixed(1)} KB</p>
         {:else}
-          <p>Drag & drop an XML file here, or</p>
+          <p>{$t('upload.dropHint')}</p>
         {/if}
         <label class="file-label">
-          {file ? "Choose different file" : "Choose file"}
+          {file ? $t('upload.chooseDifferent') : $t('upload.chooseFile')}
           <input type="file" accept=".xml,application/xml,text/xml" onchange={onFileChange} hidden />
         </label>
       </div>
 
       <button class="upload-btn" onclick={upload} disabled={!file || uploading}>
-        {uploading ? "Uploading..." : "Import Codebook"}
+        {uploading ? $t('upload.uploading') : $t('upload.importCodebook')}
       </button>
     {/if}
   </div>
 
   {#snippet otherwise()}
     <div class="login-container">
-      <p>Please sign in to upload codebooks.</p>
+      <p>{$t('auth.signInRequired')}</p>
       <LoginForm />
     </div>
   {/snippet}

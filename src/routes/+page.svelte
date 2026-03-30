@@ -1,33 +1,40 @@
 <script lang="ts">
-  import { client, clearOnAuthError } from "$lib/pocketbase";
+  import { client, clearOnAuthError, fetchApiJson } from "$lib/pocketbase";
   import type { PageStore } from "$lib/pocketbase";
   import FilterBar from "$lib/components/FilterBar.svelte";
   import QuestionCard from "$lib/components/QuestionCard.svelte";
-  import GridPreview from "$lib/components/GridPreview.svelte";
   import Paginator from "$lib/components/Paginator.svelte";
   import { metadata } from "$lib/metadata";
   import Fuse from "fuse.js";
   import { safeErrorMessage } from "$lib/validation";
   import { writable } from "svelte/store";
+  import { getCached, setCached, invalidatePrefix } from "$lib/cache";
+  import AnswerTypeTag from "$lib/components/AnswerTypeTag.svelte";
+  import { t } from "$lib/i18n";
 
-  $metadata.title = "Explore Questions";
+  $effect(() => { $metadata.title = $t('explore.title'); });
   $metadata.headline = "";
 
-  let variables = $state<any[]>([]);
+  let questions = $state<any[]>([]);
+  let studies = $state<Map<string, any>>(new Map());
   let loaded = $state(false);
   let searchQuery = $state("");
   let filters = $state<Record<string, string>>({
     answer_type: "",
     survey_type: "",
-    has_other: "",
-    has_long_list: "",
   });
   let error = $state<string | null>(null);
 
-  const queryParams = { expand: "study,group", requestKey: null };
+  async function loadAll(skipCache = false) {
+    const cachedQuestions = !skipCache ? getCached<any[]>("questions:all") : undefined;
+    const cachedStudies = !skipCache ? getCached<any[]>("studies:all") : undefined;
 
-  async function loadAll() {
-    variables = await client.collection("variables").getFullList(queryParams);
+    const [questionsData, studiesList] = await Promise.all([
+      cachedQuestions ?? fetchApiJson('/api/questions').then((d: any[]) => { setCached("questions:all", d); return d; }),
+      cachedStudies ?? client.collection("studies").getFullList({ requestKey: null }).then((d: any[]) => { setCached("studies:all", d); return d; }),
+    ]);
+    questions = questionsData;
+    studies = new Map(studiesList.map((s: any) => [s.id, s]));
     loaded = true;
   }
 
@@ -35,79 +42,89 @@
     loaded = false;
     loadAll().catch((e: any) => {
       clearOnAuthError(e);
-      error = safeErrorMessage(e, "Failed to load variables.");
+      error = safeErrorMessage(e, $t('explore.loadError'));
       loaded = true;
     });
 
-    // Reload on any realtime change
-    let unsub: (() => void) | undefined;
+    // Reload on any realtime change to variables or variable_groups
+    let unsubs: (() => void)[] = [];
     client.collection("variables").subscribe("*", () => {
-      loadAll().catch(() => {});
-    }).then(fn => unsub = fn);
+      invalidatePrefix("questions:");
+      invalidatePrefix("variable:");
+      invalidatePrefix("group:");
+      loadAll(true).catch(() => {});
+    }).then(fn => unsubs.push(fn));
+    client.collection("variable_groups").subscribe("*", () => {
+      invalidatePrefix("questions:");
+      invalidatePrefix("variable:");
+      invalidatePrefix("group:");
+      loadAll(true).catch(() => {});
+    }).then(fn => unsubs.push(fn));
 
-    return () => { unsub?.(); };
+    return () => { unsubs.forEach(fn => fn()); };
   });
 
+  function normalizeAnswerType(type: string): string {
+    return (type || '').replace(/_other$/, '').replace(/_long_list$/, '');
+  }
+
+  function answerTypeLabel(type: string): string {
+    if (!type) return '';
+    return normalizeAnswerType(type).replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  function studyForQuestion(q: any): any | undefined {
+    return studies.get(q.study_id);
+  }
+
   let answerTypeOptions = $derived(
-    [...new Set(variables.map(v => v.answer_type).filter(Boolean))].sort()
+    [...new Set(questions.map(q => normalizeAnswerType(q.answer_type)).filter(Boolean))].sort()
   );
 
   let surveyTypeOptions = $derived(
-    [...new Set(variables.flatMap(v => v.expand?.study?.topic_classifications ?? []).filter(Boolean))].sort()
+    [...new Set(questions.flatMap(q => studyForQuestion(q)?.topic_classifications ?? []).filter(Boolean))].sort()
   );
 
-  let isChoiceFilter = $derived(
-    filters.answer_type === 'Single Choice' || filters.answer_type === 'Multiple Choice'
-  );
-
-  // Match a single variable against a specific filter key/value
-  function matchesFilter(v: any, key: string, val: string): boolean {
+  function matchesFilter(q: any, key: string, val: string): boolean {
     switch (key) {
-      case 'answer_type': return answerTypeLabel(v.answer_type) === val;
-      case 'survey_type': return v.expand?.study?.topic_classifications?.includes(val);
-      case 'has_other': return (v.has_other === true) === (val === 'Yes');
-      case 'has_long_list': return (v.has_long_list === true) === (val === 'Yes');
+      case 'answer_type': return answerTypeLabel(normalizeAnswerType(q.answer_type)) === val;
+      case 'survey_type': return studyForQuestion(q)?.topic_classifications?.includes(val);
       default: return true;
     }
   }
 
-  // Apply all active filters except `excludeKey`
   function applyFilters(data: any[], excludeKey?: string): any[] {
     let result = data;
     for (const [key, val] of Object.entries(filters)) {
       if (!val || key === excludeKey) continue;
-      result = result.filter(v => matchesFilter(v, key, val));
+      result = result.filter(q => matchesFilter(q, key, val));
     }
     return result;
   }
 
-  // Compute counts for each filter value (with all other filters applied)
   function computeCounts(data: any[], key: string, values: string[]): Record<string, number> {
     const base = applyFilters(data, key);
     const counts: Record<string, number> = {};
     for (const val of values) {
-      counts[val] = base.filter(v => matchesFilter(v, key, val)).length;
+      counts[val] = base.filter(q => matchesFilter(q, key, val)).length;
     }
     return counts;
   }
 
   let filterOptionsList = $derived.by(() => {
     const atValues = answerTypeOptions.map(t => answerTypeLabel(t));
-    const boolValues = ["Yes", "No"];
     return [
-      { label: "Kind", key: "survey_type", values: surveyTypeOptions, counts: computeCounts(variables, "survey_type", surveyTypeOptions) },
-      { label: "Answer Type", key: "answer_type", values: atValues, counts: computeCounts(variables, "answer_type", atValues) },
-      { label: "Other", key: "has_other", values: boolValues, kind: "chip" as const, hidden: !isChoiceFilter, counts: computeCounts(variables, "has_other", boolValues) },
-      { label: "Long List", key: "has_long_list", values: boolValues, kind: "chip" as const, hidden: !isChoiceFilter, counts: computeCounts(variables, "has_long_list", boolValues) },
+      { label: $t('explore.filterKind'), key: "survey_type", values: surveyTypeOptions, counts: computeCounts(questions, "survey_type", surveyTypeOptions) },
+      { label: $t('explore.filterAnswerType'), key: "answer_type", values: atValues, counts: computeCounts(questions, "answer_type", atValues) },
     ];
   });
 
-  let filteredVariables = $derived.by(() => {
-    let result = applyFilters(variables);
+  let filteredQuestions = $derived.by(() => {
+    let result = applyFilters(questions);
 
     if (searchQuery.trim()) {
       const fuse = new Fuse(result, {
-        keys: ["name", "label", "question"],
+        keys: ["name", "concept", "question_text"],
         threshold: 0.3
       });
       result = fuse.search(searchQuery).map(r => r.item);
@@ -116,92 +133,8 @@
     return result;
   });
 
-  function answerTypeLabel(type: string): string {
-    if (!type) return '';
-    return type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-  }
-
-  function isMatrixOrGrid(variable: any): boolean {
-    const type = variable.expand?.group?.type?.toLowerCase() || '';
-    return type.includes('matrix') || type.includes('grid');
-  }
-
-  function isSelectType(answerType: string): boolean {
-    return answerType === 'select_one' || answerType === 'select_multiple'
-      || answerType === 'single_choice' || answerType === 'multiple_choice';
-  }
-
-  type ListEntry =
-    | { kind: 'single'; variable: any }
-    | { kind: 'select_group'; group: any; variables: any[]; answerType: string; study: any }
-    | { kind: 'grid'; group: any; variables: any[]; study: any };
-
-  // Pre-compute all siblings per select group from the full dataset
-  let allSelectGroupSiblings = $derived.by(() => {
-    const selectMap = new Map<string, any[]>();
-    for (const v of variables) {
-      const gId = v.expand?.group?.id;
-      if (!gId) continue;
-      if (isSelectType(v.answer_type) && !isMatrixOrGrid(v)) {
-        if (!selectMap.has(gId)) selectMap.set(gId, []);
-        selectMap.get(gId)!.push(v);
-      }
-    }
-    return selectMap;
-  });
-
-  // Pre-compute all siblings per grid group from the full dataset
-  let allGridGroupSiblings = $derived.by(() => {
-    const gridMap = new Map<string, any[]>();
-    for (const v of variables) {
-      const gId = v.expand?.group?.id;
-      if (!gId) continue;
-      if (isMatrixOrGrid(v)) {
-        if (!gridMap.has(gId)) gridMap.set(gId, []);
-        gridMap.get(gId)!.push(v);
-      }
-    }
-    return gridMap;
-  });
-
-  let groupedEntries = $derived.by(() => {
-    const seenGroups = new Set<string>();
-    const entries: ListEntry[] = [];
-
-    for (const v of filteredVariables) {
-      const g = v.expand?.group;
-      const hasGroup = g && g.id;
-
-      if (hasGroup && isMatrixOrGrid(v)) {
-        if (!seenGroups.has(g.id)) {
-          seenGroups.add(g.id);
-          const allSiblings = allGridGroupSiblings.get(g.id) || [v];
-          entries.push({ kind: 'grid', group: g, variables: allSiblings, study: v.expand?.study });
-        }
-      } else if (hasGroup && isSelectType(v.answer_type) && !isMatrixOrGrid(v)) {
-        if (!seenGroups.has(g.id)) {
-          seenGroups.add(g.id);
-          const allSiblings = allSelectGroupSiblings.get(g.id) || [v];
-          entries.push({ kind: 'select_group', group: g, variables: allSiblings, answerType: v.answer_type, study: v.expand?.study });
-        }
-      } else {
-        entries.push({ kind: 'single', variable: v });
-      }
-    }
-
-    return entries;
-  });
-
   const PER_PAGE = 20;
   let clientPage = $state(1);
-
-  // Clear choice-specific filters when answer type changes away from choice types
-  $effect(() => {
-    if (!isChoiceFilter) {
-      filters.has_other = "";
-      filters.has_long_list = "";
-    }
-  });
 
   // Reset to page 1 whenever search query or filters change
   $effect(() => {
@@ -210,16 +143,16 @@
     clientPage = 1;
   });
 
-  const totalPages = $derived(Math.max(1, Math.ceil(groupedEntries.length / PER_PAGE)));
+  const totalPages = $derived(Math.max(1, Math.ceil(filteredQuestions.length / PER_PAGE)));
   const currentPage = $derived(Math.min(Math.max(1, clientPage), totalPages));
-  const paginatedEntries = $derived(
-    groupedEntries.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE)
+  const paginatedQuestions = $derived(
+    filteredQuestions.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE)
   );
 
   // PageStore-compatible store for Paginator
   const _pageData = writable({ page: 1, perPage: PER_PAGE, totalItems: 0, totalPages: 1, items: [] as any[] });
   $effect(() => {
-    _pageData.set({ page: currentPage, perPage: PER_PAGE, totalItems: groupedEntries.length, totalPages, items: paginatedEntries as any[] });
+    _pageData.set({ page: currentPage, perPage: PER_PAGE, totalItems: filteredQuestions.length, totalPages, items: paginatedQuestions as any[] });
   });
   const pageStore: PageStore = {
     subscribe: _pageData.subscribe,
@@ -240,71 +173,36 @@
     {#if error}
       <div class="error-box">{error}</div>
     {:else if !loaded}
-      <p>Loading questions...</p>
-    {:else if filteredVariables.length === 0}
-      <p>No questions found.</p>
+      <p>{$t('explore.loading')}</p>
+    {:else if filteredQuestions.length === 0}
+      <p>{$t('explore.noResults')}</p>
     {:else}
-      <p class="count">{groupedEntries.length} question{groupedEntries.length === 1 ? '' : 's'}</p>
+      <p class="count">{filteredQuestions.length} {filteredQuestions.length === 1 ? $t('explore.question') : $t('explore.questions')}</p>
       <ul class="variable-list">
-        {#each paginatedEntries as entry (entry.kind === 'single' ? entry.variable.id : entry.group.id)}
+        {#each paginatedQuestions as question (question.id)}
+          {@const study = studyForQuestion(question)}
           <li>
-            {#if entry.kind === 'grid'}
-              <QuestionCard>
-                <p class="meta-text"><span class="field-label">Concept:</span> {entry.group.label || entry.variables[0].concept}</p>
+            <QuestionCard>
+              {#if question.question_text}
+                <p class="meta-text"><span class="field-label">{$t('explore.questionLabel')}</span> {question.question_text}</p>
+              {/if}
+              <p class="meta-text"><span class="field-label">{$t('explore.conceptLabel')}</span> {question.concept}</p>
 
-                <div class="card-tags">
-                  <span class="type-tag">Grid</span>
-                  {#if entry.study}
-                    <a href="/studies/{entry.study.id}" class="study-tag">{entry.study.title}</a>
-                  {/if}
-                </div>
-
-                <GridPreview variables={entry.variables} />
-
-                <a href="/questions/{entry.variables[0].id}" class="detail-link">View details &rarr;</a>
-              </QuestionCard>
-            {:else if entry.kind === 'select_group'}
-              <QuestionCard>
-                {#if entry.variables[0]?.prequestion_text}
-                  <p class="meta-text"><span class="field-label">Question:</span> {entry.variables[0].prequestion_text}</p>
+              <div class="card-tags">
+                {#if question.answer_type}
+                  <AnswerTypeTag type={question.answer_type} />
                 {/if}
-                <p class="meta-text"><span class="field-label">Concept:</span> {entry.group.label || entry.variables[0].concept}</p>
-
-                <div class="card-tags">
-                  <span class="type-tag">{answerTypeLabel(entry.answerType)}</span>
-                  {#if entry.study}
-                    <a href="/studies/{entry.study.id}" class="study-tag">{entry.study.title}</a>
-                  {/if}
-                </div>
-
-                <p class="categories-summary">{entry.variables.length} categories</p>
-
-                <a href="/questions/{entry.variables[0].id}" class="detail-link">View details &rarr;</a>
-              </QuestionCard>
-            {:else}
-              {@const variable = entry.variable}
-              <QuestionCard>
-                {#if variable.question}
-                  <p class="meta-text"><span class="field-label">Question:</span> {variable.question}</p>
+                {#if study}
+                  <a href="/studies/{study.id}" class="study-tag">{study.title}</a>
                 {/if}
-                <p class="meta-text"><span class="field-label">Concept:</span> {variable.concept}</p>
+              </div>
 
-                <div class="card-tags">
-                  {#if variable.answer_type}
-                    <span class="type-tag">{answerTypeLabel(variable.answer_type)}</span>
-                  {/if}
-                  {#if variable.expand?.study}
-                    <a href="/studies/{variable.expand.study.id}#q-{variable.id}" class="study-tag">{variable.expand.study.title}</a>
-                  {/if}
-                </div>
+              {#if question.variable_ids?.length > 1}
+                <p class="categories-summary">{question.variable_ids.length} {$t('explore.variables')}</p>
+              {/if}
 
-                {#if variable.long_list_standard}
-                  <p class="meta-text"><span class="field-label">Standard:</span> {variable.long_list_standard}</p>
-                {/if}
-
-                <a href="/questions/{variable.id}" class="detail-link">View details &rarr;</a>
-              </QuestionCard>
-            {/if}
+              <a href="/questions/{question.id}" class="detail-link">{$t('explore.viewDetails')}</a>
+            </QuestionCard>
           </li>
         {/each}
       </ul>
@@ -327,6 +225,8 @@
   .variable-list {
     list-style: none;
     padding: 0;
+    margin: 0;
+    max-width: none;
   }
 
   .variable-list li {
@@ -341,20 +241,10 @@
     flex-wrap: wrap;
   }
 
-  .type-tag,
   .study-tag {
     font-size: var(--font-size-caption-min);
     padding: 1px var(--spacing-xs);
     border-radius: var(--radius-sm);
-    white-space: nowrap;
-  }
-
-  .type-tag {
-    background-color: var(--color-tertiary);
-    color: var(--color-text-primary);
-  }
-
-  .study-tag {
     background-color: var(--color-primary-darker);
     color: var(--color-white);
     text-decoration: none;

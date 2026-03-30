@@ -1,19 +1,21 @@
 <script lang="ts">
   import { metadata } from "$lib/metadata";
+  import { locale, t } from "$lib/i18n";
 
-  $metadata.title = "About";
+  let { data } = $props();
+
+  $effect(() => {
+    $metadata.title = $t('about.title');
+  });
 </script>
 
 <article class="about">
-  <a href="/" class="back-link">&larr; Back to questions</a>
+  <a href="/" class="back-link">&larr; {$t('about.back')}</a>
 
-  <h2>About QWAC</h2>
+  <h2>{$t('about.title')}</h2>
 
   <section>
-    <p>
-      QWAC — <strong>Questions Worth Asking Continuously</strong> — is a project by
-      <a href="https://correlaid.org" target="_blank" rel="noopener noreferrer">CorrelAid e.V.</a>
-    </p>
+    {@html data.descriptionHtml[$locale]}
   </section>
 </article>
 
@@ -40,10 +42,6 @@
 
   section {
     margin-bottom: var(--spacing-lg);
-  }
-
-  p {
-    line-height: var(--line-height-relaxed);
   }
 
   a {

@@ -1,12 +1,18 @@
 <script lang="ts">
   import { page } from "$app/stores";
-  import { client, clearOnAuthError, fetchApiBlob } from "$lib/pocketbase";
-  import SurveyPreview from "$lib/components/SurveyPreview.svelte";
-  import GridPreview from "$lib/components/GridPreview.svelte";
+  import { client, clearOnAuthError, fetchApiBlob, fetchApiJson } from "$lib/pocketbase";
   import QuestionCard from "$lib/components/QuestionCard.svelte";
   import { metadata } from "$lib/metadata";
   import { extractText, extractUri, parseGoValue } from "$lib/ddi";
-  import { validatePbId, safeRelationFilter, safePath, safeErrorMessage } from "$lib/validation";
+  import { validatePbId, safePath, safeErrorMessage } from "$lib/validation";
+  import { getCached, setCached } from "$lib/cache";
+  import AnswerTypeTag from "$lib/components/AnswerTypeTag.svelte";
+  import { t } from "$lib/i18n";
+
+  function answerTypeLabel(type: string): string {
+    if (!type) return '';
+    return type.replace(/_other$/, '').replace(/_long_list$/, '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  }
 
   function formatAuthor(val: unknown): string {
     let parsed = typeof val === "string" && val.trim().startsWith("map[") ? parseGoValue(val) : val;
@@ -21,7 +27,7 @@
   }
 
   let study = $state<any>(null);
-  let variables = $state<any[]>([]);
+  let questions = $state<any[]>([]);
   let error = $state<string | null>(null);
   let exporting = $state(false);
 
@@ -30,80 +36,22 @@
     const load = async () => {
       try {
         const id = validatePbId(rawId);
-        study = await client.collection("studies").getOne(id, { requestKey: null });
+        const cachedStudy = getCached<any>(`study:${id}`);
+        const cachedQuestions = getCached<any[]>(`study-questions:${id}`);
+        const [studyData, questionsData] = await Promise.all([
+          cachedStudy ?? client.collection("studies").getOne(id, { requestKey: null }).then(d => { setCached(`study:${id}`, d); return d; }),
+          cachedQuestions ?? fetchApiJson(`/api/studies/${safePath(id)}/questions`).then((d: any[]) => { setCached(`study-questions:${id}`, d); return d; }),
+        ]);
+        study = studyData;
+        questions = questionsData;
         $metadata.title = study.title;
         $metadata.headline = "";
-        const result = await client.collection("variables").getFullList({
-          filter: safeRelationFilter("study", id),
-          expand: "group",
-          requestKey: null,
-        });
-        variables = result;
       } catch (e: any) {
         clearOnAuthError(e);
-        error = safeErrorMessage(e, "Failed to load study.");
+        error = safeErrorMessage(e, $t('study.loadError'));
       }
     };
     load();
-  });
-
-  function isGridGroup(group: any): boolean {
-    const type = group?.type?.toLowerCase() || '';
-    return type.includes('grid') || type.includes('matrix');
-  }
-
-  function isSelectType(answerType: string): boolean {
-    return answerType === 'select_one' || answerType === 'select_multiple'
-      || answerType === 'single_choice' || answerType === 'multiple_choice';
-  }
-
-  type VariableEntry =
-    | { kind: 'single'; variable: any }
-    | { kind: 'grid'; group: any; variables: any[] }
-    | { kind: 'select_group'; group: any; variables: any[]; answerType: string };
-
-  let variableEntries = $derived.by(() => {
-    const gridGroups = new Map<string, { group: any; variables: any[] }>();
-    const selectGroups = new Map<string, { group: any; variables: any[]; answerType: string }>();
-    const slots: { variable: any; groupId: string | null; groupKind: 'grid' | 'select' | null }[] = [];
-
-    for (const v of variables) {
-      const g = v.expand?.group;
-      if (g && isGridGroup(g)) {
-        if (!gridGroups.has(g.id)) {
-          gridGroups.set(g.id, { group: g, variables: [] });
-          slots.push({ variable: null as any, groupId: g.id, groupKind: 'grid' });
-        }
-        gridGroups.get(g.id)!.variables.push(v);
-      } else if (g && g.id && isSelectType(v.answer_type)) {
-        if (!selectGroups.has(g.id)) {
-          selectGroups.set(g.id, { group: g, variables: [], answerType: v.answer_type });
-          slots.push({ variable: null as any, groupId: g.id, groupKind: 'select' });
-        }
-        selectGroups.get(g.id)!.variables.push(v);
-      } else {
-        slots.push({ variable: v, groupId: null, groupKind: null });
-      }
-    }
-
-    const entries: VariableEntry[] = [];
-    const insertedGroups = new Set<string>();
-
-    for (const s of slots) {
-      if (s.groupKind === 'grid' && s.groupId && !insertedGroups.has(s.groupId)) {
-        const gdata = gridGroups.get(s.groupId)!;
-        entries.push({ kind: 'grid', group: gdata.group, variables: gdata.variables });
-        insertedGroups.add(s.groupId);
-      } else if (s.groupKind === 'select' && s.groupId && !insertedGroups.has(s.groupId)) {
-        const gdata = selectGroups.get(s.groupId)!;
-        entries.push({ kind: 'select_group', group: gdata.group, variables: gdata.variables, answerType: gdata.answerType });
-        insertedGroups.add(s.groupId);
-      } else if (s.groupKind === null) {
-        entries.push({ kind: 'single', variable: s.variable });
-      }
-    }
-
-    return entries;
   });
 
   async function exportDdiXml() {
@@ -128,40 +76,40 @@
 {#if error}
   <div class="error-box">{error}</div>
 {:else if !study}
-  <p>Loading study...</p>
+  <p>{$t('study.loading')}</p>
 {:else}
   <article class="study-detail">
-    <a href="/" class="back-link">&larr; Back to questions</a>
+    <a href="/" class="back-link">&larr; {$t('study.back')}</a>
 
     <div class="title-row">
       <h2>{study.title}</h2>
       <button class="export-btn" onclick={exportDdiXml} disabled={exporting}>
-        {exporting ? "Exporting..." : "Export DDI XML"}
+        {exporting ? $t('study.exporting') : $t('study.exportDdi')}
       </button>
     </div>
 
     <div class="meta-grid">
       {#if study.author}
         <div class="meta-item">
-          <strong>Author</strong>
+          <strong>{$t('study.author')}</strong>
           <span>{formatAuthor(study.author)}</span>
         </div>
       {/if}
       {#if study.time_period}
-        <div class="meta-item"><strong>Time Period</strong><span>{study.time_period}</span></div>
+        <div class="meta-item"><strong>{$t('study.timePeriod')}</strong><span>{study.time_period}</span></div>
       {/if}
       {#if study.analysis_unit}
-        <div class="meta-item"><strong>Analysis Unit</strong><span>{study.analysis_unit}</span></div>
+        <div class="meta-item"><strong>{$t('study.analysisUnit')}</strong><span>{study.analysis_unit}</span></div>
       {/if}
       {#if study.universe}
-        <div class="meta-item"><strong>Universe</strong><span>{study.universe}</span></div>
+        <div class="meta-item"><strong>{$t('study.universe')}</strong><span>{study.universe}</span></div>
       {/if}
       {#if study.data_kind}
-        <div class="meta-item"><strong>Data Kind</strong><span>{study.data_kind}</span></div>
+        <div class="meta-item"><strong>{$t('study.dataKind')}</strong><span>{study.data_kind}</span></div>
       {/if}
       {#if study.holdings_uri}
         <div class="meta-item">
-          <strong>Source</strong>
+          <strong>{$t('study.source')}</strong>
           <a href={extractUri(study.holdings_uri)} target="_blank" rel="noopener">
             {extractText(study.holdings_description) || extractUri(study.holdings_uri)}
           </a>
@@ -179,47 +127,27 @@
 
     {#if study.abstract}
       <div class="abstract">
-        <h3>Abstract</h3>
+        <h3>{$t('study.abstract')}</h3>
         <p>{extractText(study.abstract)}</p>
       </div>
     {/if}
 
     <section class="variables-section">
-      <h3>Variables ({variables.length})</h3>
-      {#if variables.length === 0}
-        <p>No variables found for this study.</p>
+      <h3>{$t('study.questions')} ({questions.length})</h3>
+      {#if questions.length === 0}
+        <p>{$t('study.noQuestions')}</p>
       {:else}
         <ul class="variable-list">
-          {#each variableEntries as entry}
-            {#if entry.kind === 'grid'}
-              <li id="group-{entry.group.id}">
-                <QuestionCard>
-                  <a href="/questions/{entry.variables[0].id}" class="var-name">{entry.group.label || entry.variables[0].concept}</a>
-                  <GridPreview variables={entry.variables} />
-                </QuestionCard>
-              </li>
-            {:else if entry.kind === 'select_group'}
-              <li id="group-{entry.group.id}">
-                <QuestionCard>
-                  <a href="/questions/{entry.variables[0].id}" class="var-name">{entry.group.label || entry.variables[0].concept}</a>
-                  <SurveyPreview variable={{
-                    ...entry.variables[0],
-                    question: entry.variables[0].prequestion_text || entry.group.label,
-                    categories: entry.variables.map(v => ({
-                      label: v.question || v.label || v.concept,
-                      value: v.name || v.id
-                    }))
-                  }} />
-                </QuestionCard>
-              </li>
-            {:else}
-              <li id="q-{entry.variable.id}">
-                <QuestionCard>
-                  <a href="/questions/{entry.variable.id}" class="var-name">{entry.variable.concept}</a>
-                  <SurveyPreview variable={entry.variable} />
-                </QuestionCard>
-              </li>
-            {/if}
+          {#each questions as question (question.id)}
+            <li id="q-{question.id}">
+              <QuestionCard>
+                <a href="/questions/{question.id}" class="var-name">{question.concept || question.name}</a>
+                {#if question.question_text}
+                  <p class="question-text">{question.question_text}</p>
+                {/if}
+                <AnswerTypeTag type={question.answer_type} />
+              </QuestionCard>
+            </li>
           {/each}
         </ul>
       {/if}
@@ -359,6 +287,12 @@
 
   .var-name:hover {
     text-decoration: underline;
+  }
+
+  .question-text {
+    font-size: var(--font-size-small-min);
+    line-height: var(--line-height-relaxed);
+    margin: 0 0 var(--spacing-2xs);
   }
 
   .error-box {

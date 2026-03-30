@@ -2,6 +2,8 @@
   import "$lib/styles/main.css";
   import { base } from "$app/paths";
   import { page } from "$app/stores";
+  import { LanguageSwitcher } from "@correlaid/cdl-design";
+  import { locale, t, type Locale } from "$lib/i18n";
 
   import LoginBadge from "$lib/components/LoginBadge.svelte";
   import { authModel } from "$lib/pocketbase";
@@ -9,6 +11,15 @@
   const { children } = $props();
 
   const siteName = "QWAC Frontend";
+
+  const locales = [
+    { code: 'en', label: 'EN' },
+    { code: 'de', label: 'DE' }
+  ];
+
+  function switchLocale(lang: string) {
+    locale.set(lang as Locale);
+  }
 
   $effect(() => {
     if ($page.error) {
@@ -22,10 +33,11 @@
 </svelte:head>
 
 <header class="header-full">
-  <a href="{base}/" class="site-title">QWAC <span class="site-subtitle">- questions worth asking continuously</span></a>
+  <a href="{base}/" class="site-title">QWAC <span class="site-subtitle">{$t('layout.subtitle')}</span></a>
   <nav class="header-nav">
+    <LanguageSwitcher locales={locales} currentLocale={$locale} onLocaleChange={switchLocale} />
     {#if $authModel}
-      <a href="{base}/upload" class="nav-link">Upload</a>
+      <a href="{base}/upload" class="nav-link">{$t('layout.upload')}</a>
     {/if}
     <LoginBadge />
   </nav>
@@ -40,9 +52,8 @@
 </div>
 
 <footer class="footer">
-  <span>&copy; {new Date().getFullYear()} CorrelAid</span>
-  <a href="{base}/about" class="footer-link">About</a>
-  <a href="{base}/imprint" class="footer-link">Imprint</a>
+  <a href="{base}/about" class="footer-link">{$t('layout.about')}</a>
+  <a href="{base}/imprint" class="footer-link">{$t('layout.imprint')}</a>
 </footer>
 
 <style>
@@ -90,6 +101,7 @@
     align-items: center;
     gap: var(--spacing-sm);
   }
+
 
   .nav-link {
     font-size: var(--font-size-small-min);

@@ -6,32 +6,75 @@
   import GridPreview from "$lib/components/GridPreview.svelte";
   import { metadata } from "$lib/metadata";
   import { validatePbId, safeRelationFilter, safePath, safeErrorMessage } from "$lib/validation";
+  import { getCached, setCached } from "$lib/cache";
+  import AnswerTypeTag from "$lib/components/AnswerTypeTag.svelte";
+  import { t } from "$lib/i18n";
 
   function answerTypeLabel(type: string): string {
     if (!type) return '';
-    return type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    return type.replace(/_other$/, '').replace(/_long_list$/, '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   }
 
   let variable = $state<any>(null);
+  let group = $state<any>(null);
   let groupVariables = $state<any[]>([]);
+  let study = $state<any>(null);
   let variableXml = $state<string | null>(null);
   let xlsformData = $state<any>(null);
+  let apiAnswerType = $state<string>('');
   let error = $state<string | null>(null);
   let activeTab = $state<'preview' | 'xlsform' | 'ddi'>('preview');
 
-  function isMatrixGroup(group: any): boolean {
-    const type = group?.type?.toLowerCase() || '';
-    return type.includes('grid') || type.includes('matrix');
+  let isGroupQuestion = $derived(!!group);
+  let groupType = $derived((group?.type || '').toLowerCase());
+  let isMatrix = $derived(groupType.includes('grid') || groupType.includes('matrix'));
+  let isSelectGroup = $derived(isGroupQuestion && !isMatrix);
+
+  function isChoiceType(t: string): boolean {
+    return /^(single_choice|multiple_choice)(_other|_long_list)?$/.test(t || '');
   }
 
-  function isSelectType(answerType: string): boolean {
-    return answerType === 'select_one' || answerType === 'select_multiple'
-      || answerType === 'single_choice' || answerType === 'multiple_choice';
+  // Detect "other" from group variables: a text variable among choice variables in select groups
+  let isChoiceGroup = $derived(
+    isGroupQuestion && !isMatrix &&
+    groupVariables.some(v => isChoiceType(v.answer_type))
+  );
+
+  let otherVariable = $derived(
+    isChoiceGroup
+      ? groupVariables.find(v => v.answer_type === 'text') ?? null
+      : null
+  );
+
+  let hasOther = $derived(!!otherVariable);
+
+  let choiceVariables = $derived(
+    hasOther
+      ? groupVariables.filter(v => v.answer_type !== 'text')
+      : groupVariables
+  );
+
+  let otherLabel = $derived(
+    otherVariable?.question || otherVariable?.label || otherVariable?.concept || 'Other'
+  );
+
+  function normalizeAnswerType(type: string): string {
+    return (type || '').replace(/_other$/, '').replace(/_long_list$/, '');
   }
 
-  let isMatrix = $derived(isMatrixGroup(variable?.expand?.group));
-  let isSelectGroup = $derived(
-    variable?.expand?.group?.id && isSelectType(variable?.answer_type || '') && !isMatrix
+  let rawAnswerType = $derived(apiAnswerType || (() => {
+    if (!isGroupQuestion) return variable?.answer_type || '';
+    if (isMatrix) return 'grid';
+    if (groupType === 'multipleresp') return 'multiple_choice';
+    return choiceVariables[0]?.answer_type || group?.type || '';
+  })());
+
+  let displayAnswerType = $derived(normalizeAnswerType(rawAnswerType));
+
+  let displayConcept = $derived(
+    isGroupQuestion
+      ? (group?.concept || groupVariables[0]?.concept || '')
+      : (variable?.concept || '')
   );
 
   $effect(() => {
@@ -39,41 +82,76 @@
     const load = async () => {
       try {
         const id = validatePbId(rawId);
-        variable = await client.collection("variables").getOne(id, {
-          expand: "study,group",
-          requestKey: null,
-        });
-        $metadata.title = variable.concept;
-        $metadata.headline = "";
-        const groupId = variable.expand?.group?.id;
-        const isSelect = groupId && isSelectType(variable.answer_type) && !isMatrixGroup(variable.expand?.group);
-        const shouldLoadSiblings = groupId && (
-          isMatrixGroup(variable.expand?.group) || isSelect
-        );
 
-        if (isSelect) {
-          const validGroupId = validatePbId(groupId);
-          // Use group-level endpoints for select groups
-          fetchApiText(`/api/variable-groups/${safePath(validGroupId)}/codebook`).then(xml => { variableXml = xml; }).catch(() => {});
-          fetchApiJson(`/api/variable-groups/${safePath(validGroupId)}/xlsform`).then(data => { xlsformData = data; }).catch(() => {});
-        } else {
-          fetchApiText(`/api/variables/${safePath(id)}/xml`).then(xml => { variableXml = xml; }).catch(() => {});
-          fetchApiJson(`/api/variables/${safePath(id)}/xlsform`).then(data => { xlsformData = data; }).catch(() => {});
+        // Fetch authoritative question data (answer_type etc) from API
+        const cachedQuestion = getCached<any>(`question:${id}`);
+        const questionData = cachedQuestion ?? await fetchApiJson(`/api/questions/${safePath(id)}`).then((d: any) => { setCached(`question:${id}`, d); return d; }).catch(() => null);
+        apiAnswerType = questionData?.answer_type || '';
+
+        // Try loading as a variable first
+        let loadedVariable: any = getCached<any>(`variable:${id}`);
+        if (!loadedVariable) {
+          try {
+            loadedVariable = await client.collection("variables").getOne(id, {
+              expand: "study,group",
+              requestKey: null,
+            });
+            setCached(`variable:${id}`, loadedVariable);
+          } catch (e: any) {
+            if (e?.status !== 404) throw e;
+          }
         }
 
-        if (shouldLoadSiblings) {
-          const validGroupId = validatePbId(groupId);
-          const siblings = await client.collection("variables").getFullList({
-            filter: safeRelationFilter("group", validGroupId),
+        // Fetch DDI XML and XLSForm via question-level endpoints
+        const cachedXml = getCached<string>(`xml:${id}`);
+        const cachedXls = getCached<any>(`xlsform:${id}`);
+        if (cachedXml) { variableXml = cachedXml; } else {
+          fetchApiText(`/api/questions/${safePath(id)}/xml`).then(xml => { variableXml = xml; setCached(`xml:${id}`, xml); }).catch(() => {});
+        }
+        if (cachedXls) { xlsformData = cachedXls; } else {
+          fetchApiJson(`/api/questions/${safePath(id)}/xlsform`).then(data => { xlsformData = data; setCached(`xlsform:${id}`, data); }).catch(() => {});
+        }
+
+        if (loadedVariable) {
+          // Standalone variable or variable that belongs to a group
+          variable = loadedVariable;
+          study = loadedVariable.expand?.study || null;
+          const g = loadedVariable.expand?.group;
+
+          if (g?.id) {
+            group = g;
+            const validGroupId = validatePbId(g.id);
+            const cachedGroupVars = getCached<any[]>(`group-vars:${validGroupId}`);
+            groupVariables = cachedGroupVars ?? await client.collection("variables").getFullList({
+              filter: safeRelationFilter("group", validGroupId),
+              requestKey: null,
+            }).then(d => { setCached(`group-vars:${validGroupId}`, d); return d; });
+          } else {
+            group = null;
+            groupVariables = [];
+          }
+        } else {
+          // ID is a group ID (from the questions endpoint)
+          const cachedGroup = getCached<any>(`group:${id}`);
+          const grp = cachedGroup ?? await client.collection("variable_groups").getOne(id, {
+            expand: "study",
             requestKey: null,
-          });
-          groupVariables = siblings;
-        } else {
-          groupVariables = [];
+          }).then(d => { setCached(`group:${id}`, d); return d; });
+          group = grp;
+          study = grp.expand?.study || null;
+          variable = null;
+          const cachedGroupVars = getCached<any[]>(`group-vars:${id}`);
+          groupVariables = cachedGroupVars ?? await client.collection("variables").getFullList({
+            filter: safeRelationFilter("group", id),
+            requestKey: null,
+          }).then(d => { setCached(`group-vars:${id}`, d); return d; });
         }
+
+        $metadata.title = displayConcept;
+        $metadata.headline = "";
       } catch (e: any) {
         clearOnAuthError(e);
-        error = safeErrorMessage(e, "Failed to load question.");
+        error = safeErrorMessage(e, $t('question.loadError'));
       }
     };
     load();
@@ -83,59 +161,68 @@
 
 {#if error}
   <div class="error-box">{error}</div>
-{:else if !variable}
-  <p>Loading question...</p>
+{:else if !variable && !group}
+  <p>{$t('question.loading')}</p>
 {:else}
   <article class="question-detail">
-    <a href="/" class="back-link">&larr; Back to questions</a>
+    <a href="/" class="back-link">&larr; {$t('question.back')}</a>
 
-    <p class="concept-line"><span class="field-label">Concept:</span> {variable.concept}</p>
-    {#if variable.long_list_standard}
-      <p class="concept-line"><span class="field-label">Standard:</span> {variable.long_list_standard}</p>
+    <p class="concept-line"><span class="field-label">{$t('question.concept')}</span> {displayConcept}</p>
+    {#if variable?.long_list_standard}
+      <p class="concept-line"><span class="field-label">{$t('question.standard')}</span> {variable.long_list_standard}</p>
     {/if}
 
     <div class="meta-row">
-      {#if variable.answer_type}
-        <span class="type-tag">{answerTypeLabel(variable.answer_type)}</span>
+      {#if rawAnswerType}
+        <AnswerTypeTag type={rawAnswerType} />
       {/if}
-      {#if variable.expand?.study}
-        <a href="/studies/{variable.expand.study.id}#q-{variable.id}" class="study-tag">{variable.expand.study.title}</a>
+      {#if study}
+        <a href="/studies/{study.id}#q-{group?.id || variable?.id}" class="study-tag">{study.title}</a>
       {/if}
     </div>
 
     <div class="view-tabs">
-      <button class="view-tab" class:active={activeTab === 'preview'} onclick={() => activeTab = 'preview'}>Survey Preview</button>
-      <button class="view-tab" class:active={activeTab === 'xlsform'} onclick={() => activeTab = 'xlsform'}>XLSForm</button>
-      <button class="view-tab" class:active={activeTab === 'ddi'} onclick={() => activeTab = 'ddi'}>DDI XML</button>
+      <button class="view-tab" class:active={activeTab === 'preview'} onclick={() => activeTab = 'preview'}>{$t('question.tabPreview')}</button>
+      <button class="view-tab" class:active={activeTab === 'xlsform'} onclick={() => activeTab = 'xlsform'}>{$t('question.tabXlsform')}</button>
+      <button class="view-tab" class:active={activeTab === 'ddi'} onclick={() => activeTab = 'ddi'}>{$t('question.tabDdi')}</button>
     </div>
 
     <div class="tab-content">
       {#if activeTab === 'preview'}
-        {#if isMatrix}
-          <GridPreview variables={[variable]} />
-        {:else if isSelectGroup && groupVariables.length > 0}
+        {#if isMatrix && groupVariables.length > 0}
+          <GridPreview variables={groupVariables} question={groupVariables[0]?.prequestion_text || group?.description || group?.concept || ''} />
+        {:else if isSelectGroup && choiceVariables.length > 0}
+          {@const firstVar = choiceVariables[0]}
           <SurveyPreview variable={{
-            ...variable,
-            question: variable.prequestion_text || variable.expand?.group?.label || variable.question,
-            categories: groupVariables.map(v => ({
+            ...firstVar,
+            prequestion_text: null,
+            question: firstVar?.prequestion_text || group?.description || group?.concept || firstVar?.question,
+            answer_type: displayAnswerType,
+            has_other: hasOther,
+            other_label: otherLabel,
+            categories: choiceVariables.map(v => ({
               label: v.question || v.label || v.concept,
               value: v.name || v.id
             }))
           }} />
-        {:else}
-          <SurveyPreview {variable} />
+        {:else if variable}
+          <SurveyPreview variable={{
+            ...variable,
+            answer_type: normalizeAnswerType(variable.answer_type),
+            has_other: variable.has_other === true || (variable.answer_type || '').endsWith('_other'),
+          }} />
         {/if}
       {:else if activeTab === 'xlsform'}
         {#if xlsformData}
           <XlsFormDisplay survey={xlsformData.survey} choices={xlsformData.choices} />
         {:else}
-          <p class="hint">Loading XLSForm data...</p>
+          <p class="hint">{$t('question.loadingXlsform')}</p>
         {/if}
       {:else if activeTab === 'ddi'}
         {#if variableXml}
           <DdiDisplay ddiXml={variableXml} />
         {:else}
-          <p class="hint">Loading DDI XML...</p>
+          <p class="hint">{$t('question.loadingDdi')}</p>
         {/if}
       {/if}
     </div>
@@ -180,20 +267,10 @@
     margin-bottom: var(--spacing-base);
   }
 
-  .type-tag,
   .study-tag {
     font-size: var(--font-size-caption-min);
     padding: 1px var(--spacing-xs);
     border-radius: var(--radius-sm);
-    white-space: nowrap;
-  }
-
-  .type-tag {
-    background-color: var(--color-tertiary);
-    color: var(--color-text-primary);
-  }
-
-  .study-tag {
     background-color: var(--color-primary-darker);
     color: var(--color-white);
     text-decoration: none;

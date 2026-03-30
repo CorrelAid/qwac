@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { PageStore } from "$lib/pocketbase";
+  import { t } from "$lib/i18n";
 
   const {
     store,
@@ -17,7 +18,7 @@
       onclick={() => store.prev()}
       disabled={$store.page <= 1}>&laquo;</button
     >
-    <div>page {$store.page} of {$store.totalPages}</div>
+    <div>{$t('paginator.page')} {$store.page} {$t('paginator.of')} {$store.totalPages}</div>
     <button
       type="button"
       onclick={() => store.next()}

@@ -1,9 +1,10 @@
 <script lang="ts">
+  import { t } from "$lib/i18n";
   let { categories }: { categories: any[] } = $props();
 </script>
 
 <fieldset disabled>
-  <legend class="sr-only">Select all that apply</legend>
+  <legend class="sr-only">{$t('preview.selectAll')}</legend>
   {#each categories as cat, i (i)}
     <label class="option">
       <input type="checkbox" disabled />

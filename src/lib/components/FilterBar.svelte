@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { t } from "$lib/i18n";
+
   type FilterOption = {
     label: string;
     key: string;
@@ -31,7 +33,7 @@
   <input
     type="search"
     bind:value={searchQuery}
-    placeholder="Search questions..."
+    placeholder={$t('filter.search')}
     class="search-input"
   />
 
@@ -73,7 +75,7 @@
       <button class="clear-btn" onclick={() => {
         searchQuery = "";
         for (let k in filters) filters[k] = "";
-      }}>Clear</button>
+      }}>{$t('filter.clear')}</button>
     {/if}
   </div>
 </div>

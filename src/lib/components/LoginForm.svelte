@@ -3,6 +3,7 @@
     passwordLogin = true,
   } = $props();
   import { login } from "$lib/pocketbase";
+  import { t } from "$lib/i18n";
 
   let errorMessage = $state<string | null>(null);
   let submitting = $state(false);
@@ -16,14 +17,14 @@
     e.preventDefault();
     errorMessage = null;
     if (!form.email || !form.password) {
-      errorMessage = "Please enter your email and password.";
+      errorMessage = $t('auth.emptyFields');
       return;
     }
     submitting = true;
     try {
       await login(form.email, form.password);
     } catch {
-      errorMessage = "Invalid email or password. Please try again.";
+      errorMessage = $t('auth.invalidCredentials');
     } finally {
       submitting = false;
     }
@@ -35,26 +36,26 @@
     <div class="error-message" role="alert">{errorMessage}</div>
   {/if}
   <label>
-    <span>Email / Username</span>
-    <input bind:value={form.email} required type="text" placeholder="Email or Username" />
+    <span>{$t('auth.emailLabel')}</span>
+    <input bind:value={form.email} required type="text" placeholder={$t('auth.emailPlaceholder')} />
   </label>
   <label>
-    <span>Password</span>
+    <span>{$t('auth.passwordLabel')}</span>
     <input
       bind:value={form.password}
       required
       type="password"
-      placeholder="Password"
+      placeholder={$t('auth.passwordPlaceholder')}
     />
   </label>
   <button type="submit" disabled={submitting}>
-    {submitting ? "Signing in..." : "Sign In"}
+    {submitting ? $t('auth.signingIn') : $t('auth.signIn')}
   </button>
 {/snippet}
 
 <form onsubmit={submit}>
   {#if passwordLogin}
-    <h2>Sign In</h2>
+    <h2>{$t('auth.signIn')}</h2>
     {@render signin()}
   {/if}
 </form>

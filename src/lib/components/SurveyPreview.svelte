@@ -8,13 +8,15 @@
   import TimeInput from "./question-types/TimeInput.svelte";
   import DateTimeInput from "./question-types/DateTimeInput.svelte";
   import LongListInput from "./question-types/LongListInput.svelte";
+  import { t } from "$lib/i18n";
   let { variable }: { variable: any } = $props();
 
-  let answerType = $derived(variable?.answer_type || '');
+  let answerType = $derived((variable?.answer_type || '').replace(/_other$/, '').replace(/_long_list$/, ''));
   let categories = $derived(variable?.categories || []);
   let hasCategories = $derived(Array.isArray(categories) && categories.length > 0);
   let hasLongList = $derived(variable?.has_long_list === true);
   let hasOther = $derived(variable?.has_other === true);
+  let otherLabel = $derived(variable?.other_label || $t('preview.other'));
 </script>
 
 <div class="survey-preview">
@@ -32,7 +34,7 @@
 
   {#if variable.ivu_instructions}
     <div class="instructions">
-      <span class="instructions-label">Interviewer note</span>
+      <span class="instructions-label">{$t('preview.interviewerNote')}</span>
       <p>{variable.ivu_instructions}</p>
     </div>
   {/if}
@@ -46,9 +48,9 @@
         <div class="other-option">
           <label class="option">
             <input type="radio" name="preview-radio" disabled />
-            <span>Other:</span>
+            <span>{otherLabel}:</span>
           </label>
-          <input type="text" class="other-input" placeholder="Please specify..." disabled />
+          <input type="text" class="other-input" placeholder={$t('preview.pleaseSpecify')} disabled />
         </div>
       {/if}
     {:else if (answerType === 'select_multiple' || answerType === 'multiple_choice') && hasCategories}
@@ -57,9 +59,9 @@
         <div class="other-option">
           <label class="option">
             <input type="checkbox" disabled />
-            <span>Other:</span>
+            <span>{otherLabel}:</span>
           </label>
-          <input type="text" class="other-input" placeholder="Please specify..." disabled />
+          <input type="text" class="other-input" placeholder={$t('preview.pleaseSpecify')} disabled />
         </div>
       {/if}
     {:else if answerType === 'text'}

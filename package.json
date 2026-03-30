@@ -37,6 +37,7 @@
 	},
 	"dependencies": {
 		"@correlaid/cdl-design": "github:CorrelAid/cdl-design",
+		"@isaacs/ttlcache": "^2.1.4",
 		"@sveltejs/adapter-static": "^3.0.10",
 		"fuse.js": "^7.1.0",
 		"pocketbase": "^0.26.8",

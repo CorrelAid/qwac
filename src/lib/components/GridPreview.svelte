@@ -1,10 +1,13 @@
 <script lang="ts">
-  let { variables, activeId = null }: { variables: any[]; activeId?: string | null } = $props();
+  let { variables, activeId = null, question = '' }: { variables: any[]; activeId?: string | null; question?: string } = $props();
 
   let categories = $derived(variables[0]?.categories || []);
   let isMultiple = $derived(variables[0]?.answer_type === 'select_multiple' || variables[0]?.answer_type === 'multiple_choice');
 </script>
 
+{#if question}
+  <p class="grid-question">{question}</p>
+{/if}
 <div class="grid-table-wrapper">
   <table class="grid-table">
     <thead>
@@ -37,6 +40,12 @@
 </div>
 
 <style>
+  .grid-question {
+    font-size: var(--font-size-body-min);
+    font-weight: var(--font-weight-semibold);
+    margin-bottom: var(--spacing-sm);
+  }
+
   .grid-table-wrapper {
     overflow-x: auto;
   }
@@ -85,11 +94,6 @@
     text-decoration: underline;
   }
 
-  .item-label {
-    color: var(--color-text-primary);
-    line-height: 1.3;
-  }
-
   .input-cell {
     text-align: center;
   }
@@ -109,8 +113,4 @@
     background-color: var(--color-tertiary);
   }
 
-  tbody tr.active-row .item-label {
-    font-weight: var(--font-weight-bold);
-    color: var(--color-secondary);
-  }
 </style>
