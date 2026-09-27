@@ -74,6 +74,13 @@ test('uploading a valid and an invalid codebook', async ({ page }) => {
 	await page.getByRole('button', { name: 'Codebook importieren' }).click();
 	await expect(page.getByText('Import fehlgeschlagen')).toBeVisible();
 	await expect(page.getByText('Root element must be codeBook')).toBeVisible();
+
+	// #12: findings grouped by what failed.
+	await expect(page.getByRole('heading', { name: 'Kein gültiges DDI-Codebook 2.5' })).toBeVisible();
+	await expect(
+		page.getByRole('heading', { name: 'Folgt nicht den CDL-Konventionen' })
+	).toBeVisible();
+	await expect(page.getByText('varGrp of type grid needs member variables')).toBeVisible();
 });
 
 test('the file picker can be opened with the keyboard (#20)', async ({ page }) => {
@@ -96,4 +103,17 @@ test('a stored login survives a backend outage on startup (#17)', async ({ page 
 	await mockBackend(page, { down: true });
 	await page.reload();
 	await expect(page.getByText('tester@example.org')).toBeVisible();
+});
+
+test('the upload page says what is checked and links to the supported subset (#12, #8)', async ({
+	page
+}) => {
+	await mockBackend(page);
+	await signIn(page);
+	await expect(page.getByText(/gegen DDI-Codebook 2.5 und die CDL-Konventionen/)).toBeVisible();
+	await expect(page.getByRole('link', { name: 'Unterstützte XLSForm-Teilmenge' })).toHaveAttribute(
+		'href',
+		'https://github.com/CorrelAid/formtransform#supported-xlsform-subset'
+	);
+	await expect(page.getByText(/vorerst für Online-Umfragen/)).toBeVisible();
 });

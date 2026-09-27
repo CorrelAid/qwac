@@ -124,6 +124,10 @@
 
 <div class="explore-container">
 	<h1 class="sr-only">{$t('explore.title')}</h1>
+	<div class="scope-notice">
+		<Notice><p>{$t('notice.onlineSurveys')}</p></Notice>
+	</div>
+
 	<FilterBar
 		bind:searchQuery={() => searchQuery, setSearchQuery}
 		{filters}
@@ -174,6 +178,10 @@
 	.count {
 		font-size: var(--font-size-small-min);
 		color: var(--color-text-primary);
+		margin-bottom: var(--spacing-sm);
+	}
+
+	.scope-notice {
 		margin-bottom: var(--spacing-sm);
 	}
 

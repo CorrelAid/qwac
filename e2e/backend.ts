@@ -308,7 +308,10 @@ function answer(method: string, url: URL, postData: string): [number, unknown] {
 	}
 	if (method === 'POST' && path === '/api/import') {
 		if (!postData.includes('<codeBook')) {
-			const errors = [{ rule: 'xsd', message: 'Root element must be codeBook', location: '/*[1]' }];
+			const errors = [
+				{ rule: 'xsd', message: 'Root element must be codeBook', location: '/*[1]' },
+				{ rule: 'schematron', message: 'varGrp of type grid needs member variables' }
+			];
 			return [400, { valid: false, errors }];
 		}
 		importStudy();

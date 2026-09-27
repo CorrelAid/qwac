@@ -99,3 +99,8 @@ test('the paginator shows the range and scrolls to the results (#30)', async ({ 
 	await expect(page.locator('.range')).toHaveText('21–24 von 24');
 	await expect(page.locator('#results')).toBeInViewport();
 });
+
+test('the explore page says QWAC is for online surveys for now (#8)', async ({ page }) => {
+	await page.goto('/');
+	await expect(page.getByText(/vorerst für Online-Umfragen/)).toBeVisible();
+});
