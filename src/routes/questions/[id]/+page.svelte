@@ -10,15 +10,7 @@
 	import AnswerTypeTag from '$lib/components/AnswerTypeTag.svelte';
 	import { t, locale } from '$lib/i18n';
 	import { localizeGroup, localizeVariable } from '$lib/translations';
-	import {
-		baseType,
-		groupAnswerType,
-		isChoiceType,
-		isGridGroup,
-		isTextType,
-		typeInfo,
-		variableType
-	} from '$lib/questionTypes';
+	import { questionView } from '$lib/questionView';
 
 	let { data } = $props();
 
@@ -54,46 +46,11 @@
 	);
 	let tags = $derived<{ lang?: string; text: string }[]>(questionData?.tags ?? []);
 
-	// For standalone questions, the single variable is variables[0]
-	let variable = $derived(group ? null : (variables[0] ?? null));
-
-	let isMatrix = $derived(isGridGroup(group?.type ?? ''));
-	let isSelectGroup = $derived(!!group && !isMatrix);
-
-	let isChoiceGroup = $derived(
-		isSelectGroup && variables.some((v: any) => isChoiceType(v.answer_type))
+	let view = $derived(
+		questionView(group, variables, questionData?.answer_type, $t('preview.other'))
 	);
-
-	let otherVariable = $derived(
-		isChoiceGroup ? (variables.find((v: any) => isTextType(v.answer_type)) ?? null) : null
-	);
-
-	let hasOther = $derived(!!otherVariable);
-
-	let choiceVariables = $derived(
-		hasOther ? variables.filter((v: any) => !isTextType(v.answer_type)) : variables
-	);
-
-	let otherLabel = $derived(
-		otherVariable?.question || otherVariable?.label || otherVariable?.concept || $t('preview.other')
-	);
-
-	let rawAnswerType = $derived(
-		(() => {
-			const at = questionData?.answer_type || '';
-			if (at) return at;
-			if (!group) return variable?.answer_type || '';
-			return (
-				groupAnswerType(group?.type ?? '') || choiceVariables[0]?.answer_type || group?.type || ''
-			);
-		})()
-	);
-
-	let displayConcept = $derived(
-		group ? group.concept || variables[0]?.concept || '' : variable?.concept || ''
-	);
-
-	let longListStandard = $derived(!group ? variable?.long_list_standard || '' : '');
+	let variable = $derived(view.variable);
+	let displayConcept = $derived(view.concept);
 
 	$effect(() => {
 		$metadata.title = displayConcept;
@@ -107,10 +64,10 @@
 		<span class="field-label">{$t('question.concept')}</span>
 		{displayConcept}
 	</p>
-	{#if longListStandard}
+	{#if view.longListStandard}
 		<p class="concept-line">
 			<span class="field-label">{$t('question.standard')}</span>
-			{longListStandard}
+			{view.longListStandard}
 		</p>
 	{/if}
 	{#if tags.length}
@@ -123,8 +80,8 @@
 	{/if}
 
 	<div class="meta-row">
-		{#if rawAnswerType}
-			<AnswerTypeTag type={rawAnswerType} />
+		{#if view.answerType}
+			<AnswerTypeTag type={view.answerType} />
 		{/if}
 		{#if study}
 			<a
@@ -152,39 +109,10 @@
 
 	<div class="tab-content">
 		{#if activeTab === 'preview'}
-			{#if isMatrix && variables.length > 0}
-				<GridPreview
-					{variables}
-					question={variables[0]?.prequestion_text || group?.description || group?.concept || ''}
-				/>
-			{:else if isSelectGroup && choiceVariables.length > 0}
-				{@const firstVar = choiceVariables[0]}
-				<SurveyPreview
-					variable={{
-						...firstVar,
-						prequestion_text: null,
-						question:
-							firstVar?.prequestion_text ||
-							group?.description ||
-							group?.concept ||
-							firstVar?.question,
-						answer_type: baseType(rawAnswerType),
-						has_other: hasOther,
-						other_label: otherLabel,
-						categories: choiceVariables.map((v: any) => ({
-							label: v.question || v.label || v.concept,
-							value: v.name || v.id
-						}))
-					}}
-				/>
-			{:else if variable}
-				<SurveyPreview
-					variable={{
-						...variable,
-						answer_type: variableType(variable),
-						has_other: variable.has_other === true || !!typeInfo(variable.answer_type)?.withOther
-					}}
-				/>
+			{#if view.preview?.kind === 'grid'}
+				<GridPreview variables={view.preview.variables} question={view.preview.question} />
+			{:else if view.preview?.kind === 'survey'}
+				<SurveyPreview variable={view.preview.variable} />
 			{/if}
 		{:else if activeTab === 'xlsform'}
 			{#await data.xlsform}
