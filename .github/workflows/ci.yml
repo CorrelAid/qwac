@@ -19,8 +19,6 @@ jobs:
     env:
       # Any value works; the build only needs the variable to exist.
       PUBLIC_POCKETBASE_URL: http://127.0.0.1:8090
-      # Used by vite.config.ts to fetch the CDL content snippets.
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2

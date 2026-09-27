@@ -2,7 +2,7 @@ import { createServer } from 'node:http';
 import { readFileSync } from 'node:fs';
 import { extname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { securityHeaders } from './security-headers.js';
+import { inlineScriptHashes, securityHeaders } from './security-headers.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const BUILD_DIR = join(__dirname, 'build');
@@ -61,7 +61,6 @@ function cacheControl(pathname, contentType) {
  */
 export function createHandler(buildDir, { backendUrl = process.env.PUBLIC_POCKETBASE_URL } = {}) {
 	const root = resolve(buildDir);
-	const headers = securityHeaders(backendUrl);
 	/** @type {Map<string, Buffer | null>} */
 	const files = new Map();
 
@@ -76,6 +75,13 @@ export function createHandler(buildDir, { backendUrl = process.env.PUBLIC_POCKET
 		}
 		return files.get(path);
 	}
+
+	// Every page is the SPA shell (index.html) or a prerendered copy of it, so
+	// its inline bootstrap script is the one the CSP has to allow.
+	const index = read(join(root, 'index.html'));
+	const headers = securityHeaders(backendUrl, {
+		scriptHashes: index ? inlineScriptHashes(index.toString('utf8')) : []
+	});
 
 	function send(req, res, filePath, pathname, contentType) {
 		const accepts = String(req.headers['accept-encoding'] ?? '');
