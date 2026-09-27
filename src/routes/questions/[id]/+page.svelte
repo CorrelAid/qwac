@@ -10,6 +10,15 @@
 	import AnswerTypeTag from '$lib/components/AnswerTypeTag.svelte';
 	import { t, locale } from '$lib/i18n';
 	import { localizeGroup, localizeVariable } from '$lib/translations';
+	import {
+		baseType,
+		groupAnswerType,
+		isChoiceType,
+		isGridGroup,
+		isTextType,
+		typeInfo,
+		variableType
+	} from '$lib/questionTypes';
 
 	let { data } = $props();
 
@@ -48,48 +57,37 @@
 	// For standalone questions, the single variable is variables[0]
 	let variable = $derived(group ? null : (variables[0] ?? null));
 
-	let groupType = $derived((group?.type || '').toLowerCase());
-	let isMatrix = $derived(groupType.includes('grid') || groupType.includes('matrix'));
+	let isMatrix = $derived(isGridGroup(group?.type ?? ''));
 	let isSelectGroup = $derived(!!group && !isMatrix);
-
-	function isChoiceType(t: string): boolean {
-		return /^(single_choice|multiple_choice)(_other|_long_list)?$/.test(t || '');
-	}
 
 	let isChoiceGroup = $derived(
 		isSelectGroup && variables.some((v: any) => isChoiceType(v.answer_type))
 	);
 
 	let otherVariable = $derived(
-		isChoiceGroup ? (variables.find((v: any) => v.answer_type === 'text') ?? null) : null
+		isChoiceGroup ? (variables.find((v: any) => isTextType(v.answer_type)) ?? null) : null
 	);
 
 	let hasOther = $derived(!!otherVariable);
 
 	let choiceVariables = $derived(
-		hasOther ? variables.filter((v: any) => v.answer_type !== 'text') : variables
+		hasOther ? variables.filter((v: any) => !isTextType(v.answer_type)) : variables
 	);
 
 	let otherLabel = $derived(
 		otherVariable?.question || otherVariable?.label || otherVariable?.concept || $t('preview.other')
 	);
 
-	function normalizeAnswerType(type: string): string {
-		return (type || '').replace(/_other$/, '').replace(/_long_list$/, '');
-	}
-
 	let rawAnswerType = $derived(
 		(() => {
 			const at = questionData?.answer_type || '';
 			if (at) return at;
 			if (!group) return variable?.answer_type || '';
-			if (isMatrix) return 'grid';
-			if (groupType === 'multipleresp') return 'multiple_choice';
-			return choiceVariables[0]?.answer_type || group?.type || '';
+			return (
+				groupAnswerType(group?.type ?? '') || choiceVariables[0]?.answer_type || group?.type || ''
+			);
 		})()
 	);
-
-	let displayAnswerType = $derived(normalizeAnswerType(rawAnswerType));
 
 	let displayConcept = $derived(
 		group ? group.concept || variables[0]?.concept || '' : variable?.concept || ''
@@ -170,7 +168,7 @@
 							group?.description ||
 							group?.concept ||
 							firstVar?.question,
-						answer_type: displayAnswerType,
+						answer_type: baseType(rawAnswerType),
 						has_other: hasOther,
 						other_label: otherLabel,
 						categories: choiceVariables.map((v: any) => ({
@@ -183,9 +181,8 @@
 				<SurveyPreview
 					variable={{
 						...variable,
-						answer_type: normalizeAnswerType(variable.answer_type),
-						has_other:
-							variable.has_other === true || (variable.answer_type || '').endsWith('_other')
+						answer_type: variableType(variable),
+						has_other: variable.has_other === true || !!typeInfo(variable.answer_type)?.withOther
 					}}
 				/>
 			{/if}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { allowsMultiple } from '$lib/questionTypes';
 	/* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
 	let {
 		variables,
@@ -7,10 +8,7 @@
 	}: { variables: any[]; activeId?: string | null; question?: string } = $props();
 
 	let categories = $derived(variables[0]?.categories || []);
-	let isMultiple = $derived(
-		variables[0]?.answer_type === 'select_multiple' ||
-			variables[0]?.answer_type === 'multiple_choice'
-	);
+	let isMultiple = $derived(allowsMultiple(variables[0]?.answer_type ?? ''));
 </script>
 
 {#if question}
