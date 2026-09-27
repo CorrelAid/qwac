@@ -10,7 +10,15 @@
 	import AnswerTypeTag from '$lib/components/AnswerTypeTag.svelte';
 	import { t, locale } from '$lib/i18n';
 	import { questionText } from '$lib/translations';
-	import { baseType, typeLabel } from '$lib/questionTypes';
+	import { typeLabel } from '$lib/questionTypes';
+	import {
+		answerTypeOptions,
+		applyFilters,
+		computeCounts,
+		paginate,
+		rankBySearch,
+		topicOptions
+	} from '$lib/explore';
 
 	$effect(() => {
 		$metadata.title = $t('explore.title');
@@ -84,88 +92,29 @@
 		!!navigating.to && navigating.to.route.id === '/' && navigating.from?.route.id === '/'
 	);
 
-	// Questions matching the search, in relevance order; all questions without a query.
-	let searchedQuestions = $derived.by(() => {
-		if (!data.searchIds) return data.searchFailed ? [] : questions;
-		const rank = new Map(data.searchIds.map((id, i) => [id, i]));
-		return questions
-			.filter((q) => rank.has(q.id))
-			.sort((a, b) => rank.get(a.id)! - rank.get(b.id)!);
-	});
+	let searchedQuestions = $derived(rankBySearch(questions, data.searchIds, data.searchFailed));
 
-	function studyForQuestion(q: any): any | undefined {
-		return studies.get(q.study_id);
-	}
-
-	let answerTypeOptions = $derived(
-		[...new Set(questions.map((q) => baseType(q.answer_type)).filter(Boolean))].sort()
-	);
-
-	let surveyTypeOptions = $derived(
-		[
-			...new Set(
-				questions.flatMap((q) => studyForQuestion(q)?.topic_classifications ?? []).filter(Boolean)
-			)
-		].sort()
-	);
-
-	function matchesFilter(q: any, key: string, val: string): boolean {
-		switch (key) {
-			case 'answer_type':
-				return baseType(q.answer_type) === val;
-			case 'survey_type':
-				return studyForQuestion(q)?.topic_classifications?.includes(val);
-			default:
-				return true;
-		}
-	}
-
-	function applyFilters(data: any[], excludeKey?: string): any[] {
-		let result = data;
-		for (const [key, val] of Object.entries(filters)) {
-			if (!val || key === excludeKey) continue;
-			result = result.filter((q) => matchesFilter(q, key, val));
-		}
-		return result;
-	}
-
-	function computeCounts(data: any[], key: string, values: string[]): Record<string, number> {
-		const base = applyFilters(data, key);
-		const counts: Record<string, number> = {};
-		for (const val of values) {
-			counts[val] = base.filter((q) => matchesFilter(q, key, val)).length;
-		}
-		return counts;
-	}
+	let answerTypes = $derived(answerTypeOptions(questions));
+	let topics = $derived(topicOptions(questions, studies));
 
 	let filterOptionsList = $derived([
 		{
 			label: $t('explore.filterKind'),
 			key: 'survey_type',
-			values: surveyTypeOptions,
-			counts: computeCounts(searchedQuestions, 'survey_type', surveyTypeOptions)
+			values: topics,
+			counts: computeCounts(searchedQuestions, filters, studies, 'survey_type', topics)
 		},
 		{
 			label: $t('explore.filterAnswerType'),
 			key: 'answer_type',
-			values: answerTypeOptions,
-			labels: Object.fromEntries(answerTypeOptions.map((v) => [v, typeLabel(v)])),
-			counts: computeCounts(searchedQuestions, 'answer_type', answerTypeOptions)
+			values: answerTypes,
+			labels: Object.fromEntries(answerTypes.map((v) => [v, typeLabel(v)])),
+			counts: computeCounts(searchedQuestions, filters, studies, 'answer_type', answerTypes)
 		}
 	]);
 
-	let filteredQuestions = $derived(applyFilters(searchedQuestions));
-
-	const totalPages = $derived(Math.max(1, Math.ceil(filteredQuestions.length / PER_PAGE)));
-	const currentPage = $derived(
-		Math.min(
-			Math.max(1, Number.parseInt(page.url.searchParams.get('page') ?? '1') || 1),
-			totalPages
-		)
-	);
-	const paginatedQuestions = $derived(
-		filteredQuestions.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE)
-	);
+	let filteredQuestions = $derived(applyFilters(searchedQuestions, filters, studies));
+	let paged = $derived(paginate(filteredQuestions, page.url.searchParams.get('page'), PER_PAGE));
 
 	function setPage(n: number) {
 		updateUrl({ page: n > 1 ? String(n) : '' }, { keepPage: true });
@@ -193,8 +142,8 @@
 				{#if searching}<span class="searching">· {$t('explore.searching')}</span>{/if}
 			</p>
 			<ul class="variable-list">
-				{#each paginatedQuestions as question (question.id)}
-					{@const study = studyForQuestion(question)}
+				{#each paged.items as question (question.id)}
+					{@const study = studies.get(question.study_id)}
 					{@const text = questionText(question, $locale)}
 					<li>
 						<QuestionCard>
@@ -234,7 +183,7 @@
 					</li>
 				{/each}
 			</ul>
-			<Paginator page={currentPage} {totalPages} onchange={setPage} />
+			<Paginator page={paged.page} totalPages={paged.totalPages} onchange={setPage} />
 		{/if}
 	</div>
 </div>

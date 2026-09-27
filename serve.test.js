@@ -16,6 +16,7 @@ beforeAll(async () => {
 	writeFileSync(join(build, 'index.html'), '<!doctype html><title>index</title>');
 	writeFileSync(join(build, '_app', 'immutable', 'x.js'), 'console.log(1);');
 	writeFileSync(join(build, 'with space.txt'), 'spaced');
+	writeFileSync(join(build, 'prerendered.html'), '<title>prerendered</title>');
 	// A sibling directory whose name starts with the build directory's name.
 	mkdirSync(join(dir, 'build2'));
 	writeFileSync(join(dir, 'build2', 'secret.txt'), 'secret');
@@ -32,7 +33,12 @@ afterAll(() => {
 
 async function get(path) {
 	const res = await fetch(base + path);
-	return { status: res.status, type: res.headers.get('content-type'), body: await res.text() };
+	return {
+		status: res.status,
+		type: res.headers.get('content-type'),
+		headers: res.headers,
+		body: await res.text()
+	};
 }
 
 describe('serve.js', () => {
@@ -74,6 +80,24 @@ describe('serve.js', () => {
 	it('rejects undecodable paths', async () => {
 		expect((await get('/%E0%A4%A')).status).toBe(400);
 		expect((await get('/a%00.js')).status).toBe(400);
+	});
+
+	it('serves a prerendered page for a path without extension', async () => {
+		expect(await get('/prerendered')).toMatchObject({
+			status: 200,
+			type: 'text/html',
+			body: '<title>prerendered</title>'
+		});
+	});
+
+	it('sends the security headers on every response', async () => {
+		for (const path of ['/', '/_app/immutable/x.js', '/missing.js', '/%E0%A4%A', '/health']) {
+			const { headers } = await get(path);
+			expect(headers.get('x-content-type-options'), path).toBe('nosniff');
+			expect(headers.get('x-frame-options'), path).toBe('DENY');
+			expect(headers.get('referrer-policy'), path).toBe('strict-origin-when-cross-origin');
+			expect(headers.get('content-security-policy'), path).toContain("frame-ancestors 'none'");
+		}
 	});
 
 	it('answers health checks', async () => {
