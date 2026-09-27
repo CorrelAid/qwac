@@ -1,4 +1,5 @@
 import { defineConfig, type Plugin } from 'vitest/config';
+import { playwright } from '@vitest/browser-playwright';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { cdlTokens } from '@correlaid/cdl-design/vite-plugin';
 
@@ -87,6 +88,25 @@ export default defineConfig({
 	test: {
 		expect: { requireAssertions: true },
 		projects: [
+			{
+				// Component tests (*.svelte.test.ts) run in a real browser.
+				extends: './vite.config.ts',
+				test: {
+					name: 'client',
+					browser: {
+						enabled: true,
+						provider: playwright({
+							// Where Playwright's own Chromium can't be installed (e.g. an
+							// unsupported Linux), point this at a local Chromium.
+							launchOptions: process.env.PLAYWRIGHT_CHROMIUM_PATH
+								? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH }
+								: {}
+						}),
+						instances: [{ browser: 'chromium', headless: true }]
+					},
+					include: ['src/**/*.svelte.{test,spec}.{js,ts}']
+				}
+			},
 			{
 				extends: './vite.config.ts',
 				test: {

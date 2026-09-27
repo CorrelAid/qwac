@@ -44,6 +44,28 @@ cp .env.example .env
 | `bun run check`   | Type-check the project    |
 | `bun run lint`    | Run linting               |
 | `bun run format`  | Format code with Prettier |
+| `bun run test`    | Run all tests             |
+
+## Tests
+
+`bun run test` runs two Vitest projects:
+
+- **server** (Node): unit tests, `src/**/*.test.ts` and `serve.test.js`
+- **client** (Chromium via Playwright): component tests, `src/**/*.svelte.test.ts`
+
+The component tests need Playwright's Chromium once:
+
+```sh
+bunx playwright install chromium-headless-shell
+```
+
+Where Playwright can't install its browser (e.g. an unsupported Linux distribution), use a local Chromium instead:
+
+```sh
+PLAYWRIGHT_CHROMIUM_PATH=/usr/bin/chromium bun run test
+```
+
+Run one project with `bun run test -- --project server` (or `client`).
 
 ## Architecture
 
