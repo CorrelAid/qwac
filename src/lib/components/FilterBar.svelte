@@ -5,6 +5,8 @@
 		label: string;
 		key: string;
 		values: string[];
+		/** Display text per value; the value itself when missing. */
+		labels?: Record<string, string>;
 		counts?: Record<string, number>;
 		kind?: 'select' | 'chip';
 		hidden?: boolean;
@@ -12,21 +14,21 @@
 
 	let {
 		searchQuery = $bindable(''),
-		filters = $bindable({}),
-		filterOptions = []
+		filters,
+		filterOptions = [],
+		onfilter,
+		onclear
 	}: {
 		searchQuery: string;
 		filters: Record<string, string>;
 		filterOptions: FilterOption[];
+		onfilter: (key: string, value: string) => void;
+		onclear: () => void;
 	} = $props();
 
 	let hasActiveFilters = $derived(
 		Object.values(filters).some((v) => v !== '') || searchQuery !== ''
 	);
-
-	function toggleChip(key: string, val: string) {
-		filters[key] = filters[key] === val ? '' : val;
-	}
 </script>
 
 <div class="filter-bar">
@@ -34,6 +36,7 @@
 		type="search"
 		bind:value={searchQuery}
 		placeholder={$t('filter.search')}
+		aria-label={$t('filter.search')}
 		class="search-input"
 	/>
 
@@ -47,32 +50,34 @@
 						<button
 							class="chip"
 							class:active={filters[option.key] === val}
-							onclick={() => toggleChip(option.key, val)}
+							aria-pressed={filters[option.key] === val}
+							onclick={() => onfilter(option.key, filters[option.key] === val ? '' : val)}
 						>
-							{val}
+							{option.labels?.[val] ?? val}
 							{#if count != null}<span class="count">{count}</span>{/if}
 						</button>
 					{/each}
 				</div>
 			{:else}
-				<select id={option.key} bind:value={filters[option.key]} aria-label={option.label}>
+				<select
+					id={option.key}
+					value={filters[option.key] ?? ''}
+					onchange={(e) => onfilter(option.key, e.currentTarget.value)}
+					aria-label={option.label}
+				>
 					<option value="">{option.label}</option>
 					{#each option.values as val (val)}
 						{@const count = option.counts?.[val]}
-						<option value={val}>{val}{count != null ? ` (${count})` : ''}</option>
+						<option value={val}
+							>{option.labels?.[val] ?? val}{count != null ? ` (${count})` : ''}</option
+						>
 					{/each}
 				</select>
 			{/if}
 		{/each}
 
 		{#if hasActiveFilters}
-			<button
-				class="clear-btn"
-				onclick={() => {
-					searchQuery = '';
-					for (let k in filters) filters[k] = '';
-				}}>{$t('filter.clear')}</button
-			>
+			<button class="clear-btn" onclick={onclear}>{$t('filter.clear')}</button>
 		{/if}
 	</div>
 </div>
