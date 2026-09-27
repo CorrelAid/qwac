@@ -1,5 +1,4 @@
 <script lang="ts">
-	/* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
 	import { resolve } from '$app/paths';
 	import { clearOnAuthError, fetchApiBlob } from '$lib/pocketbase';
 	import QuestionCard from '$lib/components/QuestionCard.svelte';
@@ -8,6 +7,7 @@
 	import AnswerTypeTag from '$lib/components/AnswerTypeTag.svelte';
 	import { t, locale } from '$lib/i18n';
 	import { questionText } from '$lib/translations';
+	import { downloadBlob, safeFilename } from '$lib/download';
 
 	function formatAuthor(val: unknown): string {
 		let parsed = typeof val === 'string' && val.trim().startsWith('map[') ? parseGoValue(val) : val;
@@ -26,6 +26,9 @@
 	let study = $derived(data.study);
 	let questions = $derived(data.questions);
 	let exporting = $state(false);
+	// The export error belongs to one study; it disappears on navigation.
+	let exportFailedFor = $state<string | null>(null);
+	let exportFailed = $derived(exportFailedFor === data.id);
 
 	$effect(() => {
 		$metadata.title = study.title;
@@ -35,16 +38,13 @@
 	async function exportDdiXml() {
 		const id = data.id;
 		exporting = true;
+		exportFailedFor = null;
 		try {
 			const blob = await fetchApiBlob(`/api/studies/${id}/export`);
-			const url = URL.createObjectURL(blob);
-			const a = document.createElement('a');
-			a.href = url;
-			a.download = `${study?.title || id}.xml`;
-			a.click();
-			URL.revokeObjectURL(url);
-		} catch (e: any) {
+			downloadBlob(blob, `${safeFilename(study?.title ?? '', `study-${id}`)}.xml`);
+		} catch (e) {
 			clearOnAuthError(e);
+			exportFailedFor = id;
 		} finally {
 			exporting = false;
 		}
@@ -56,9 +56,14 @@
 
 	<div class="title-row">
 		<h2>{study.title}</h2>
-		<button class="export-btn" onclick={exportDdiXml} disabled={exporting}>
-			{exporting ? $t('study.exporting') : $t('study.exportDdi')}
-		</button>
+		<div class="export">
+			<button class="export-btn" onclick={exportDdiXml} disabled={exporting}>
+				{exporting ? $t('study.exporting') : $t('study.exportDdi')}
+			</button>
+			{#if exportFailed}
+				<p class="export-error" role="alert">{$t('study.exportFailed')}</p>
+			{/if}
+		</div>
 	</div>
 
 	<div class="meta-grid">
@@ -173,6 +178,20 @@
 	h2 {
 		color: var(--color-secondary);
 		margin: var(--spacing-sm) 0 var(--spacing-base);
+	}
+
+	.export {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		max-width: 320px;
+	}
+
+	.export-error {
+		margin: var(--spacing-2xs) 0 0;
+		font-size: var(--font-size-small-min);
+		color: #d32f2f;
+		text-align: right;
 	}
 
 	.export-btn {
