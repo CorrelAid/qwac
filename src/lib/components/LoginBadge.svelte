@@ -34,7 +34,7 @@
 		<button class="badge" onclick={toggle}>
 			{#if $authModel.avatar}
 				<img
-					src={client.getFileUrl($authModel, $authModel.avatar)}
+					src={client.files.getURL($authModel, $authModel.avatar)}
 					alt={$t('auth.profilePicture')}
 				/>
 			{/if}

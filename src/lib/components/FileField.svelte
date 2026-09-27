@@ -27,7 +27,7 @@
 			<tr>
 				<td class:deleted>
 					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- PocketBase file URL, not an app route -->
-					<a href={client.files.getUrl(record, file)} target="_blank">
+					<a href={client.files.getURL(record, file)} target="_blank">
 						{file}
 					</a>
 				</td>
