@@ -40,14 +40,14 @@ test('moving from one question to another shows no stale data (#15)', async ({ p
 	await expect(page.getByText('How old are you?')).toBeVisible();
 	await expect(page.locator('.view-tab.active')).toHaveText('Vorschau');
 	await expect(page.getByText('Local groups')).toHaveCount(0);
-	await page.getByRole('button', { name: 'XLSForm' }).click();
+	await page.getByRole('tab', { name: 'XLSForm' }).click();
 	await expect(page.getByText('age', { exact: true })).toBeVisible();
 	await expect(page.getByText('contact', { exact: true })).toHaveCount(0);
 });
 
 test('tabs can be linked to (#23)', async ({ page }) => {
 	await page.goto(`/questions/${fixtures.age.question.id}/`);
-	await page.getByRole('button', { name: 'DDI XML' }).click();
+	await page.getByRole('tab', { name: 'DDI XML' }).click();
 	await expect(page).toHaveURL(/\?tab=ddi$/);
 	await page.reload();
 	await expect(page.locator('.view-tab.active')).toHaveText('DDI XML');

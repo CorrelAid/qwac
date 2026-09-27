@@ -86,12 +86,15 @@ export const translations: Record<Locale, Record<string, string>> = {
 		// Paginator
 		'paginator.page': 'page',
 		'paginator.of': 'of',
+		'paginator.previous': 'Previous page',
+		'paginator.next': 'Next page',
 
 		// Question detail
 		'question.back': 'Back to questions',
 		'question.concept': 'Concept:',
 		'question.standard': 'Standard:',
 		'question.tags': 'Tags:',
+		'question.tabsLabel': 'Views of the question',
 		'question.tabPreview': 'Survey Preview',
 		'question.tabXlsform': 'XLSForm',
 		'question.tabDdi': 'DDI XML',
@@ -208,12 +211,15 @@ export const translations: Record<Locale, Record<string, string>> = {
 		// Paginator
 		'paginator.page': 'Seite',
 		'paginator.of': 'von',
+		'paginator.previous': 'Vorherige Seite',
+		'paginator.next': 'Nächste Seite',
 
 		// Question detail
 		'question.back': 'Zurück zu Fragen',
 		'question.concept': 'Konzept:',
 		'question.standard': 'Standard:',
 		'question.tags': 'Schlagwörter:',
+		'question.tabsLabel': 'Ansichten der Frage',
 		'question.tabPreview': 'Vorschau',
 		'question.tabXlsform': 'XLSForm',
 		'question.tabDdi': 'DDI XML',

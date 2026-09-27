@@ -67,10 +67,9 @@
 	.pretext {
 		margin-bottom: var(--spacing-base);
 		font-size: var(--font-size-small-min);
-		color: var(--color-text-primary);
-		opacity: 0.8;
 		line-height: var(--line-height-relaxed);
 		font-style: italic;
+		color: var(--color-text-muted);
 	}
 
 	.pretext p {
@@ -90,8 +89,8 @@
 	}
 
 	.instructions {
-		background-color: #fef9e7;
-		border-left: 3px solid #f0c040;
+		background-color: var(--color-note-bg);
+		border-left: 3px solid var(--color-note-border);
 		padding: var(--spacing-sm) var(--spacing-base);
 		margin-bottom: var(--spacing-lg);
 		border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
@@ -102,7 +101,7 @@
 		font-weight: var(--font-weight-bold);
 		text-transform: uppercase;
 		letter-spacing: var(--letter-spacing-wider);
-		color: #b8860b;
+		color: var(--color-note);
 		display: block;
 		margin-bottom: var(--spacing-2xs);
 	}

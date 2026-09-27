@@ -16,10 +16,18 @@
 
 {#if showIfSinglePage || totalPages > 1}
 	<div class="paginator">
-		<button type="button" onclick={() => onchange(page - 1)} disabled={page <= 1}>&laquo;</button>
+		<button
+			type="button"
+			aria-label={$t('paginator.previous')}
+			onclick={() => onchange(page - 1)}
+			disabled={page <= 1}>&laquo;</button
+		>
 		<div>{$t('paginator.page')} {page} {$t('paginator.of')} {totalPages}</div>
-		<button type="button" onclick={() => onchange(page + 1)} disabled={page >= totalPages}
-			>&raquo;</button
+		<button
+			type="button"
+			aria-label={$t('paginator.next')}
+			onclick={() => onchange(page + 1)}
+			disabled={page >= totalPages}>&raquo;</button
 		>
 	</div>
 {/if}

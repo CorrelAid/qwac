@@ -16,14 +16,14 @@ describe('Paginator', () => {
 		const onchange = vi.fn();
 		await render(Paginator, { page: 2, totalPages: 3, onchange });
 		await expect.element(page.getByText('page 2 of 3')).toBeInTheDocument();
-		await page.getByRole('button', { name: '«' }).click();
-		await page.getByRole('button', { name: '»' }).click();
+		await page.getByRole('button', { name: 'Previous page' }).click();
+		await page.getByRole('button', { name: 'Next page' }).click();
 		expect(onchange.mock.calls).toEqual([[1], [3]]);
 	});
 
 	it('disables the buttons at the ends', async () => {
 		await render(Paginator, { page: 1, totalPages: 2, onchange: vi.fn() });
-		await expect.element(page.getByRole('button', { name: '«' })).toBeDisabled();
-		await expect.element(page.getByRole('button', { name: '»' })).toBeEnabled();
+		await expect.element(page.getByRole('button', { name: 'Previous page' })).toBeDisabled();
+		await expect.element(page.getByRole('button', { name: 'Next page' })).toBeEnabled();
 	});
 });

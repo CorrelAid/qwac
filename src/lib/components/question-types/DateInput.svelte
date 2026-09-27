@@ -9,7 +9,7 @@
 		border-radius: var(--radius-sm);
 		font-family: var(--font-family-body);
 		font-size: var(--font-size-body-min);
-		background-color: #f8f8f8;
+		background-color: var(--color-surface-muted);
 		color: var(--color-text-primary);
 	}
 </style>

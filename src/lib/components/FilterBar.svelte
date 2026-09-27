@@ -104,9 +104,7 @@
 	}
 
 	.search-input:focus {
-		outline: none;
 		border-color: var(--color-secondary);
-		box-shadow: 0 0 0 2px rgba(134, 24, 79, 0.1);
 	}
 
 	.filters {
@@ -134,10 +132,9 @@
 
 	.chip-label {
 		font-size: var(--font-size-caption-min);
-		color: var(--color-text-primary);
-		opacity: 0.5;
 		white-space: nowrap;
 		margin-right: 2px;
+		color: var(--color-text-muted);
 	}
 
 	.chip {
@@ -169,7 +166,7 @@
 
 	.count {
 		font-size: 0.85em;
-		opacity: 0.6;
+		color: var(--color-text-muted);
 	}
 
 	.clear-btn {

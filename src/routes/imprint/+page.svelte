@@ -9,7 +9,7 @@
 	});
 </script>
 
-<main class="container">
+<div class="container">
 	<a href={resolve('/')} class="back-link">&larr; {$t('imprint.back')}</a>
 	<h1>{$t('imprint.title')}</h1>
 
@@ -20,7 +20,7 @@
 
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -- build-time CDL snippet; sanitising is #27 -->
 	{@html content.liability[$locale]}
-</main>
+</div>
 
 <style>
 	.container {

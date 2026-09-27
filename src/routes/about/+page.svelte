@@ -12,7 +12,7 @@
 <article class="about">
 	<a href={resolve('/')} class="back-link">&larr; {$t('about.back')}</a>
 
-	<h2>{$t('about.title')}</h2>
+	<h1>{$t('about.title')}</h1>
 
 	<section>
 		<!-- eslint-disable-next-line svelte/no-at-html-tags -- build-time CDL snippet; sanitising is #27 -->
@@ -36,7 +36,10 @@
 		margin: var(--spacing-base) auto;
 	}
 
-	h2 {
+	h1 {
+		/* Same size as before it became the page heading. */
+		--min-size: var(--font-size-h2-min);
+		--max-size: var(--font-size-h2-max);
 		color: var(--color-secondary);
 		margin-bottom: var(--spacing-lg);
 	}
