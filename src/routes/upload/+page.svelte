@@ -29,6 +29,7 @@
 	};
 
 	let file = $state<File | null>(null);
+	let fileInput = $state<HTMLInputElement>();
 	let uploading = $state(false);
 	let result = $state<UploadResult | null>(null);
 	let dragover = $state(false);
@@ -160,15 +161,17 @@
 				{:else}
 					<p>{$t('upload.dropHint')}</p>
 				{/if}
-				<label class="file-label">
+				<!-- A real button, so the picker can be opened with the keyboard (#20). -->
+				<button type="button" class="file-btn" onclick={() => fileInput?.click()}>
 					{file ? $t('upload.chooseDifferent') : $t('upload.chooseFile')}
-					<input
-						type="file"
-						accept=".xml,application/xml,text/xml"
-						onchange={onFileChange}
-						hidden
-					/>
-				</label>
+				</button>
+				<input
+					bind:this={fileInput}
+					type="file"
+					accept=".xml,application/xml,text/xml"
+					onchange={onFileChange}
+					hidden
+				/>
 			</div>
 
 			<button class="upload-btn" onclick={upload} disabled={!file || uploading}>
@@ -244,7 +247,8 @@
 		font-size: var(--font-size-caption-min);
 	}
 
-	.file-label {
+	.file-btn {
+		background: none;
 		display: inline-block;
 		padding: var(--spacing-2xs) var(--spacing-sm);
 		border: 1.5px solid var(--color-secondary);
@@ -257,7 +261,12 @@
 		transition: all 0.15s;
 	}
 
-	.file-label:hover {
+	.file-btn:focus-visible {
+		outline: 3px solid var(--color-secondary);
+		outline-offset: 2px;
+	}
+
+	.file-btn:hover {
 		background-color: var(--color-secondary);
 		color: var(--color-white);
 	}
