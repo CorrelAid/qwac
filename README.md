@@ -36,15 +36,16 @@ cp .env.example .env
 
 ## Scripts
 
-| Command           | Description               |
-| ----------------- | ------------------------- |
-| `bun run dev`     | Start dev server          |
-| `bun run build`   | Build for production      |
-| `bun run preview` | Preview production build  |
-| `bun run check`   | Type-check the project    |
-| `bun run lint`    | Run linting               |
-| `bun run format`  | Format code with Prettier |
-| `bun run test`    | Run all tests             |
+| Command            | Description               |
+| ------------------ | ------------------------- |
+| `bun run dev`      | Start dev server          |
+| `bun run build`    | Build for production      |
+| `bun run preview`  | Preview production build  |
+| `bun run check`    | Type-check the project    |
+| `bun run lint`     | Run linting               |
+| `bun run format`   | Format code with Prettier |
+| `bun run test`     | Run all tests             |
+| `bun run test:e2e` | Run the end-to-end tests  |
 
 ## Tests
 
@@ -66,6 +67,8 @@ PLAYWRIGHT_CHROMIUM_PATH=/usr/bin/chromium bun run test
 ```
 
 Run one project with `bun run test -- --project server` (or `client`).
+
+`bun run test:e2e` runs the Playwright tests in `e2e/`. It builds the app, serves it with `serve.js` on port 4173 and answers the API calls from the fixtures in `e2e/backend.ts`, so no qwacback is needed. `PLAYWRIGHT_CHROMIUM_PATH` works here too.
 
 ## Architecture
 

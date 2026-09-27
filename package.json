@@ -14,11 +14,13 @@
 		"format": "prettier --write .",
 		"test:unit": "vitest",
 		"test": "npm run test:unit -- --run",
-		"postinstall": "cp node_modules/@correlaid/cdl-design/dist/favicons/* static/"
+		"postinstall": "cp node_modules/@correlaid/cdl-design/dist/favicons/* static/",
+		"test:e2e": "playwright test"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^2.0.2",
 		"@eslint/js": "^9.39.2",
+		"@playwright/test": "1.63.0",
 		"@sveltejs/kit": "^2.50.2",
 		"@sveltejs/vite-plugin-svelte": "^6.2.4",
 		"@types/node": "^22",
