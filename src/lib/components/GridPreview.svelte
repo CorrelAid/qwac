@@ -1,6 +1,5 @@
 <script lang="ts">
 	/* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
-	import { resolve } from '$app/paths';
 	let {
 		variables,
 		activeId = null,
@@ -31,9 +30,9 @@
 			{#each variables as variable (variable.id)}
 				<tr class:active-row={activeId && variable.id === activeId}>
 					<td class="item-cell">
-						<a href={resolve('/questions/[id]', { id: variable.id })} class="item-name"
-							>{variable.question || variable.concept}</a
-						>
+						<!-- A grid row is a variable inside a group, not a question of its own,
+						     so it has no detail page (#14). -->
+						<span class="item-name">{variable.question || variable.concept}</span>
 					</td>
 					{#each categories, i (i)}
 						<td class="input-cell">
@@ -96,13 +95,7 @@
 
 	.item-name {
 		font-weight: var(--font-weight-semibold);
-		color: var(--color-secondary);
 		font-size: var(--font-size-body-min);
-		text-decoration: none;
-	}
-
-	.item-name:hover {
-		text-decoration: underline;
 	}
 
 	.input-cell {
