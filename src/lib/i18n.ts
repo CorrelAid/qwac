@@ -71,10 +71,7 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'explore.question': 'question',
 		'explore.questions': 'questions',
 		'explore.variables': 'variables',
-		'explore.viewDetails': 'View details →',
-		'explore.questionLabel': 'Question:',
-		'explore.conceptLabel': 'Concept:',
-		'explore.filterKind': 'Kind',
+		'explore.filterTopic': 'Topic',
 		'explore.filterAnswerType': 'Answer Type',
 		'explore.searching': 'Searching...',
 		'explore.searchError': 'Search failed. Please try again.',
@@ -86,6 +83,7 @@ export const translations: Record<Locale, Record<string, string>> = {
 		// Paginator
 		'paginator.page': 'page',
 		'paginator.of': 'of',
+		'paginator.label': 'Result pages',
 		'paginator.previous': 'Previous page',
 		'paginator.next': 'Next page',
 
@@ -100,6 +98,9 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'question.tabDdi': 'DDI XML',
 		'question.loadingXlsform': 'Loading XLSForm data...',
 		'question.loadingDdi': 'Loading DDI XML...',
+		'question.downloadXml': 'Download .xml',
+		'question.copy': 'Copy',
+		'question.copied': 'Copied!',
 		'question.xlsformUnavailable': 'The XLSForm for this question is not available.',
 		'question.ddiUnavailable': 'The DDI XML for this question is not available.',
 
@@ -196,10 +197,7 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'explore.question': 'Frage',
 		'explore.questions': 'Fragen',
 		'explore.variables': 'Variablen',
-		'explore.viewDetails': 'Details anzeigen →',
-		'explore.questionLabel': 'Frage:',
-		'explore.conceptLabel': 'Konzept:',
-		'explore.filterKind': 'Art',
+		'explore.filterTopic': 'Thema',
 		'explore.filterAnswerType': 'Antworttyp',
 		'explore.searching': 'Suche läuft...',
 		'explore.searchError': 'Suche fehlgeschlagen. Bitte erneut versuchen.',
@@ -211,6 +209,7 @@ export const translations: Record<Locale, Record<string, string>> = {
 		// Paginator
 		'paginator.page': 'Seite',
 		'paginator.of': 'von',
+		'paginator.label': 'Ergebnisseiten',
 		'paginator.previous': 'Vorherige Seite',
 		'paginator.next': 'Nächste Seite',
 
@@ -225,6 +224,9 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'question.tabDdi': 'DDI XML',
 		'question.loadingXlsform': 'XLSForm-Daten werden geladen...',
 		'question.loadingDdi': 'DDI XML wird geladen...',
+		'question.downloadXml': '.xml herunterladen',
+		'question.copy': 'Kopieren',
+		'question.copied': 'Kopiert!',
 		'question.xlsformUnavailable': 'Das XLSForm für diese Frage ist nicht verfügbar.',
 		'question.ddiUnavailable': 'Das DDI XML für diese Frage ist nicht verfügbar.',
 

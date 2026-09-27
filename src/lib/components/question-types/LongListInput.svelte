@@ -4,7 +4,7 @@
 </script>
 
 <div class="long-list">
-	<select disabled>
+	<select tabindex="-1" aria-disabled="true">
 		<option>{concept || $t('longList.select')}</option>
 	</select>
 	{#if standard}

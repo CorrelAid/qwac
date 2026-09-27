@@ -1,6 +1,7 @@
 <script lang="ts">
 	import '$lib/styles/main.css';
 	import { resolve } from '$app/paths';
+	import { navigating } from '$app/state';
 	import { LanguageSwitcher } from '@correlaid/cdl-design';
 	import { locale, setLocale, t, LOCALES, type Locale } from '$lib/i18n';
 
@@ -22,6 +23,11 @@
 	<title>{$metadata.title ? `${$metadata.title} | ${siteName}` : siteName}</title>
 	<meta name="description" content={$t('layout.description')} />
 </svelte:head>
+
+<!-- While a page loads, the old one stays; this bar shows that something is happening. -->
+{#if navigating.to}
+	<div class="nav-progress" aria-hidden="true"></div>
+{/if}
 
 <header class="header-full">
 	<a href={resolve('/')} class="site-title"
@@ -50,6 +56,47 @@
 </footer>
 
 <style>
+	.nav-progress {
+		position: fixed;
+		top: 0;
+		left: 0;
+		z-index: 100;
+		height: 3px;
+		width: 100%;
+		background: linear-gradient(90deg, transparent, var(--color-secondary), transparent);
+		background-size: 50% 100%;
+		background-repeat: no-repeat;
+		/* Only for loads that take a moment, so fast navigations don't flash. */
+		animation:
+			nav-progress-in 0s 150ms both,
+			nav-progress-move 1s 150ms linear infinite;
+	}
+
+	@keyframes nav-progress-in {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+
+	@keyframes nav-progress-move {
+		from {
+			background-position: -50% 0;
+		}
+		to {
+			background-position: 150% 0;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.nav-progress {
+			animation: nav-progress-in 0s 150ms both;
+			background: var(--color-secondary);
+		}
+	}
+
 	:global(body) {
 		font-family: var(--font-family-body);
 		background-color: var(--color-background-primary);

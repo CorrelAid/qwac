@@ -73,3 +73,12 @@ test('unknown and invalid IDs show the 404 page (#22)', async ({ page }) => {
 		await expect(page.getByRole('button', { name: 'Erneut versuchen' })).toHaveCount(0);
 	}
 });
+
+test('the DDI XML can be downloaded (#30)', async ({ page }) => {
+	await page.goto(`/questions/${fixtures.age.question.id}/?tab=ddi`);
+	const [download] = await Promise.all([
+		page.waitForEvent('download'),
+		page.getByRole('button', { name: '.xml herunterladen' }).click()
+	]);
+	expect(download.suggestedFilename()).toBe('Age.xml');
+});

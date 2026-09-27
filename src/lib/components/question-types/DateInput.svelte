@@ -1,4 +1,4 @@
-<input type="date" class="text-input" disabled />
+<input type="date" class="text-input" readonly tabindex="-1" aria-disabled="true" />
 
 <style>
 	.text-input {
@@ -9,7 +9,7 @@
 		border-radius: var(--radius-sm);
 		font-family: var(--font-family-body);
 		font-size: var(--font-size-body-min);
-		background-color: var(--color-surface-muted);
+		background-color: var(--color-white);
 		color: var(--color-text-primary);
 	}
 </style>

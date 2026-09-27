@@ -2,7 +2,14 @@
 	import { t } from '$lib/i18n';
 </script>
 
-<input type="text" class="text-input" disabled placeholder={$t('preview.textResponse')} />
+<input
+	type="text"
+	class="text-input"
+	readonly
+	tabindex="-1"
+	aria-disabled="true"
+	placeholder={$t('preview.textResponse')}
+/>
 
 <style>
 	.text-input {
@@ -13,7 +20,7 @@
 		border-radius: var(--radius-sm);
 		font-family: var(--font-family-body);
 		font-size: var(--font-size-body-min);
-		background-color: var(--color-surface-muted);
+		background-color: var(--color-white);
 		color: var(--color-text-primary);
 	}
 </style>
