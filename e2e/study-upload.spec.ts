@@ -105,7 +105,7 @@ test('a stored login survives a backend outage on startup (#17)', async ({ page 
 	await expect(page.getByText('tester@example.org')).toBeVisible();
 });
 
-test('the upload page says what is checked and links to the supported subset (#12, #8)', async ({
+test('the upload page says what is checked and links to the supported subset (#12)', async ({
 	page
 }) => {
 	await mockBackend(page);
@@ -115,5 +115,4 @@ test('the upload page says what is checked and links to the supported subset (#1
 		'href',
 		'https://github.com/CorrelAid/formtransform#supported-xlsform-subset'
 	);
-	await expect(page.getByText(/vorerst für Online-Umfragen/)).toBeVisible();
 });

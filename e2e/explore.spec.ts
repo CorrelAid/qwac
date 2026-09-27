@@ -10,6 +10,9 @@ test('lists all questions in German by default', async ({ page }) => {
 	await expect(page.locator('html')).toHaveAttribute('lang', 'de');
 	await expect(page.locator('.count')).toContainText('24 Fragen');
 	await expect(page).toHaveTitle('Fragen durchsuchen | QWAC');
+	// QWAC's expansion stays English; no online-surveys note any more.
+	await expect(page.locator('.site-subtitle')).toHaveText('- questions worth asking continuously');
+	await expect(page.getByText(/Online-Umfragen/)).toHaveCount(0);
 });
 
 test('search, filter and page survive opening a question and going back (#23)', async ({
@@ -98,11 +101,6 @@ test('the paginator shows the range and scrolls to the results (#30)', async ({ 
 	await page.getByRole('button', { name: 'Nächste Seite' }).click();
 	await expect(page.locator('.range')).toHaveText('21–24 von 24');
 	await expect(page.locator('#results')).toBeInViewport();
-});
-
-test('the explore page says QWAC is for online surveys for now (#8)', async ({ page }) => {
-	await page.goto('/');
-	await expect(page.getByText(/vorerst für Online-Umfragen/)).toBeVisible();
 });
 
 test('pages run under the CSP without violations, and About/Imprint have content (#27)', async ({
