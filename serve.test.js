@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createServer } from 'node:http';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
+import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createHandler } from './serve.js';
@@ -14,7 +15,10 @@ beforeAll(async () => {
 	dir = mkdtempSync(join(tmpdir(), 'qwac-serve-'));
 	const build = join(dir, 'build');
 	mkdirSync(join(build, '_app', 'immutable'), { recursive: true });
-	writeFileSync(join(build, 'index.html'), '<!doctype html><title>index</title>');
+	writeFileSync(
+		join(build, 'index.html'),
+		'<!doctype html><title>index</title><script>boot()</script><script src="/x.js"></script>'
+	);
 	writeFileSync(join(build, '_app', 'immutable', 'x.js'), 'console.log(1);');
 	writeFileSync(join(build, '_app', 'immutable', 'x.js.gz'), gzipSync('console.log(1);'));
 	writeFileSync(join(build, 'robots.txt'), 'User-agent: *');
@@ -128,6 +132,13 @@ describe('serve.js', () => {
 		const r = await get('/', { method: 'HEAD' });
 		expect(r.status).toBe(200);
 		expect(r.body).toBe('');
+	});
+
+	it("allows the index page's inline script by hash, not 'unsafe-inline' (#27)", async () => {
+		const csp = (await get('/')).headers.get('content-security-policy');
+		const hash = createHash('sha256').update('boot()').digest('base64');
+		expect(csp).toContain(`script-src 'self' 'sha256-${hash}'`);
+		expect(csp).not.toMatch(/script-src[^;]*'unsafe-inline'/);
 	});
 
 	it('allows the backend in the CSP', async () => {

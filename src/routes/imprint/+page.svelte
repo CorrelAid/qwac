@@ -18,7 +18,7 @@
 		<p>{@html $t('imprint.text')}</p>
 	</section>
 
-	<!-- eslint-disable-next-line svelte/no-at-html-tags -- build-time CDL snippet; sanitising is #27 -->
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -- CDL snippet, sanitised at build time (cdl-content.ts) -->
 	{@html content.liability[$locale]}
 </div>
 

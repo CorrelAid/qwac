@@ -15,7 +15,7 @@
 	<h1>{$t('about.title')}</h1>
 
 	<section>
-		<!-- eslint-disable-next-line svelte/no-at-html-tags -- build-time CDL snippet; sanitising is #27 -->
+		<!-- eslint-disable-next-line svelte/no-at-html-tags -- CDL snippet, sanitised at build time (cdl-content.ts) -->
 		{@html content.qwac[$locale]}
 	</section>
 </article>

@@ -29,10 +29,9 @@ cp .env.example .env
 
 ## Environment Variables
 
-| Variable                | Required | Description                                                          |
-| ----------------------- | -------- | -------------------------------------------------------------------- |
-| `PUBLIC_POCKETBASE_URL` | Yes      | URL of the qwacback/PocketBase backend                               |
-| `GITHUB_TOKEN`          | No       | GitHub PAT to avoid rate limits when fetching snippets at build time |
+| Variable                | Required | Description                            |
+| ----------------------- | -------- | -------------------------------------- |
+| `PUBLIC_POCKETBASE_URL` | Yes      | URL of the qwacback/PocketBase backend |
 
 ## Scripts
 
@@ -81,7 +80,7 @@ The app is a fully static SPA served by `serve.js`. All data comes from the qwac
 - `GET /api/studies/{id}/questions` — questions for a study
 - `GET /api/studies/{id}/export` — DDI XML export of a full study
 
-The About and Imprint pages fetch HTML snippets from the [cdl-wp-eins](https://github.com/CorrelAid/cdl-wp-eins) repository at build time (prerendered).
+The About and Imprint texts are HTML snippets from the [cdl-wp-eins](https://github.com/CorrelAid/cdl-wp-eins) repository (`cdl-content.ts`). They're fetched at build time from the commit pinned in `CDL_CONTENT_REF`, sanitised to text and links, and bundled into the app. To publish new texts, bump `CDL_CONTENT_REF`. In CI (`CI` set) a missing snippet fails the build, since the Imprint is required content.
 
 ## Deployment
 

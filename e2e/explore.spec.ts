@@ -104,3 +104,21 @@ test('the explore page says QWAC is for online surveys for now (#8)', async ({ p
 	await page.goto('/');
 	await expect(page.getByText(/vorerst für Online-Umfragen/)).toBeVisible();
 });
+
+test('pages run under the CSP without violations, and About/Imprint have content (#27)', async ({
+	page
+}) => {
+	const violations: string[] = [];
+	page.on('console', (m) => {
+		if (/Content Security Policy/i.test(m.text())) violations.push(m.text());
+	});
+	await page.goto('/');
+	await expect(page.locator('.count')).toContainText('Fragen');
+	await page.goto(`/questions/${fixtures.gender.question.id}/`);
+	await expect(page.getByText('Was ist Ihr Geschlecht?')).toBeVisible();
+	await page.goto('/about/');
+	await expect(page.locator('section p').first()).not.toBeEmpty();
+	await page.goto('/imprint/');
+	await expect(page.getByRole('heading', { name: 'Haftungsausschluss' })).toBeVisible();
+	expect(violations).toEqual([]);
+});
