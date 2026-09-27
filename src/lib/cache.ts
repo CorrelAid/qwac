@@ -9,3 +9,8 @@ export async function cached<T>(key: string, fetcher: () => Promise<T>): Promise
 	cache.set(key, data);
 	return data;
 }
+
+/** Forgets everything, e.g. after an import added a study. */
+export function clearCache(): void {
+	cache.clear();
+}

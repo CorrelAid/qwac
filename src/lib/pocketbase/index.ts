@@ -12,6 +12,12 @@ const POCKETBASE_URL = (PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8090').replac
 
 export const client = new PocketBase(POCKETBASE_URL);
 
+/**
+ * Signing in is for importing codebooks, which qwacback allows superusers
+ * only (/api/import), so qwac signs in against PocketBase's superusers.
+ */
+export const AUTH_COLLECTION = '_superusers';
+
 /** If the error is a 401, clear stale auth so the login screen appears. */
 export function clearOnAuthError(err: unknown): void {
 	if (
@@ -40,7 +46,7 @@ export const authModel = readable<AuthRecord>(null, (set) => {
 export async function verifyStoredAuth(): Promise<void> {
 	if (!client.authStore.isValid) return;
 	try {
-		await client.collection('users').authRefresh();
+		await client.collection(AUTH_COLLECTION).authRefresh();
 	} catch (e) {
 		const status = (e as { status?: number })?.status;
 		if (status === 401 || status === 403 || status === 404) client.authStore.clear();
@@ -50,7 +56,7 @@ export async function verifyStoredAuth(): Promise<void> {
 if (browser) verifyStoredAuth();
 
 export async function login(email: string, password: string) {
-	return await client.collection('users').authWithPassword(email, password);
+	return await client.collection(AUTH_COLLECTION).authWithPassword(email, password);
 }
 
 export function logout() {

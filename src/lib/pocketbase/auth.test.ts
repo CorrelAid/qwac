@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { ClientResponseError } from 'pocketbase';
-import { client, verifyStoredAuth } from './index';
+import { AUTH_COLLECTION, client, verifyStoredAuth } from './index';
 
 // A syntactically valid JWT that expires far in the future, so isValid is true.
 const TOKEN = `x.${btoa(JSON.stringify({ exp: 4102444800 }))}.y`;
 
 function refreshFailsWith(status: number) {
-	const users = client.collection('users');
+	const users = client.collection(AUTH_COLLECTION);
 	vi.spyOn(users, 'authRefresh').mockRejectedValue(
 		new ClientResponseError({ status, response: {} })
 	);

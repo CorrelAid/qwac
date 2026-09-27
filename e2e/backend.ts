@@ -185,7 +185,50 @@ const fillers: Fixture[] = Array.from({ length: 21 }, (_, i) => {
 
 export const fixtures = { grid, age, gender };
 const all: Fixture[] = [grid, age, gender, ...fillers];
-export const questions = all.map((f) => f.question);
+export let questions = all.map((f) => f.question);
+
+/** What a successful /api/import adds. */
+export const imported = {
+	study: {
+		id: 'imported0000001',
+		collectionName: 'studies',
+		title: 'Imported Study',
+		topic_classifications: ['Impact'],
+		language: 'en'
+	},
+	fixture: {
+		question: {
+			id: 'importedq000001',
+			study_id: 'imported0000001',
+			name: 'trust',
+			concept: 'Institutional trust',
+			question_text: 'How much do you trust the council?',
+			answer_type: 'integer',
+			variable_ids: ['importedq000001'],
+			order: 0
+		},
+		detail: {
+			group: null,
+			variables: [{ id: 'importedq000001', name: 'trust', answer_type: 'integer', categories: [] }]
+		}
+	} as Fixture
+};
+
+function importStudy() {
+	if (studies.some((s) => s.id === imported.study.id)) return;
+	studies.push(imported.study);
+	all.push(imported.fixture);
+	questions = all.map((f) => f.question);
+}
+
+/** Undoes importStudy(), so every test starts from the same data. */
+export function resetBackend() {
+	const i = studies.findIndex((s) => s.id === imported.study.id);
+	if (i >= 0) studies.splice(i, 1);
+	const j = all.indexOf(imported.fixture);
+	if (j >= 0) all.splice(j, 1);
+	questions = all.map((f) => f.question);
+}
 
 const xlsform = (f: Fixture) => ({
 	survey: [
@@ -202,7 +245,7 @@ const ddi = (f: Fixture) =>
 
 /** A token PocketBase's SDK considers valid (it only reads `exp`). */
 export const TOKEN = `x.${Buffer.from(JSON.stringify({ exp: 4102444800 })).toString('base64')}.y`;
-const USER = { id: 'user00000000001', collectionName: 'users', email: 'tester@example.org' };
+const USER = { id: 'user00000000001', collectionName: '_superusers', email: 'tester@example.org' };
 export const PASSWORD = 'correct horse';
 
 export interface BackendOptions {
@@ -214,6 +257,7 @@ export interface BackendOptions {
 
 /** Answers every request to the fake backend. Returns the requests seen, for assertions. */
 export async function mockBackend(page: Page, options: BackendOptions = {}) {
+	resetBackend();
 	const seen: string[] = [];
 	await page.route(`${BACKEND}/**`, async (route) => {
 		const request = route.request();
@@ -254,24 +298,21 @@ function answer(method: string, url: URL, postData: string): [number, unknown] {
 	const path = url.pathname;
 	let m: RegExpMatchArray | null;
 
-	if (method === 'POST' && path === '/api/collections/users/auth-with-password') {
+	if (method === 'POST' && path === '/api/collections/_superusers/auth-with-password') {
 		return postData.includes(PASSWORD)
 			? [200, { token: TOKEN, record: USER }]
 			: [400, { status: 400, message: 'Failed to authenticate.', data: {} }];
 	}
-	if (method === 'POST' && path === '/api/collections/users/auth-refresh') {
+	if (method === 'POST' && path === '/api/collections/_superusers/auth-refresh') {
 		return [200, { token: TOKEN, record: USER }];
 	}
-	if (method === 'POST' && path === '/api/validate') {
-		return postData.includes('<codeBook')
-			? [200, { valid: true, message: 'XML is valid' }]
-			: [
-					400,
-					{
-						valid: false,
-						errors: [{ message: 'Root element must be codeBook', location: '/*[1]' }]
-					}
-				];
+	if (method === 'POST' && path === '/api/import') {
+		if (!postData.includes('<codeBook')) {
+			const errors = [{ rule: 'xsd', message: 'Root element must be codeBook', location: '/*[1]' }];
+			return [400, { valid: false, errors }];
+		}
+		importStudy();
+		return [200, { valid: true, imported: true, study_id: imported.study.id, message: 'imported' }];
 	}
 
 	if (path === '/api/questions') return [200, questions];
