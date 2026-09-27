@@ -42,7 +42,8 @@
 						<input
 							type={info.choice === 'multiple' ? 'checkbox' : 'radio'}
 							name="preview-radio"
-							disabled
+							tabindex="-1"
+							aria-disabled="true"
 						/>
 						<span>{otherLabel}:</span>
 					</label>
@@ -50,7 +51,9 @@
 						type="text"
 						class="other-input"
 						placeholder={$t('preview.pleaseSpecify')}
-						disabled
+						readonly
+						tabindex="-1"
+						aria-disabled="true"
 					/>
 				</div>
 			{/if}
@@ -59,6 +62,14 @@
 </div>
 
 <style>
+	/* A preview, not a form: inputs look like a real questionnaire (no
+	   greyed-out disabled state) but can't be clicked, typed in or focused. */
+	.response-area :global(input),
+	.response-area :global(select),
+	.response-area :global(label) {
+		pointer-events: none;
+	}
+
 	.survey-preview {
 		padding: var(--spacing-lg);
 		max-width: 700px;

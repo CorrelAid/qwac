@@ -20,7 +20,7 @@ export function matchesFilter(q: any, key: string, value: string, studies: Study
 	switch (key) {
 		case 'answer_type':
 			return baseType(q.answer_type) === value;
-		case 'survey_type':
+		case 'topic':
 			return !!studies.get(q.study_id)?.topic_classifications?.includes(value);
 		default:
 			return true;

@@ -1,4 +1,12 @@
-<input type="number" class="text-input" disabled placeholder="0.00" step="any" />
+<input
+	type="number"
+	class="text-input"
+	readonly
+	tabindex="-1"
+	aria-disabled="true"
+	placeholder="0.00"
+	step="any"
+/>
 
 <style>
 	.text-input {
@@ -9,7 +17,7 @@
 		border-radius: var(--radius-sm);
 		font-family: var(--font-family-body);
 		font-size: var(--font-size-body-min);
-		background-color: var(--color-surface-muted);
+		background-color: var(--color-white);
 		color: var(--color-text-primary);
 	}
 </style>

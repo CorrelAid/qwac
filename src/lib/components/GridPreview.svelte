@@ -39,9 +39,15 @@
 						{@const label = `${variable.question || variable.concept}: ${categoryLabel(cat)}`}
 						<td class="input-cell">
 							{#if isMultiple}
-								<input type="checkbox" aria-label={label} disabled />
+								<input type="checkbox" aria-label={label} tabindex="-1" aria-disabled="true" />
 							{:else}
-								<input type="radio" name="grid-{variable.id}" aria-label={label} disabled />
+								<input
+									type="radio"
+									name="grid-{variable.id}"
+									aria-label={label}
+									tabindex="-1"
+									aria-disabled="true"
+								/>
 							{/if}
 						</td>
 					{/each}
@@ -52,6 +58,11 @@
 </div>
 
 <style>
+	/* See SurveyPreview: full contrast, but not interactive. */
+	.input-cell input {
+		pointer-events: none;
+	}
+
 	.grid-question {
 		font-size: var(--font-size-body-min);
 		font-weight: var(--font-weight-semibold);

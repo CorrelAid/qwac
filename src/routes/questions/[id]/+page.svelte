@@ -11,6 +11,7 @@
 	import { t, locale } from '$lib/i18n';
 	import { localizeGroup, localizeVariable } from '$lib/translations';
 	import { questionView } from '$lib/questionView';
+	import { downloadBlob, safeFilename } from '$lib/download';
 
 	let { data } = $props();
 
@@ -71,6 +72,11 @@
 	);
 	let variable = $derived(view.variable);
 	let displayConcept = $derived(view.concept);
+
+	function downloadXml(xml: string) {
+		const name = safeFilename(displayConcept || questionData?.name || '', `question-${data.id}`);
+		downloadBlob(new Blob([xml], { type: 'application/xml' }), `${name}.xml`);
+	}
 
 	$effect(() => {
 		$metadata.title = displayConcept;
@@ -149,7 +155,16 @@
 				<p class="hint">{$t('question.loadingDdi')}</p>
 			{:then xml}
 				{#if xml}
-					<DdiDisplay ddiXml={xml} />
+					<div class="tab-actions">
+						<button class="download-btn" onclick={() => downloadXml(xml)}
+							>{$t('question.downloadXml')}</button
+						>
+					</div>
+					<DdiDisplay
+						ddiXml={xml}
+						copyLabel={$t('question.copy')}
+						copiedLabel={$t('question.copied')}
+					/>
 				{:else}
 					<p class="hint">{$t('question.ddiUnavailable')}</p>
 				{/if}
@@ -249,6 +264,29 @@
 		border-bottom-color: var(--color-secondary);
 		font-weight: var(--font-weight-bold);
 		color: var(--color-secondary);
+	}
+
+	.tab-actions {
+		display: flex;
+		justify-content: flex-end;
+		margin-bottom: var(--spacing-sm);
+	}
+
+	.download-btn {
+		padding: var(--spacing-2xs) var(--spacing-sm);
+		background-color: var(--color-white);
+		border: 1.5px solid var(--color-secondary);
+		border-radius: var(--radius-sm);
+		color: var(--color-secondary);
+		font-family: var(--font-family-body);
+		font-size: var(--font-size-small-min);
+		font-weight: var(--font-weight-bold);
+		cursor: pointer;
+	}
+
+	.download-btn:hover {
+		background-color: var(--color-secondary);
+		color: var(--color-white);
 	}
 
 	.tab-content {

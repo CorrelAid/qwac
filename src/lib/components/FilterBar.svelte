@@ -115,7 +115,10 @@
 	}
 
 	.filters select {
-		width: 220px;
+		/* As wide as the longest option, but never wider than the bar. */
+		width: auto;
+		min-width: 12rem;
+		max-width: 100%;
 		padding: var(--spacing-xs) var(--spacing-sm);
 		border: var(--dimension-border-width) solid var(--color-primary-darker);
 		border-radius: var(--radius-sm);

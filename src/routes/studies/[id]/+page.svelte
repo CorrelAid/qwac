@@ -4,9 +4,7 @@
 	import QuestionCard from '$lib/components/QuestionCard.svelte';
 	import { metadata } from '$lib/metadata';
 	import { extractText, extractUri, parseGoValue } from '$lib/ddi';
-	import AnswerTypeTag from '$lib/components/AnswerTypeTag.svelte';
-	import { t, locale } from '$lib/i18n';
-	import { questionText } from '$lib/translations';
+	import { t } from '$lib/i18n';
 	import { downloadBlob, safeFilename } from '$lib/download';
 
 	function formatAuthor(val: unknown): string {
@@ -131,16 +129,7 @@
 			<ul class="variable-list">
 				{#each questions as question (question.id)}
 					<li id="q-{question.id}">
-						<QuestionCard>
-							<a href={resolve('/questions/[id]', { id: question.id })} class="var-name"
-								>{question.concept || question.name}</a
-							>
-							{@const text = questionText(question, $locale)}
-							{#if text}
-								<p class="question-text">{text}</p>
-							{/if}
-							<AnswerTypeTag type={question.answer_type} />
-						</QuestionCard>
+						<QuestionCard {question} headingLevel={3} />
 					</li>
 				{/each}
 			</ul>
@@ -287,23 +276,5 @@
 
 	.variable-list > li {
 		margin-bottom: var(--spacing-base);
-	}
-
-	.var-name {
-		font-weight: var(--font-weight-bold);
-		color: var(--color-secondary);
-		text-decoration: none;
-		display: block;
-		margin-bottom: var(--spacing-2xs);
-	}
-
-	.var-name:hover {
-		text-decoration: underline;
-	}
-
-	.question-text {
-		font-size: var(--font-size-small-min);
-		line-height: var(--line-height-relaxed);
-		margin: 0 0 var(--spacing-2xs);
 	}
 </style>

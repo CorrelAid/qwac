@@ -4,11 +4,11 @@
 	let { categories }: { categories: any[] } = $props();
 </script>
 
-<fieldset disabled>
+<fieldset>
 	<legend class="sr-only">{$t('preview.selectAll')}</legend>
 	{#each categories as cat, i (i)}
 		<label class="option">
-			<input type="checkbox" disabled />
+			<input type="checkbox" tabindex="-1" aria-disabled="true" />
 			<span>{cat.label ?? cat.labl ?? cat.value ?? cat.catValu ?? ''}</span>
 		</label>
 	{/each}

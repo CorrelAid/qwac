@@ -14,7 +14,7 @@ const filterOptions = [
 		labels: { select_one: 'Select One', integer: 'Integer' },
 		counts: { select_one: 12, integer: 3 }
 	},
-	{ label: 'Kind', key: 'survey_type', values: ['Impact'], kind: 'chip' as const },
+	{ label: 'Topic', key: 'topic', values: ['Impact'], kind: 'chip' as const },
 	{ label: 'Hidden', key: 'hidden', values: ['x'], hidden: true }
 ];
 
@@ -48,14 +48,14 @@ describe('FilterBar', () => {
 	it('toggles a chip on and off', async () => {
 		const first = await setup();
 		await page.getByRole('button', { name: 'Impact' }).click();
-		expect(first.onfilter).toHaveBeenCalledWith('survey_type', 'Impact');
+		expect(first.onfilter).toHaveBeenCalledWith('topic', 'Impact');
 		await first.unmount();
 
-		const second = await setup({ survey_type: 'Impact' });
+		const second = await setup({ topic: 'Impact' });
 		const chip = page.getByRole('button', { name: 'Impact' });
 		await expect.element(chip).toHaveAttribute('aria-pressed', 'true');
 		await chip.click();
-		expect(second.onfilter).toHaveBeenCalledWith('survey_type', '');
+		expect(second.onfilter).toHaveBeenCalledWith('topic', '');
 	});
 
 	it('shows "Clear" only with an active filter or search, and reports it', async () => {

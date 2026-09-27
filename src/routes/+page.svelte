@@ -1,15 +1,14 @@
 <script lang="ts">
 	/* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
 	import { resolve } from '$app/paths';
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
+	import Notice from '$lib/components/Notice.svelte';
 	import { navigating, page } from '$app/state';
 	import FilterBar from '$lib/components/FilterBar.svelte';
 	import QuestionCard from '$lib/components/QuestionCard.svelte';
 	import Paginator from '$lib/components/Paginator.svelte';
 	import { metadata } from '$lib/metadata';
-	import AnswerTypeTag from '$lib/components/AnswerTypeTag.svelte';
-	import { t, locale } from '$lib/i18n';
-	import { questionText } from '$lib/translations';
+	import { t } from '$lib/i18n';
 	import { typeLabel } from '$lib/questionTypes';
 	import {
 		answerTypeOptions,
@@ -28,7 +27,7 @@
 
 	// Search, filters and page live in the URL (?q=&topic=&type=&page=), so
 	// Back, bookmarks and shared links restore the same view (#23).
-	const FILTER_PARAMS: Record<string, string> = { survey_type: 'topic', answer_type: 'type' };
+	const FILTER_PARAMS: Record<string, string> = { topic: 'topic', answer_type: 'type' };
 	const PER_PAGE = 20;
 	const SEARCH_DEBOUNCE_MS = 300;
 
@@ -99,10 +98,10 @@
 
 	let filterOptionsList = $derived([
 		{
-			label: $t('explore.filterKind'),
-			key: 'survey_type',
+			label: $t('explore.filterTopic'),
+			key: 'topic',
 			values: topics,
-			counts: computeCounts(searchedQuestions, filters, studies, 'survey_type', topics)
+			counts: computeCounts(searchedQuestions, filters, studies, 'topic', topics)
 		},
 		{
 			label: $t('explore.filterAnswerType'),
@@ -116,8 +115,10 @@
 	let filteredQuestions = $derived(applyFilters(searchedQuestions, filters, studies));
 	let paged = $derived(paginate(filteredQuestions, page.url.searchParams.get('page'), PER_PAGE));
 
-	function setPage(n: number) {
-		updateUrl({ page: n > 1 ? String(n) : '' }, { keepPage: true });
+	async function setPage(n: number) {
+		await updateUrl({ page: n > 1 ? String(n) : '' }, { keepPage: true });
+		// Start reading the new page from its top.
+		document.getElementById('results')?.scrollIntoView({ block: 'start' });
 	}
 </script>
 
@@ -131,9 +132,14 @@
 		onclear={clearAll}
 	/>
 
-	<div class="results">
+	<div class="results" id="results">
 		{#if data.searchFailed}
-			<div class="error-box">{$t('explore.searchError')}</div>
+			<Notice kind="error">
+				{$t('explore.searchError')}
+				{#snippet action()}
+					<button onclick={() => invalidateAll()}>{$t('error.retry')}</button>
+				{/snippet}
+			</Notice>
 		{:else if filteredQuestions.length === 0}
 			<p>{$t('explore.noResults')}</p>
 		{:else}
@@ -144,47 +150,18 @@
 			</p>
 			<ul class="variable-list">
 				{#each paged.items as question (question.id)}
-					{@const study = studies.get(question.study_id)}
-					{@const text = questionText(question, $locale)}
 					<li>
-						<QuestionCard>
-							{#if text}
-								<p class="meta-text">
-									<span class="field-label">{$t('explore.questionLabel')}</span>
-									{text}
-								</p>
-							{/if}
-							<p class="meta-text">
-								<span class="field-label">{$t('explore.conceptLabel')}</span>
-								{question.concept}
-							</p>
-
-							<div class="card-tags">
-								{#if question.answer_type}
-									<AnswerTypeTag type={question.answer_type} />
-								{/if}
-								{#if study}
-									<a href={resolve('/studies/[id]', { id: study.id })} class="study-tag"
-										>{study.title}</a
-									>
-								{/if}
-							</div>
-
-							{#if question.variable_ids?.length > 1}
-								<p class="categories-summary">
-									{question.variable_ids.length}
-									{$t('explore.variables')}
-								</p>
-							{/if}
-
-							<a href={resolve('/questions/[id]', { id: question.id })} class="detail-link"
-								>{$t('explore.viewDetails')}</a
-							>
-						</QuestionCard>
+						<QuestionCard {question} study={studies.get(question.study_id)} />
 					</li>
 				{/each}
 			</ul>
-			<Paginator page={paged.page} totalPages={paged.totalPages} onchange={setPage} />
+			<Paginator
+				page={paged.page}
+				totalPages={paged.totalPages}
+				totalItems={filteredQuestions.length}
+				perPage={PER_PAGE}
+				onchange={setPage}
+			/>
 		{/if}
 	</div>
 </div>
@@ -213,65 +190,6 @@
 
 	.variable-list li {
 		margin-bottom: var(--spacing-lg);
-	}
-
-	.card-tags {
-		display: flex;
-		align-items: baseline;
-		gap: var(--spacing-sm);
-		margin: var(--spacing-xs) 0;
-		flex-wrap: wrap;
-	}
-
-	.study-tag {
-		font-size: var(--font-size-caption-min);
-		padding: 1px var(--spacing-xs);
-		border-radius: var(--radius-sm);
-		background-color: var(--color-tag-bg);
-		color: var(--color-white);
-		text-decoration: none;
-		white-space: normal;
-		word-break: break-word;
-	}
-
-	.study-tag:hover {
-		background-color: var(--color-secondary);
-	}
-
-	.meta-text {
-		font-size: var(--font-size-small-min);
-		line-height: var(--line-height-relaxed);
-		margin: 0 0 var(--spacing-2xs);
-	}
-
-	.field-label {
-		font-size: var(--font-size-caption-min);
-		font-weight: var(--font-weight-medium);
-		color: var(--color-text-muted);
-	}
-
-	.detail-link {
-		font-size: var(--font-size-small-min);
-		color: var(--color-secondary);
-		text-decoration: none;
-	}
-
-	.detail-link:hover {
-		text-decoration: underline;
-	}
-
-	.categories-summary {
-		font-size: var(--font-size-small-min);
-		margin: var(--spacing-xs) 0;
-		color: var(--color-text-muted);
-	}
-
-	.error-box {
-		padding: var(--spacing-base);
-		background-color: var(--color-error-bg);
-		border: 1px solid var(--color-error-border);
-		border-radius: var(--radius-base);
-		color: var(--color-error);
 	}
 
 	:global(.paginator) {

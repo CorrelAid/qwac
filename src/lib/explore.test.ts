@@ -47,34 +47,28 @@ describe('applyFilters', () => {
 	});
 
 	it('matches the study topic, and questions of unknown studies never match', () => {
-		expect(ids(applyFilters(questions, { survey_type: 'Impact' }, studies))).toEqual([
-			'a',
-			'b',
-			'c'
-		]);
+		expect(ids(applyFilters(questions, { topic: 'Impact' }, studies))).toEqual(['a', 'b', 'c']);
 	});
 
 	it('combines filters and ignores empty ones', () => {
 		expect(
-			ids(applyFilters(questions, { survey_type: 'Impact', answer_type: 'integer' }, studies))
+			ids(applyFilters(questions, { topic: 'Impact', answer_type: 'integer' }, studies))
 		).toEqual(['c']);
-		expect(applyFilters(questions, { survey_type: '', answer_type: '' }, studies)).toEqual(
-			questions
-		);
+		expect(applyFilters(questions, { topic: '', answer_type: '' }, studies)).toEqual(questions);
 	});
 });
 
 describe('computeCounts', () => {
 	it("counts each option with the other filters, not the key's own selection", () => {
-		const filters = { survey_type: 'Demographics', answer_type: 'integer' };
+		const filters = { topic: 'Demographics', answer_type: 'integer' };
 		// Answer type counts: only Demographics applies (a, b), not answer_type=integer.
 		expect(
 			computeCounts(questions, filters, studies, 'answer_type', ['select_one', 'integer'])
 		).toEqual({ select_one: 2, integer: 0 });
 		// Topic counts: only answer_type=integer applies (c).
-		expect(
-			computeCounts(questions, filters, studies, 'survey_type', ['Impact', 'Demographics'])
-		).toEqual({ Impact: 1, Demographics: 0 });
+		expect(computeCounts(questions, filters, studies, 'topic', ['Impact', 'Demographics'])).toEqual(
+			{ Impact: 1, Demographics: 0 }
+		);
 	});
 });
 
