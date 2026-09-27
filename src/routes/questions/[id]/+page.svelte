@@ -1,6 +1,8 @@
 <script lang="ts">
 	/* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
 	import { resolve } from '$app/paths';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { XlsFormDisplay, DdiDisplay } from '@correlaid/cdl-design';
 	import SurveyPreview from '$lib/components/SurveyPreview.svelte';
 	import GridPreview from '$lib/components/GridPreview.svelte';
@@ -13,12 +15,22 @@
 
 	let questionData = $derived(data.question);
 
-	// The tab belongs to one question; navigating to another starts on the preview.
+	// The tab is in the URL (?tab=xlsform|ddi), so it can be linked to (#23).
+	// Another question opens on the preview, since its links carry no tab.
 	type Tab = 'preview' | 'xlsform' | 'ddi';
-	let chosenTab = $state<{ id: string; tab: Tab }>({ id: '', tab: 'preview' });
-	let activeTab = $derived(chosenTab.id === data.id ? chosenTab.tab : 'preview');
+	const TABS: Tab[] = ['preview', 'xlsform', 'ddi'];
+	let activeTab = $derived.by((): Tab => {
+		const tab = page.url.searchParams.get('tab') as Tab;
+		return TABS.includes(tab) ? tab : 'preview';
+	});
 	function selectTab(tab: Tab) {
-		chosenTab = { id: data.id, tab };
+		const href = resolve('/questions/[id]', { id: data.id });
+		// eslint-disable-next-line svelte/no-navigation-without-resolve -- the resolved route plus ?tab
+		goto(tab === 'preview' ? href : `${href}?tab=${tab}`, {
+			replaceState: true,
+			keepFocus: true,
+			noScroll: true
+		});
 	}
 
 	// Derived from the single API response; texts in the UI locale when the
