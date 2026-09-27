@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: check, lint, test, build
+    runs-on: ubuntu-latest
+    env:
+      # Any value works; the build only needs the variable to exist.
+      PUBLIC_POCKETBASE_URL: http://127.0.0.1:8090
+      # Used by vite.config.ts to fetch the CDL content snippets.
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.10
+      - run: bun install --frozen-lockfile
+      - run: bun run check
+      - run: bun run lint
+      - run: bun run test
+      - run: bun run build
