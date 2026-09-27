@@ -4,6 +4,8 @@
 	import { client, clearOnAuthError } from '$lib/pocketbase';
 	import { invalidateAll } from '$app/navigation';
 	import { clearCache } from '$lib/cache';
+	import Notice from '$lib/components/Notice.svelte';
+	import { groupFindings, type Finding } from '$lib/findings';
 	import LoginGuard from '$lib/components/LoginGuard.svelte';
 	import LoginForm from '$lib/components/LoginForm.svelte';
 	import { metadata } from '$lib/metadata';
@@ -21,14 +23,13 @@
 		return null;
 	}
 
-	type ValidationError = { rule?: string; test?: string; location?: string; message?: string };
 	/**
 	 * The outcome of an upload: imported (with the new study, if the backend
 	 * says which), rejected with validation findings, or failed with a message.
 	 */
 	type UploadResult =
 		| { kind: 'imported'; studyId?: string }
-		| { kind: 'invalid'; errors: (string | ValidationError)[] }
+		| { kind: 'invalid'; errors: (string | Finding)[] }
 		| { kind: 'failed'; message: string };
 
 	let file = $state<File | null>(null);
@@ -130,6 +131,18 @@
 
 		<h1>{$t('upload.title')}</h1>
 		<p class="description">{$t('upload.description')}</p>
+		<div class="scope">
+			<Notice>
+				<p>
+					{$t('upload.scopeChecks')}
+					<a href="https://github.com/CorrelAid/formtransform#supported-xlsform-subset"
+						>{$t('upload.scopeLink')}</a
+					>
+				</p>
+				<p>{$t('upload.scopeLifetime')}</p>
+				<p>{$t('notice.onlineSurveys')}</p>
+			</Notice>
+		</div>
 
 		{#if result}
 			<div
@@ -151,22 +164,19 @@
 					<p>{result.message}</p>
 				{/if}
 				{#if result.kind === 'invalid' && result.errors.length}
-					<ul class="error-list">
-						{#each result.errors as err, i (i)}
-							<li>
-								{#if typeof err === 'string'}
-									{err}
-								{:else}
-									<span class="error-message"
-										>{err.message || err.rule || $t('upload.unknownError')}</span
-									>
-									{#if err.location}
-										<span class="error-location">{err.location}</span>
+					{#each groupFindings(result.errors) as { group, findings } (group)}
+						<h2 class="finding-group">{$t(`upload.findings.${group}`)}</h2>
+						<ul class="error-list">
+							{#each findings as finding, i (i)}
+								<li>
+									<span class="error-message">{finding.message || $t('upload.unknownError')}</span>
+									{#if finding.location}
+										<span class="error-location">{finding.location}</span>
 									{/if}
-								{/if}
-							</li>
-						{/each}
-					</ul>
+								</li>
+							{/each}
+						</ul>
+					{/each}
 				{/if}
 				<button class="reset-btn" onclick={reset}>{$t('upload.uploadAnother')}</button>
 			</div>
@@ -334,6 +344,25 @@
 
 	.result-box p {
 		margin: var(--spacing-xs) 0 0;
+	}
+
+	.scope {
+		margin-bottom: var(--spacing-lg);
+	}
+
+	.scope :global(p + p) {
+		margin-top: var(--spacing-xs);
+	}
+
+	.scope a {
+		color: var(--color-secondary);
+	}
+
+	.finding-group {
+		--min-size: var(--font-size-body-min);
+		--max-size: var(--font-size-body-max);
+		margin: var(--spacing-sm) 0 var(--spacing-2xs);
+		color: inherit;
 	}
 
 	.error-list {

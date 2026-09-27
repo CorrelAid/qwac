@@ -137,6 +137,14 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'upload.xmlOnly': 'File must be an XML file.',
 		'upload.tooLarge': 'File must be smaller than 10 MB.',
 		'upload.viewStudy': 'View the imported study →',
+		'upload.scopeChecks':
+			"Files are checked against DDI-Codebook 2.5 and the CDL conventions. A valid DDI codebook that doesn't follow the CDL conventions is rejected.",
+		'upload.scopeLink': 'Supported XLSForm subset',
+		'upload.scopeLifetime':
+			'Imported studies are kept until the next deployment of the question bank.',
+		'upload.findings.xsd': 'Not valid DDI-Codebook 2.5',
+		'upload.findings.schematron': "Doesn't follow the CDL conventions",
+		'upload.findings.other': 'Other findings',
 		'upload.notStored': 'The file is valid, but it could not be stored. Please try again later.',
 		'upload.notAllowed':
 			'Only administrators can import codebooks. Please sign in with an administrator account.',
@@ -157,6 +165,10 @@ export const translations: Record<Locale, Record<string, string>> = {
 		// About
 		'about.title': 'About QWAC',
 		'about.back': 'Back to questions',
+
+		// Notices
+		'notice.onlineSurveys':
+			'QWAC is for online surveys for now: questions, previews and exports are made for online questionnaires.',
 
 		// Error page
 		'error.title': 'Something went wrong',
@@ -268,6 +280,14 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'upload.xmlOnly': 'Die Datei muss eine XML-Datei sein.',
 		'upload.tooLarge': 'Die Datei darf maximal 10 MB groß sein.',
 		'upload.viewStudy': 'Importierte Studie ansehen →',
+		'upload.scopeChecks':
+			'Dateien werden gegen DDI-Codebook 2.5 und die CDL-Konventionen geprüft. Ein gültiges DDI-Codebook, das den CDL-Konventionen nicht folgt, wird abgelehnt.',
+		'upload.scopeLink': 'Unterstützte XLSForm-Teilmenge',
+		'upload.scopeLifetime':
+			'Importierte Studien bleiben bis zur nächsten Aktualisierung der Fragendatenbank erhalten.',
+		'upload.findings.xsd': 'Kein gültiges DDI-Codebook 2.5',
+		'upload.findings.schematron': 'Folgt nicht den CDL-Konventionen',
+		'upload.findings.other': 'Weitere Befunde',
 		'upload.notStored':
 			'Die Datei ist gültig, konnte aber nicht gespeichert werden. Bitte später erneut versuchen.',
 		'upload.notAllowed':
@@ -289,6 +309,10 @@ export const translations: Record<Locale, Record<string, string>> = {
 		// About
 		'about.title': 'Über QWAC',
 		'about.back': 'Zurück zu Fragen',
+
+		// Notices
+		'notice.onlineSurveys':
+			'QWAC ist vorerst für Online-Umfragen gedacht: Fragen, Vorschauen und Exporte sind auf Online-Fragebögen ausgelegt.',
 
 		// Error page
 		'error.title': 'Etwas ist schiefgelaufen',
