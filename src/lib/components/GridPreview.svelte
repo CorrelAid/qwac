@@ -2,7 +2,7 @@
 	import { allowsMultiple } from '$lib/questionTypes';
 	/* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
 	let {
-		variables,
+		variables = [],
 		activeId = null,
 		question = ''
 	}: { variables: any[]; activeId?: string | null; question?: string } = $props();

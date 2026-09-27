@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { readdirSync } from 'node:fs';
+import { QUESTION_TYPES as CATALOGUE } from '@correlaid/formtransform';
 import {
+	PREVIEWS,
+	PREVIEW_LESS,
 	QUESTION_TYPES,
 	allowsMultiple,
 	baseType,
@@ -18,6 +21,30 @@ const previewModules = import.meta.glob<{ default: unknown }>(
 	'./components/question-types/*.svelte',
 	{ eager: true }
 );
+
+describe('registry coverage', () => {
+	const registryQuestionTypes = Object.entries(CATALOGUE)
+		.filter(([, e]) => e.kind === 'question')
+		.map(([type]) => type);
+
+	it.each(registryQuestionTypes)(
+		'%s has a preview component or is preview-less on purpose',
+		(type) => {
+			expect(PREVIEWS, `add ${type} to PREVIEWS in questionTypes.ts`).toHaveProperty(type);
+			if (!PREVIEW_LESS.has(type)) {
+				expect(typeInfo(type)?.component, `${type} has no preview component`).toBeTruthy();
+			}
+		}
+	);
+
+	it('takes every registered label from the catalogue', () => {
+		for (const [type, info] of Object.entries(QUESTION_TYPES)) {
+			const entry = (CATALOGUE as Record<string, { label: string }>)[type];
+			if (entry) expect(info.label, type).toBe(entry.label);
+			else expect(info.unregistered, type).toBe(true);
+		}
+	});
+});
 
 describe('QUESTION_TYPES', () => {
 	it('every component resolves to a real component', () => {
@@ -65,6 +92,7 @@ describe('typeInfo', () => {
 		expect(registryType('multiple_choice_other')).toBe('select_multiple_other');
 		expect(registryType('multiple_choice_long_list')).toBe('select_multiple_long_list');
 		expect(registryType('int')).toBe('integer');
+		expect(registryType('string')).toBe('text');
 		expect(typeInfo('single_choice_other')?.label).toBe('Select One with Other');
 	});
 
