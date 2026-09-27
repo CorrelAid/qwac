@@ -19,3 +19,12 @@ export function invalidatePrefix(prefix: string): void {
 export function invalidateAll(): void {
 	cache.clear();
 }
+
+/** Returns the cached value for `key`, or fetches it and caches it on success. */
+export async function cached<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
+	const hit = getCached<T>(key);
+	if (hit !== undefined) return hit;
+	const data = await fetcher();
+	setCached(key, data);
+	return data;
+}

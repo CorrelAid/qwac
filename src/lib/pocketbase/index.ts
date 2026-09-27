@@ -14,7 +14,8 @@ import { PUBLIC_POCKETBASE_URL } from '$env/static/public';
 
 // For Jamstack development, we often need to point to the specific backend URL.
 // In production, if served by PocketBase, it can be empty string or origin.
-const POCKETBASE_URL = PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8090';
+// Without a trailing slash: paths are appended as `${POCKETBASE_URL}/api/…`.
+const POCKETBASE_URL = (PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8090').replace(/\/+$/, '');
 
 export const client = new PocketBase(POCKETBASE_URL);
 

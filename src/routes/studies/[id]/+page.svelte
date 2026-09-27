@@ -1,13 +1,10 @@
 <script lang="ts">
 	/* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
 	import { resolve } from '$app/paths';
-	import { page } from '$app/stores';
-	import { client, clearOnAuthError, fetchApiBlob, fetchApiJson } from '$lib/pocketbase';
+	import { clearOnAuthError, fetchApiBlob } from '$lib/pocketbase';
 	import QuestionCard from '$lib/components/QuestionCard.svelte';
 	import { metadata } from '$lib/metadata';
 	import { extractText, extractUri, parseGoValue } from '$lib/ddi';
-	import { validatePbId, safePath, safeErrorMessage } from '$lib/validation';
-	import { getCached, setCached } from '$lib/cache';
 	import AnswerTypeTag from '$lib/components/AnswerTypeTag.svelte';
 	import { t, locale } from '$lib/i18n';
 	import { questionText } from '$lib/translations';
@@ -24,50 +21,22 @@
 		return extractText(val);
 	}
 
-	let study = $state<any>(null);
-	let questions = $state<any[]>([]);
-	let error = $state<string | null>(null);
+	let { data } = $props();
+
+	let study = $derived(data.study);
+	let questions = $derived(data.questions);
 	let exporting = $state(false);
 
 	$effect(() => {
-		const rawId = $page.params.id!;
-		const load = async () => {
-			try {
-				const id = validatePbId(rawId);
-				const cachedStudy = getCached<any>(`study:${id}`);
-				const cachedQuestions = getCached<any[]>(`study-questions:${id}`);
-				const [studyData, questionsData] = await Promise.all([
-					cachedStudy ??
-						client
-							.collection('studies')
-							.getOne(id, { requestKey: null })
-							.then((d) => {
-								setCached(`study:${id}`, d);
-								return d;
-							}),
-					cachedQuestions ??
-						fetchApiJson(`/api/studies/${safePath(id)}/questions`).then((d: any[]) => {
-							setCached(`study-questions:${id}`, d);
-							return d;
-						})
-				]);
-				study = studyData;
-				questions = questionsData;
-				$metadata.title = study.title;
-				$metadata.headline = '';
-			} catch (e: any) {
-				clearOnAuthError(e);
-				error = safeErrorMessage(e, $t('study.loadError'));
-			}
-		};
-		load();
+		$metadata.title = study.title;
+		$metadata.headline = '';
 	});
 
 	async function exportDdiXml() {
-		const id = validatePbId($page.params.id!);
+		const id = data.id;
 		exporting = true;
 		try {
-			const blob = await fetchApiBlob(`/api/studies/${safePath(id)}/export`);
+			const blob = await fetchApiBlob(`/api/studies/${id}/export`);
 			const url = URL.createObjectURL(blob);
 			const a = document.createElement('a');
 			a.href = url;
@@ -82,104 +51,98 @@
 	}
 </script>
 
-{#if error}
-	<div class="error-box">{error}</div>
-{:else if !study}
-	<p>{$t('study.loading')}</p>
-{:else}
-	<article class="study-detail">
-		<a href={resolve('/')} class="back-link">&larr; {$t('study.back')}</a>
+<article class="study-detail">
+	<a href={resolve('/')} class="back-link">&larr; {$t('study.back')}</a>
 
-		<div class="title-row">
-			<h2>{study.title}</h2>
-			<button class="export-btn" onclick={exportDdiXml} disabled={exporting}>
-				{exporting ? $t('study.exporting') : $t('study.exportDdi')}
-			</button>
+	<div class="title-row">
+		<h2>{study.title}</h2>
+		<button class="export-btn" onclick={exportDdiXml} disabled={exporting}>
+			{exporting ? $t('study.exporting') : $t('study.exportDdi')}
+		</button>
+	</div>
+
+	<div class="meta-grid">
+		{#if study.author}
+			<div class="meta-item">
+				<strong>{$t('study.author')}</strong>
+				<span>{formatAuthor(study.author)}</span>
+			</div>
+		{/if}
+		{#if study.time_period}
+			<div class="meta-item">
+				<strong>{$t('study.timePeriod')}</strong><span>{study.time_period}</span>
+			</div>
+		{/if}
+		{#if study.analysis_unit}
+			<div class="meta-item">
+				<strong>{$t('study.analysisUnit')}</strong><span>{study.analysis_unit}</span>
+			</div>
+		{/if}
+		{#if study.universe}
+			<div class="meta-item">
+				<strong>{$t('study.universe')}</strong><span>{study.universe}</span>
+			</div>
+		{/if}
+		{#if study.language}
+			<div class="meta-item">
+				<strong>{$t('study.language')}</strong><span>{study.language}</span>
+			</div>
+		{/if}
+		{#if study.data_kind}
+			<div class="meta-item">
+				<strong>{$t('study.dataKind')}</strong><span>{study.data_kind}</span>
+			</div>
+		{/if}
+		{#if study.holdings_uri}
+			<div class="meta-item">
+				<strong>{$t('study.source')}</strong>
+				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- external source URL -->
+				<a href={extractUri(study.holdings_uri)} target="_blank" rel="noopener">
+					{extractText(study.holdings_description) || extractUri(study.holdings_uri)}
+				</a>
+			</div>
+		{/if}
+	</div>
+
+	{#if study.topic_classifications?.length}
+		<div class="tags">
+			{#each study.topic_classifications as tc (tc)}
+				<span class="tag">{tc}</span>
+			{/each}
 		</div>
+	{/if}
 
-		<div class="meta-grid">
-			{#if study.author}
-				<div class="meta-item">
-					<strong>{$t('study.author')}</strong>
-					<span>{formatAuthor(study.author)}</span>
-				</div>
-			{/if}
-			{#if study.time_period}
-				<div class="meta-item">
-					<strong>{$t('study.timePeriod')}</strong><span>{study.time_period}</span>
-				</div>
-			{/if}
-			{#if study.analysis_unit}
-				<div class="meta-item">
-					<strong>{$t('study.analysisUnit')}</strong><span>{study.analysis_unit}</span>
-				</div>
-			{/if}
-			{#if study.universe}
-				<div class="meta-item">
-					<strong>{$t('study.universe')}</strong><span>{study.universe}</span>
-				</div>
-			{/if}
-			{#if study.language}
-				<div class="meta-item">
-					<strong>{$t('study.language')}</strong><span>{study.language}</span>
-				</div>
-			{/if}
-			{#if study.data_kind}
-				<div class="meta-item">
-					<strong>{$t('study.dataKind')}</strong><span>{study.data_kind}</span>
-				</div>
-			{/if}
-			{#if study.holdings_uri}
-				<div class="meta-item">
-					<strong>{$t('study.source')}</strong>
-					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- external source URL -->
-					<a href={extractUri(study.holdings_uri)} target="_blank" rel="noopener">
-						{extractText(study.holdings_description) || extractUri(study.holdings_uri)}
-					</a>
-				</div>
-			{/if}
+	{#if study.abstract}
+		<div class="abstract">
+			<h3>{$t('study.abstract')}</h3>
+			<p>{extractText(study.abstract)}</p>
 		</div>
+	{/if}
 
-		{#if study.topic_classifications?.length}
-			<div class="tags">
-				{#each study.topic_classifications as tc (tc)}
-					<span class="tag">{tc}</span>
+	<section class="variables-section">
+		<h3>{$t('study.questions')} ({questions.length})</h3>
+		{#if questions.length === 0}
+			<p>{$t('study.noQuestions')}</p>
+		{:else}
+			<ul class="variable-list">
+				{#each questions as question (question.id)}
+					<li id="q-{question.id}">
+						<QuestionCard>
+							<a href={resolve('/questions/[id]', { id: question.id })} class="var-name"
+								>{question.concept || question.name}</a
+							>
+							{@const text = questionText(question, $locale)}
+							{#if text}
+								<p class="question-text">{text}</p>
+							{/if}
+							<AnswerTypeTag type={question.answer_type} />
+						</QuestionCard>
+					</li>
 				{/each}
-			</div>
+			</ul>
 		{/if}
-
-		{#if study.abstract}
-			<div class="abstract">
-				<h3>{$t('study.abstract')}</h3>
-				<p>{extractText(study.abstract)}</p>
-			</div>
-		{/if}
-
-		<section class="variables-section">
-			<h3>{$t('study.questions')} ({questions.length})</h3>
-			{#if questions.length === 0}
-				<p>{$t('study.noQuestions')}</p>
-			{:else}
-				<ul class="variable-list">
-					{#each questions as question (question.id)}
-						<li id="q-{question.id}">
-							<QuestionCard>
-								<a href={resolve('/questions/[id]', { id: question.id })} class="var-name"
-									>{question.concept || question.name}</a
-								>
-								{@const text = questionText(question, $locale)}
-								{#if text}
-									<p class="question-text">{text}</p>
-								{/if}
-								<AnswerTypeTag type={question.answer_type} />
-							</QuestionCard>
-						</li>
-					{/each}
-				</ul>
-			{/if}
-		</section>
-	</article>
-{/if}
+	</section>
+</article>
 
 <style>
 	.study-detail {
@@ -318,13 +281,5 @@
 		font-size: var(--font-size-small-min);
 		line-height: var(--line-height-relaxed);
 		margin: 0 0 var(--spacing-2xs);
-	}
-
-	.error-box {
-		padding: var(--spacing-base);
-		background-color: #fff1f1;
-		border: 1px solid #ffa3a3;
-		border-radius: var(--radius-base);
-		color: #d32f2f;
 	}
 </style>

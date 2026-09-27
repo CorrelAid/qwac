@@ -1,23 +1,25 @@
 <script lang="ts">
 	/* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
 	import { resolve } from '$app/paths';
-	import { page } from '$app/stores';
-	import { clearOnAuthError, fetchApiText, fetchApiJson } from '$lib/pocketbase';
 	import { XlsFormDisplay, DdiDisplay } from '@correlaid/cdl-design';
 	import SurveyPreview from '$lib/components/SurveyPreview.svelte';
 	import GridPreview from '$lib/components/GridPreview.svelte';
 	import { metadata } from '$lib/metadata';
-	import { validatePbId, safePath, safeErrorMessage } from '$lib/validation';
-	import { getCached, setCached } from '$lib/cache';
 	import AnswerTypeTag from '$lib/components/AnswerTypeTag.svelte';
 	import { t, locale } from '$lib/i18n';
 	import { localizeGroup, localizeVariable } from '$lib/translations';
 
-	let questionData = $state<any>(null);
-	let variableXml = $state<string | null>(null);
-	let xlsformData = $state<any>(null);
-	let error = $state<string | null>(null);
-	let activeTab = $state<'preview' | 'xlsform' | 'ddi'>('preview');
+	let { data } = $props();
+
+	let questionData = $derived(data.question);
+
+	// The tab belongs to one question; navigating to another starts on the preview.
+	type Tab = 'preview' | 'xlsform' | 'ddi';
+	let chosenTab = $state<{ id: string; tab: Tab }>({ id: '', tab: 'preview' });
+	let activeTab = $derived(chosenTab.id === data.id ? chosenTab.tab : 'preview');
+	function selectTab(tab: Tab) {
+		chosenTab = { id: data.id, tab };
+	}
 
 	// Derived from the single API response; texts in the UI locale when the
 	// study has a translation for it.
@@ -84,165 +86,121 @@
 	let longListStandard = $derived(!group ? variable?.long_list_standard || '' : '');
 
 	$effect(() => {
-		const rawId = $page.params.id!;
-		const load = async () => {
-			try {
-				const id = validatePbId(rawId);
-
-				const cached = getCached<any>(`question:${id}`);
-				const data =
-					cached ??
-					(await fetchApiJson(`/api/questions/${safePath(id)}`).then((d: any) => {
-						setCached(`question:${id}`, d);
-						return d;
-					}));
-				questionData = data;
-
-				// Lazy-load tabs in background
-				const cachedXml = getCached<string>(`xml:${id}`);
-				const cachedXls = getCached<any>(`xlsform:${id}`);
-				if (cachedXml) {
-					variableXml = cachedXml;
-				} else {
-					fetchApiText(`/api/questions/${safePath(id)}/xml`)
-						.then((xml) => {
-							variableXml = xml;
-							setCached(`xml:${id}`, xml);
-						})
-						.catch(() => {});
-				}
-				if (cachedXls) {
-					xlsformData = cachedXls;
-				} else {
-					fetchApiJson(`/api/questions/${safePath(id)}/xlsform`)
-						.then((d) => {
-							xlsformData = d;
-							setCached(`xlsform:${id}`, d);
-						})
-						.catch(() => {});
-				}
-
-				$metadata.title = displayConcept;
-				$metadata.headline = '';
-			} catch (e: any) {
-				clearOnAuthError(e);
-				error = safeErrorMessage(e, $t('question.loadError'));
-			}
-		};
-		load();
+		$metadata.title = displayConcept;
+		$metadata.headline = '';
 	});
 </script>
 
-{#if error}
-	<div class="error-box">{error}</div>
-{:else if !questionData}
-	<p>{$t('question.loading')}</p>
-{:else}
-	<article class="question-detail">
-		<a href={resolve('/')} class="back-link">&larr; {$t('question.back')}</a>
+<article class="question-detail">
+	<a href={resolve('/')} class="back-link">&larr; {$t('question.back')}</a>
 
+	<p class="concept-line">
+		<span class="field-label">{$t('question.concept')}</span>
+		{displayConcept}
+	</p>
+	{#if longListStandard}
 		<p class="concept-line">
-			<span class="field-label">{$t('question.concept')}</span>
-			{displayConcept}
+			<span class="field-label">{$t('question.standard')}</span>
+			{longListStandard}
 		</p>
-		{#if longListStandard}
-			<p class="concept-line">
-				<span class="field-label">{$t('question.standard')}</span>
-				{longListStandard}
-			</p>
+	{/if}
+	{#if tags.length}
+		<p class="concept-line">
+			<span class="field-label">{$t('question.tags')}</span>
+			{#each tags as tag, i (i)}
+				<span class="search-tag" lang={tag.lang || undefined}>{tag.text}</span>
+			{/each}
+		</p>
+	{/if}
+
+	<div class="meta-row">
+		{#if rawAnswerType}
+			<AnswerTypeTag type={rawAnswerType} />
 		{/if}
-		{#if tags.length}
-			<p class="concept-line">
-				<span class="field-label">{$t('question.tags')}</span>
-				{#each tags as tag, i (i)}
-					<span class="search-tag" lang={tag.lang || undefined}>{tag.text}</span>
-				{/each}
-			</p>
+		{#if study}
+			<a
+				href="{resolve('/studies/[id]', { id: study.id })}#q-{group?.id || variable?.id}"
+				class="study-tag">{study.title}</a
+			>
 		{/if}
+	</div>
 
-		<div class="meta-row">
-			{#if rawAnswerType}
-				<AnswerTypeTag type={rawAnswerType} />
+	<div class="view-tabs">
+		<button
+			class="view-tab"
+			class:active={activeTab === 'preview'}
+			onclick={() => selectTab('preview')}>{$t('question.tabPreview')}</button
+		>
+		<button
+			class="view-tab"
+			class:active={activeTab === 'xlsform'}
+			onclick={() => selectTab('xlsform')}>{$t('question.tabXlsform')}</button
+		>
+		<button class="view-tab" class:active={activeTab === 'ddi'} onclick={() => selectTab('ddi')}
+			>{$t('question.tabDdi')}</button
+		>
+	</div>
+
+	<div class="tab-content">
+		{#if activeTab === 'preview'}
+			{#if isMatrix && variables.length > 0}
+				<GridPreview
+					{variables}
+					question={variables[0]?.prequestion_text || group?.description || group?.concept || ''}
+				/>
+			{:else if isSelectGroup && choiceVariables.length > 0}
+				{@const firstVar = choiceVariables[0]}
+				<SurveyPreview
+					variable={{
+						...firstVar,
+						prequestion_text: null,
+						question:
+							firstVar?.prequestion_text ||
+							group?.description ||
+							group?.concept ||
+							firstVar?.question,
+						answer_type: displayAnswerType,
+						has_other: hasOther,
+						other_label: otherLabel,
+						categories: choiceVariables.map((v: any) => ({
+							label: v.question || v.label || v.concept,
+							value: v.name || v.id
+						}))
+					}}
+				/>
+			{:else if variable}
+				<SurveyPreview
+					variable={{
+						...variable,
+						answer_type: normalizeAnswerType(variable.answer_type),
+						has_other:
+							variable.has_other === true || (variable.answer_type || '').endsWith('_other')
+					}}
+				/>
 			{/if}
-			{#if study}
-				<a
-					href="{resolve('/studies/[id]', { id: study.id })}#q-{group?.id || variable?.id}"
-					class="study-tag">{study.title}</a
-				>
-			{/if}
-		</div>
-
-		<div class="view-tabs">
-			<button
-				class="view-tab"
-				class:active={activeTab === 'preview'}
-				onclick={() => (activeTab = 'preview')}>{$t('question.tabPreview')}</button
-			>
-			<button
-				class="view-tab"
-				class:active={activeTab === 'xlsform'}
-				onclick={() => (activeTab = 'xlsform')}>{$t('question.tabXlsform')}</button
-			>
-			<button
-				class="view-tab"
-				class:active={activeTab === 'ddi'}
-				onclick={() => (activeTab = 'ddi')}>{$t('question.tabDdi')}</button
-			>
-		</div>
-
-		<div class="tab-content">
-			{#if activeTab === 'preview'}
-				{#if isMatrix && variables.length > 0}
-					<GridPreview
-						{variables}
-						question={variables[0]?.prequestion_text || group?.description || group?.concept || ''}
-					/>
-				{:else if isSelectGroup && choiceVariables.length > 0}
-					{@const firstVar = choiceVariables[0]}
-					<SurveyPreview
-						variable={{
-							...firstVar,
-							prequestion_text: null,
-							question:
-								firstVar?.prequestion_text ||
-								group?.description ||
-								group?.concept ||
-								firstVar?.question,
-							answer_type: displayAnswerType,
-							has_other: hasOther,
-							other_label: otherLabel,
-							categories: choiceVariables.map((v: any) => ({
-								label: v.question || v.label || v.concept,
-								value: v.name || v.id
-							}))
-						}}
-					/>
-				{:else if variable}
-					<SurveyPreview
-						variable={{
-							...variable,
-							answer_type: normalizeAnswerType(variable.answer_type),
-							has_other:
-								variable.has_other === true || (variable.answer_type || '').endsWith('_other')
-						}}
-					/>
-				{/if}
-			{:else if activeTab === 'xlsform'}
-				{#if xlsformData}
-					<XlsFormDisplay survey={xlsformData.survey} choices={xlsformData.choices} />
+		{:else if activeTab === 'xlsform'}
+			{#await data.xlsform}
+				<p class="hint">{$t('question.loadingXlsform')}</p>
+			{:then xlsform}
+				{#if xlsform}
+					<XlsFormDisplay survey={xlsform.survey} choices={xlsform.choices} />
 				{:else}
-					<p class="hint">{$t('question.loadingXlsform')}</p>
+					<p class="hint">{$t('question.xlsformUnavailable')}</p>
 				{/if}
-			{:else if activeTab === 'ddi'}
-				{#if variableXml}
-					<DdiDisplay ddiXml={variableXml} />
+			{/await}
+		{:else if activeTab === 'ddi'}
+			{#await data.xml}
+				<p class="hint">{$t('question.loadingDdi')}</p>
+			{:then xml}
+				{#if xml}
+					<DdiDisplay ddiXml={xml} />
 				{:else}
-					<p class="hint">{$t('question.loadingDdi')}</p>
+					<p class="hint">{$t('question.ddiUnavailable')}</p>
 				{/if}
-			{/if}
-		</div>
-	</article>
-{/if}
+			{/await}
+		{/if}
+	</div>
+</article>
 
 <style>
 	.question-detail {
@@ -345,13 +303,5 @@
 		color: var(--color-text-primary);
 		opacity: 0.6;
 		margin-bottom: var(--spacing-sm);
-	}
-
-	.error-box {
-		padding: var(--spacing-base);
-		background-color: #fff1f1;
-		border: 1px solid #ffa3a3;
-		border-radius: var(--radius-base);
-		color: #d32f2f;
 	}
 </style>
