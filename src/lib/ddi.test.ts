@@ -8,7 +8,7 @@ describe('parseGoValue', () => {
 		);
 		expect(result).toEqual({
 			'#text': 'New Economics Foundation',
-			'-affiliation': 'New Economics Foundation (NEF)',
+			'-affiliation': 'New Economics Foundation (NEF)'
 		});
 	});
 
@@ -18,7 +18,8 @@ describe('parseGoValue', () => {
 		);
 		expect(result).toEqual({
 			'#text': 'Source questionnaire available from NEF Consulting downloads page.',
-			'-URI': 'https://www.nefconsulting.com/what-we-do/evaluation-impact-assessment/prove-it/downloads/',
+			'-URI':
+				'https://www.nefconsulting.com/what-we-do/evaluation-impact-assessment/prove-it/downloads/'
 		});
 	});
 
@@ -32,7 +33,7 @@ describe('parseGoValue', () => {
 			'map[p:[map[#text:First paragraph.] map[#text:Second paragraph.]]]'
 		);
 		expect(result).toEqual({
-			p: [{ '#text': 'First paragraph.' }, { '#text': 'Second paragraph.' }],
+			p: [{ '#text': 'First paragraph.' }, { '#text': 'Second paragraph.' }]
 		});
 	});
 
@@ -42,7 +43,7 @@ describe('parseGoValue', () => {
 		);
 		expect(result).toEqual({
 			'#text': "People's networks and contacts:",
-			ul: { li: ['for achieving change'] },
+			ul: { li: ['for achieving change'] }
 		});
 	});
 
@@ -62,8 +63,7 @@ describe('extractText', () => {
 	});
 
 	it('extracts #text from author Go map, skipping -affiliation', () => {
-		const input =
-			'map[#text:New Economics Foundation -affiliation:New Economics Foundation (NEF)]';
+		const input = 'map[#text:New Economics Foundation -affiliation:New Economics Foundation (NEF)]';
 		expect(extractText(input)).toBe('New Economics Foundation');
 	});
 
@@ -142,8 +142,7 @@ describe('extractText', () => {
 
 describe('extractUri', () => {
 	it('extracts -URI from Go map string', () => {
-		const input =
-			'map[#text:Source questionnaire. -URI:https://www.nefconsulting.com/downloads/]';
+		const input = 'map[#text:Source questionnaire. -URI:https://www.nefconsulting.com/downloads/]';
 		expect(extractUri(input)).toBe('https://www.nefconsulting.com/downloads/');
 	});
 

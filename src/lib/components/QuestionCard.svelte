@@ -1,19 +1,19 @@
 <script lang="ts">
-  import type { Snippet } from 'svelte';
+	import type { Snippet } from 'svelte';
 
-  let { children }: { children: Snippet } = $props();
+	let { children }: { children: Snippet } = $props();
 </script>
 
 <div class="question-card">
-  {@render children()}
+	{@render children()}
 </div>
 
 <style>
-  .question-card {
-    background-color: var(--color-white);
-    border-radius: var(--radius-md);
-    padding: var(--spacing-base);
-    overflow: hidden;
-    min-width: 0;
-  }
+	.question-card {
+		background-color: var(--color-white);
+		border-radius: var(--radius-md);
+		padding: var(--spacing-base);
+		overflow: hidden;
+		min-width: 0;
+	}
 </style>

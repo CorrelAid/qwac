@@ -1,7 +1,7 @@
 import { existsSync, readdirSync } from 'fs';
 
 const PORT = process.env.PORT || 3000;
-const HOST = process.env.HOST || "0.0.0.0";
+const HOST = process.env.HOST || '0.0.0.0';
 
 console.log(`🚀 Starting server on ${HOST}:${PORT}...`);
 console.log(`📁 Working directory: ${process.cwd()}`);
@@ -9,12 +9,12 @@ console.log(`📁 Working directory: ${process.cwd()}`);
 // Check if build directory exists
 const buildPath = './build';
 if (existsSync(buildPath)) {
-  console.log(`✅ build directory exists`);
-  const files = readdirSync(buildPath);
-  console.log(`build contents: ${files.join(', ')}`);
+	console.log(`✅ build directory exists`);
+	const files = readdirSync(buildPath);
+	console.log(`build contents: ${files.join(', ')}`);
 } else {
-  console.error(`❌ build directory NOT FOUND at ${buildPath}`);
-  console.log(`Current directory contents:`, readdirSync('.'));
+	console.error(`❌ build directory NOT FOUND at ${buildPath}`);
+	console.log(`Current directory contents:`, readdirSync('.'));
 }
 
 import { createServer } from 'node:http';
@@ -26,22 +26,22 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const BUILD_DIR = join(__dirname, 'build');
 
 const mimeTypes = {
-  '.html': 'text/html',
-  '.htm': 'text/html',
-  '.css': 'text/css',
-  '.js': 'application/javascript',
-  '.json': 'application/json',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.gif': 'image/gif',
-  '.svg': 'image/svg+xml',
-  '.woff': 'font/woff',
-  '.woff2': 'font/woff2',
-  '.ttf': 'font/ttf',
-  '.otf': 'font/otf',
-  '.ico': 'image/x-icon',
-  '.txt': 'text/plain'
+	'.html': 'text/html',
+	'.htm': 'text/html',
+	'.css': 'text/css',
+	'.js': 'application/javascript',
+	'.json': 'application/json',
+	'.png': 'image/png',
+	'.jpg': 'image/jpeg',
+	'.jpeg': 'image/jpeg',
+	'.gif': 'image/gif',
+	'.svg': 'image/svg+xml',
+	'.woff': 'font/woff',
+	'.woff2': 'font/woff2',
+	'.ttf': 'font/ttf',
+	'.otf': 'font/otf',
+	'.ico': 'image/x-icon',
+	'.txt': 'text/plain'
 };
 
 // --- Security headers ---
@@ -49,107 +49,122 @@ const pbUrl = (process.env.PUBLIC_POCKETBASE_URL || '').replace(/\/+$/, '');
 const connectSrc = pbUrl ? `'self' ${pbUrl}` : "'self'";
 
 const securityHeaders = {
-  'X-Content-Type-Options': 'nosniff',
-  'X-Frame-Options': 'DENY',
-  'Referrer-Policy': 'strict-origin-when-cross-origin',
-  'Permissions-Policy': 'geolocation=(), microphone=(), camera=()',
-  'Content-Security-Policy': [
-    "default-src 'self'",
-    `script-src 'self' 'unsafe-inline'`,
-    `style-src 'self' 'unsafe-inline'`,
-    `img-src 'self' data: ${pbUrl}`,
-    `font-src 'self'`,
-    `connect-src ${connectSrc}`,
-    "frame-ancestors 'none'",
-    "base-uri 'self'",
-    "form-action 'self'",
-  ].join('; '),
+	'X-Content-Type-Options': 'nosniff',
+	'X-Frame-Options': 'DENY',
+	'Referrer-Policy': 'strict-origin-when-cross-origin',
+	'Permissions-Policy': 'geolocation=(), microphone=(), camera=()',
+	'Content-Security-Policy': [
+		"default-src 'self'",
+		`script-src 'self' 'unsafe-inline'`,
+		`style-src 'self' 'unsafe-inline'`,
+		`img-src 'self' data: ${pbUrl}`,
+		`font-src 'self'`,
+		`connect-src ${connectSrc}`,
+		"frame-ancestors 'none'",
+		"base-uri 'self'",
+		"form-action 'self'"
+	].join('; ')
 };
 
 function writeHead(res, status, extraHeaders = {}) {
-  res.writeHead(status, { ...securityHeaders, ...extraHeaders });
+	res.writeHead(status, { ...securityHeaders, ...extraHeaders });
 }
 
 const server = createServer((req, res) => {
-  // Health check endpoint for Coolify
-  if (req.url === '/health' || req.url === '/healthz') {
-    writeHead(res, 200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ status: 'healthy', timestamp: new Date().toISOString() }));
-    return;
-  }
+	// Health check endpoint for Coolify
+	if (req.url === '/health' || req.url === '/healthz') {
+		writeHead(res, 200, { 'Content-Type': 'application/json' });
+		res.end(JSON.stringify({ status: 'healthy', timestamp: new Date().toISOString() }));
+		return;
+	}
 
-  let filePath = join(BUILD_DIR, req.url === '/' ? 'index.html' : req.url);
+	let filePath = join(BUILD_DIR, req.url === '/' ? 'index.html' : req.url);
 
-  // Security check to prevent directory traversal
-  if (!filePath.startsWith(BUILD_DIR)) {
-    writeHead(res, 403);
-    res.end('Forbidden');
-    return;
-  }
+	// Security check to prevent directory traversal
+	if (!filePath.startsWith(BUILD_DIR)) {
+		writeHead(res, 403);
+		res.end('Forbidden');
+		return;
+	}
 
-  try {
-    const ext = extname(filePath);
-    const contentType = mimeTypes[ext] || 'application/octet-stream';
-    const content = readFileSync(filePath);
+	try {
+		const ext = extname(filePath);
+		const contentType = mimeTypes[ext] || 'application/octet-stream';
+		const content = readFileSync(filePath);
 
-    writeHead(res, 200, { 'Content-Type': contentType });
-    res.end(content);
-  } catch (err) {
-    if (err.code === 'ENOENT' || err.code === 'EISDIR') {
-      const ext = extname(filePath);
+		writeHead(res, 200, { 'Content-Type': contentType });
+		res.end(content);
+	} catch (err) {
+		if (err.code === 'ENOENT' || err.code === 'EISDIR') {
+			const ext = extname(filePath);
 
-      // If no extension, try adding .html for SvelteKit prerendered pages
-      if (!ext) {
-        try {
-          const htmlContent = readFileSync(filePath + '.html');
-          writeHead(res, 200, { 'Content-Type': 'text/html' });
-          res.end(htmlContent);
-          return;
-        } catch (_) {}
-      }
+			// If no extension, try adding .html for SvelteKit prerendered pages
+			if (!ext) {
+				try {
+					const htmlContent = readFileSync(filePath + '.html');
+					writeHead(res, 200, { 'Content-Type': 'text/html' });
+					res.end(htmlContent);
+					return;
+				} catch (_) {}
+			}
 
-      // Return 404 for missing assets — don't serve index.html for JS/CSS/etc.
-      const assetExtensions = ['.js', '.css', '.json', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.woff', '.woff2', '.ttf', '.otf', '.ico', '.txt'];
-      if (ext && assetExtensions.includes(ext)) {
-        writeHead(res, 404);
-        res.end('Not Found');
-        return;
-      }
+			// Return 404 for missing assets — don't serve index.html for JS/CSS/etc.
+			const assetExtensions = [
+				'.js',
+				'.css',
+				'.json',
+				'.png',
+				'.jpg',
+				'.jpeg',
+				'.gif',
+				'.svg',
+				'.woff',
+				'.woff2',
+				'.ttf',
+				'.otf',
+				'.ico',
+				'.txt'
+			];
+			if (ext && assetExtensions.includes(ext)) {
+				writeHead(res, 404);
+				res.end('Not Found');
+				return;
+			}
 
-      // Fallback to index.html for SPA page routes
-      try {
-        const indexContent = readFileSync(join(BUILD_DIR, 'index.html'));
-        writeHead(res, 200, { 'Content-Type': 'text/html' });
-        res.end(indexContent);
-      } catch (indexErr) {
-        writeHead(res, 404);
-        res.end('Not Found');
-      }
-    } else {
-      writeHead(res, 500);
-      res.end('Server Error');
-    }
-  }
+			// Fallback to index.html for SPA page routes
+			try {
+				const indexContent = readFileSync(join(BUILD_DIR, 'index.html'));
+				writeHead(res, 200, { 'Content-Type': 'text/html' });
+				res.end(indexContent);
+			} catch (indexErr) {
+				writeHead(res, 404);
+				res.end('Not Found');
+			}
+		} else {
+			writeHead(res, 500);
+			res.end('Server Error');
+		}
+	}
 });
 
 server.listen(PORT, HOST, () => {
-  console.log(`✅ Server running at http://${HOST}:${PORT}`);
-  console.log(`📁 Serving static files from ${BUILD_DIR}`);
-  console.log(`🌐 Health checks available at /health and /healthz`);
+	console.log(`✅ Server running at http://${HOST}:${PORT}`);
+	console.log(`📁 Serving static files from ${BUILD_DIR}`);
+	console.log(`🌐 Health checks available at /health and /healthz`);
 });
 
 process.on('SIGTERM', () => {
-  console.log('SIGTERM received. Shutting down gracefully...');
-  server.close(() => {
-    console.log('Server closed');
-    process.exit(0);
-  });
+	console.log('SIGTERM received. Shutting down gracefully...');
+	server.close(() => {
+		console.log('Server closed');
+		process.exit(0);
+	});
 });
 
 process.on('SIGINT', () => {
-  console.log('SIGINT received. Shutting down gracefully...');
-  server.close(() => {
-    console.log('Server closed');
-    process.exit(0);
-  });
+	console.log('SIGINT received. Shutting down gracefully...');
+	server.close(() => {
+		console.log('Server closed');
+		process.exit(0);
+	});
 });

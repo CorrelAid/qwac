@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { pickLang, localizedText, questionText, localizeVariable, localizeGroup } from './translations';
+import {
+	pickLang,
+	localizedText,
+	questionText,
+	localizeVariable,
+	localizeGroup
+} from './translations';
 
 describe('pickLang', () => {
 	it('matches on the primary language subtag', () => {
@@ -30,7 +36,11 @@ describe('localizedText', () => {
 
 describe('questionText', () => {
 	it('reads question_text, language and translations', () => {
-		const q = { question_text: 'Wie alt sind Sie?', language: 'de', translations: { en: 'How old are you?' } };
+		const q = {
+			question_text: 'Wie alt sind Sie?',
+			language: 'de',
+			translations: { en: 'How old are you?' }
+		};
 		expect(questionText(q, 'en')).toBe('How old are you?');
 		expect(questionText(q, 'de')).toBe('Wie alt sind Sie?');
 	});
@@ -47,11 +57,15 @@ describe('localizeVariable', () => {
 		ivu_instructions: 'Vorlesen',
 		categories: [
 			{ value: '1', label: 'Sehr zufrieden' },
-			{ value: '2', label: 'Unzufrieden' },
+			{ value: '2', label: 'Unzufrieden' }
 		],
 		translations: {
-			en: { question: 'How satisfied are you?', ivu_instructions: 'Read out', categories: { '1': 'Very satisfied' } },
-		},
+			en: {
+				question: 'How satisfied are you?',
+				ivu_instructions: 'Read out',
+				categories: { '1': 'Very satisfied' }
+			}
+		}
 	};
 
 	it('translates texts and category labels', () => {
