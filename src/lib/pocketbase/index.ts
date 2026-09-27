@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
 import PocketBase from 'pocketbase';
 import type {
-	AuthModel,
+	AuthRecord,
 	ListResult,
 	RecordListOptions,
 	RecordModel,
@@ -9,7 +9,6 @@ import type {
 } from 'pocketbase';
 import { readable, type Readable, type Subscriber } from 'svelte/store';
 import { browser } from '$app/environment';
-import { invalidateAll } from '$app/navigation';
 import { PUBLIC_POCKETBASE_URL } from '$env/static/public';
 
 // For Jamstack development, we often need to point to the specific backend URL.
@@ -32,35 +31,29 @@ export function clearOnAuthError(err: unknown): void {
 	}
 }
 
-export const authModel = readable<AuthModel | null>(null, function (set, update) {
+/** The signed-in user's record, or null. */
+export const authModel = readable<AuthRecord>(null, (set) => {
 	if (!browser) return;
-
-	// Set initial value
-	set(client.authStore.model);
-
-	const unsub = client.authStore.onChange((token, model) => {
-		update((oldval) => {
-			if ((oldval?.isValid && !model?.isValid) || (!oldval?.isValid && model?.isValid)) {
-				// if the auth changed, invalidate all page load data
-				invalidateAll();
-			}
-			return model;
-		});
-	}, true);
-
-	return unsub;
+	return client.authStore.onChange((_token, record) => set(record), true);
 });
 
-// On startup, verify that a persisted token is still valid against the backend.
-// If the backend was recreated, the user record no longer exists and we should log out.
-if (browser && client.authStore.isValid) {
-	client
-		.collection('users')
-		.authRefresh()
-		.catch(() => {
-			client.authStore.clear();
-		});
+/**
+ * Checks a stored token against the backend and logs out only if the backend
+ * rejects it: 401/403 for an invalid or expired token, 404 when the user no
+ * longer exists (e.g. after a backend reset). A network error or a 5xx says
+ * nothing about the token, so the user stays logged in (#17).
+ */
+export async function verifyStoredAuth(): Promise<void> {
+	if (!client.authStore.isValid) return;
+	try {
+		await client.collection('users').authRefresh();
+	} catch (e) {
+		const status = (e as { status?: number })?.status;
+		if (status === 401 || status === 403 || status === 404) client.authStore.clear();
+	}
 }
+
+if (browser) verifyStoredAuth();
 
 export async function login(email: string, password: string) {
 	return await client.collection('users').authWithPassword(email, password);
