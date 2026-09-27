@@ -1,5 +1,28 @@
 import { describe, it, expect } from 'vitest';
 import { questionView } from './questionView';
+import type { Group, PreviewVariable, Variable } from './types';
+
+const mkVar = (p: Partial<Variable>): Variable => ({
+	id: '',
+	name: '',
+	concept: '',
+	question: '',
+	prequestion_text: '',
+	ivu_instructions: '',
+	answer_type: '',
+	has_other: false,
+	has_long_list: false,
+	long_list_standard: '',
+	categories: [],
+	...p
+});
+const mkGroup = (p: Partial<Group>): Group => ({
+	id: 'g',
+	type: '',
+	concept: '',
+	description: '',
+	...p
+});
 
 const cats = [
 	{ value: '1', label: 'Yes' },
@@ -8,15 +31,15 @@ const cats = [
 
 describe('questionView', () => {
 	it('shows a grid group as a grid', () => {
-		const group = {
+		const group = mkGroup({
 			id: 'g',
 			type: 'grid',
 			concept: 'Trust',
 			description: 'How much do you trust…'
-		};
+		});
 		const variables = [
-			{ id: 'v1', answer_type: 'single_choice', question: 'Police', categories: cats },
-			{ id: 'v2', answer_type: 'single_choice', question: 'Courts', categories: cats }
+			mkVar({ id: 'v1', answer_type: 'single_choice', question: 'Police', categories: cats }),
+			mkVar({ id: 'v2', answer_type: 'single_choice', question: 'Courts', categories: cats })
 		];
 		const view = questionView(group, variables, undefined, 'Other');
 		expect(view.answerType).toBe('grid');
@@ -29,17 +52,22 @@ describe('questionView', () => {
 	});
 
 	it('shows a choice group as one question, with the text variable as "Other"', () => {
-		const group = { id: 'g', type: 'multipleResp', concept: 'Gender', description: 'Your gender?' };
+		const group = mkGroup({
+			id: 'g',
+			type: 'multipleResp',
+			concept: 'Gender',
+			description: 'Your gender?'
+		});
 		const variables = [
-			{ id: 'v1', name: 'w', answer_type: 'multiple_choice', question: 'female' },
-			{ id: 'v2', name: 'm', answer_type: 'multiple_choice', question: 'male' },
-			{ id: 'v3', name: 'o', answer_type: 'text', question: 'self-described' }
+			mkVar({ id: 'v1', name: 'w', answer_type: 'multiple_choice', question: 'female' }),
+			mkVar({ id: 'v2', name: 'm', answer_type: 'multiple_choice', question: 'male' }),
+			mkVar({ id: 'v3', name: 'o', answer_type: 'text', question: 'self-described' })
 		];
 		const view = questionView(group, variables, 'multiple_choice_other', 'Other');
 		expect(view.answerType).toBe('multiple_choice_other');
 		expect(view.variable).toBeNull();
 		expect(view.preview?.kind).toBe('survey');
-		const v = (view.preview as { variable: Record<string, unknown> }).variable;
+		const v = (view.preview as { variable: PreviewVariable }).variable;
 		expect(v).toMatchObject({
 			question: 'Your gender?',
 			answer_type: 'select_multiple',
@@ -53,14 +81,14 @@ describe('questionView', () => {
 	});
 
 	it('uses the fallback label for an "Other" variable without text', () => {
-		const group = { id: 'g', type: 'other', concept: 'Status' };
+		const group = mkGroup({ id: 'g', type: 'other', concept: 'Status' });
 		const variables = [
-			{ id: 'v1', answer_type: 'single_choice', concept: 'employed' },
-			{ id: 'v2', answer_type: 'text' }
+			mkVar({ id: 'v1', answer_type: 'single_choice', concept: 'employed' }),
+			mkVar({ id: 'v2', answer_type: 'text' })
 		];
 		const v = (
 			questionView(group, variables, '', 'Sonstiges').preview as {
-				variable: Record<string, unknown>;
+				variable: PreviewVariable;
 			}
 		).variable;
 		expect(v.other_label).toBe('Sonstiges');
@@ -68,22 +96,27 @@ describe('questionView', () => {
 	});
 
 	it('falls back to the group type, then the first choice type, for the answer type', () => {
-		expect(questionView({ type: 'multipleResp' }, [], undefined, '').answerType).toBe(
+		expect(questionView(mkGroup({ type: 'multipleResp' }), [], undefined, '').answerType).toBe(
 			'multiple_choice'
 		);
 		expect(
-			questionView({ type: 'other' }, [{ answer_type: 'single_choice' }], undefined, '').answerType
+			questionView(
+				mkGroup({ type: 'other' }),
+				[mkVar({ answer_type: 'single_choice' })],
+				undefined,
+				''
+			).answerType
 		).toBe('single_choice');
 	});
 
 	it('shows a standalone variable with its variant from the flags', () => {
-		const variable = {
+		const variable = mkVar({
 			id: 'v',
 			answer_type: 'single_choice',
 			has_long_list: true,
 			long_list_standard: 'iso_3166_1',
 			concept: 'Country'
-		};
+		});
 		const view = questionView(null, [variable], 'single_choice_long_list', 'Other');
 		expect(view.variable).toBe(variable);
 		expect(view.longListStandard).toBe('iso_3166_1');
@@ -95,6 +128,6 @@ describe('questionView', () => {
 	});
 
 	it('has no preview for an empty group', () => {
-		expect(questionView({ type: 'grid' }, [], undefined, '').preview).toBeNull();
+		expect(questionView(mkGroup({ type: 'grid' }), [], undefined, '').preview).toBeNull();
 	});
 });

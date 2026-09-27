@@ -1,8 +1,8 @@
 <script lang="ts">
-	/* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
 	import { typeInfo } from '$lib/questionTypes';
 	import { t } from '$lib/i18n';
-	let { variable }: { variable: any } = $props();
+	import type { PreviewVariable } from '$lib/types';
+	let { variable }: { variable: PreviewVariable } = $props();
 
 	let info = $derived(typeInfo(variable?.answer_type ?? ''));
 	let Input = $derived(info?.component ?? null);

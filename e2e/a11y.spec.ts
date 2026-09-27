@@ -4,14 +4,14 @@ import { mockBackend, fixtures, PASSWORD } from './backend';
 
 const pages: Record<string, string> = {
 	explore: '/',
-	grid: `/questions/${fixtures.grid.question.id}/`,
-	choice: `/questions/${fixtures.gender.question.id}/`,
-	study: '/studies/study0000000001/',
-	upload: '/upload/',
-	about: '/about/',
-	login: '/login/',
-	imprint: '/imprint/',
-	'not found': '/questions/aaaaaaaaaaaaaaa/'
+	grid: `/questions/${fixtures.grid.question.id}`,
+	choice: `/questions/${fixtures.gender.question.id}`,
+	study: '/studies/study0000000001',
+	upload: '/upload',
+	about: '/about',
+	login: '/login',
+	imprint: '/imprint',
+	'not found': '/questions/aaaaaaaaaaaaaaa'
 };
 
 for (const [name, path] of Object.entries(pages)) {
@@ -30,7 +30,7 @@ for (const [name, path] of Object.entries(pages)) {
 
 test('upload page, signed in, has no axe violations', async ({ page }) => {
 	await mockBackend(page);
-	await page.goto('/upload/');
+	await page.goto('/upload');
 	await page.getByLabel('E-Mail / Benutzername').fill('tester@example.org');
 	await page.getByLabel('Passwort').fill(PASSWORD);
 	await page.getByRole('button', { name: 'Anmelden' }).last().click();

@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { mockBackend, PASSWORD } from './backend';
 
-const STUDY = '/studies/study0000000001/';
+const STUDY = '/studies/study0000000001';
 
 test('the study DDI export downloads a file (#18)', async ({ page }) => {
 	await mockBackend(page);
@@ -21,7 +21,7 @@ test('a failing export shows a message (#18)', async ({ page }) => {
 });
 
 async function signIn(page: Page) {
-	await page.goto('/upload/');
+	await page.goto('/upload');
 	await page.getByLabel('E-Mail / Benutzername').fill('tester@example.org');
 	await page.getByLabel('Passwort').fill(PASSWORD);
 	await page.getByRole('button', { name: 'Anmelden' }).last().click();
@@ -30,7 +30,7 @@ async function signIn(page: Page) {
 
 test('signing in with a wrong password fails', async ({ page }) => {
 	await mockBackend(page);
-	await page.goto('/upload/');
+	await page.goto('/upload');
 	await page.getByLabel('E-Mail / Benutzername').fill('tester@example.org');
 	await page.getByLabel('Passwort').fill('wrong');
 	await page.getByRole('button', { name: 'Anmelden' }).last().click();

@@ -63,8 +63,17 @@ export function questionText(
 	);
 }
 
+/** What localizeVariable needs of a variable. */
+interface LocalizableVariable {
+	question?: string;
+	prequestion_text?: string;
+	ivu_instructions?: string;
+	categories?: { value?: string; label?: string }[] | null;
+	translations?: unknown;
+}
+
 /** A variable with its texts and category labels in the UI locale. */
-export function localizeVariable<T extends Record<string, unknown>>(
+export function localizeVariable<T extends LocalizableVariable>(
 	variable: T,
 	language: string | undefined,
 	locale: string
@@ -91,7 +100,7 @@ export function localizeVariable<T extends Record<string, unknown>>(
 }
 
 /** A variable group with its description in the UI locale. */
-export function localizeGroup<T extends Record<string, unknown>>(
+export function localizeGroup<T extends { description?: string; translations?: unknown }>(
 	group: T,
 	language: string | undefined,
 	locale: string

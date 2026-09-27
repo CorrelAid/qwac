@@ -1,22 +1,34 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
 /** Search ranking, filters, facet counts and paging for the explore page. */
 import { baseType } from '$lib/questionTypes';
+import type { Question, Study } from '$lib/types';
+
+/** What filtering needs of a question. */
+type QuestionLike = Pick<Question, 'id' | 'study_id' | 'answer_type'>;
 
 /** Filter key → selected value ('' = no filter). */
 export type Filters = Record<string, string>;
-export type StudyMap = Map<string, any>;
+export type StudyMap = Map<string, Study>;
 
 /**
  * The questions matching a search, in the backend's relevance order; all
  * questions when there's no search; none when the search failed.
  */
-export function rankBySearch(questions: any[], ids: string[] | null, failed = false): any[] {
+export function rankBySearch<Q extends Pick<Question, 'id'>>(
+	questions: Q[],
+	ids: string[] | null,
+	failed = false
+): Q[] {
 	if (!ids) return failed ? [] : questions;
 	const rank = new Map(ids.map((id, i) => [id, i]));
 	return questions.filter((q) => rank.has(q.id)).sort((a, b) => rank.get(a.id)! - rank.get(b.id)!);
 }
 
-export function matchesFilter(q: any, key: string, value: string, studies: StudyMap): boolean {
+export function matchesFilter(
+	q: QuestionLike,
+	key: string,
+	value: string,
+	studies: StudyMap
+): boolean {
 	switch (key) {
 		case 'answer_type':
 			return baseType(q.answer_type) === value;
@@ -28,12 +40,12 @@ export function matchesFilter(q: any, key: string, value: string, studies: Study
 }
 
 /** The questions matching every set filter, except `excludeKey`. */
-export function applyFilters(
-	questions: any[],
+export function applyFilters<Q extends QuestionLike>(
+	questions: Q[],
 	filters: Filters,
 	studies: StudyMap,
 	excludeKey?: string
-): any[] {
+): Q[] {
 	let result = questions;
 	for (const [key, value] of Object.entries(filters)) {
 		if (!value || key === excludeKey) continue;
@@ -47,8 +59,8 @@ export function applyFilters(
  * filters apply; `key`'s own selection doesn't, so every option shows what
  * choosing it would give.
  */
-export function computeCounts(
-	questions: any[],
+export function computeCounts<Q extends QuestionLike>(
+	questions: Q[],
 	filters: Filters,
 	studies: StudyMap,
 	key: string,
@@ -61,12 +73,12 @@ export function computeCounts(
 }
 
 /** The distinct answer types (without variants), sorted. */
-export function answerTypeOptions(questions: any[]): string[] {
+export function answerTypeOptions(questions: QuestionLike[]): string[] {
 	return [...new Set(questions.map((q) => baseType(q.answer_type)).filter(Boolean))].sort();
 }
 
 /** The distinct topic classifications of the questions' studies, sorted. */
-export function topicOptions(questions: any[], studies: StudyMap): string[] {
+export function topicOptions(questions: QuestionLike[], studies: StudyMap): string[] {
 	return [
 		...new Set(
 			questions.flatMap((q) => studies.get(q.study_id)?.topic_classifications ?? []).filter(Boolean)

@@ -1,7 +1,7 @@
 <script lang="ts">
-	/* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
 	import { t } from '$lib/i18n';
-	let { categories }: { categories: any[] } = $props();
+	import type { Category } from '$lib/types';
+	let { categories }: { categories: Pick<Category, 'label' | 'value'>[] } = $props();
 </script>
 
 <fieldset>
@@ -9,7 +9,7 @@
 	{#each categories as cat, i (i)}
 		<label class="option">
 			<input type="radio" name="preview-radio" tabindex="-1" aria-disabled="true" />
-			<span>{cat.label ?? cat.labl ?? cat.value ?? cat.catValu ?? ''}</span>
+			<span>{cat.label || cat.value}</span>
 		</label>
 	{/each}
 </fieldset>

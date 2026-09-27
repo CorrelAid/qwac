@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
 import PocketBase from 'pocketbase';
 import type { AuthRecord } from 'pocketbase';
 import { readable } from 'svelte/store';
@@ -25,7 +24,7 @@ export function clearOnAuthError(err: unknown): void {
 		err &&
 		typeof err === 'object' &&
 		'status' in err &&
-		(err as any).status === 401
+		err.status === 401
 	) {
 		client.authStore.clear();
 	}
@@ -126,8 +125,8 @@ export async function fetchApiText(path: string): Promise<string> {
 }
 
 /** Fetch JSON from a custom PocketBase API endpoint (authenticated). Supports custom request options (method, body, etc). */
-export async function fetchApiJson(path: string, options?: RequestInit): Promise<any> {
-	return (await apiFetch(path, options)).json();
+export async function fetchApiJson<T = unknown>(path: string, options?: RequestInit): Promise<T> {
+	return (await apiFetch(path, options)).json() as Promise<T>;
 }
 
 /** Fetch a blob from a custom PocketBase API endpoint (authenticated). */

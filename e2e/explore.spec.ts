@@ -87,7 +87,7 @@ test('question cards look the same on the explore and study pages (#30)', async 
 	};
 	await page.goto('/?q=Age');
 	const onExplore = await card();
-	await page.goto('/studies/study0000000001/');
+	await page.goto('/studies/study0000000001');
 	expect(await card()).toEqual(onExplore);
 });
 
@@ -114,11 +114,11 @@ test('pages run under the CSP without violations, and About/Imprint have content
 	});
 	await page.goto('/');
 	await expect(page.locator('.count')).toContainText('Fragen');
-	await page.goto(`/questions/${fixtures.gender.question.id}/`);
+	await page.goto(`/questions/${fixtures.gender.question.id}`);
 	await expect(page.getByText('Was ist Ihr Geschlecht?')).toBeVisible();
-	await page.goto('/about/');
+	await page.goto('/about');
 	await expect(page.locator('section p').first()).not.toBeEmpty();
-	await page.goto('/imprint/');
+	await page.goto('/imprint');
 	await expect(page.getByRole('heading', { name: 'Haftungsausschluss' })).toBeVisible();
 	expect(violations).toEqual([]);
 });
