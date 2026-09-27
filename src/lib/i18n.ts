@@ -48,6 +48,8 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'layout.about': 'About',
 		'layout.imprint': 'Imprint',
 		'layout.upload': 'Upload',
+		'layout.alpha': 'Alpha',
+		'layout.alphaNote': 'QWAC is still in development. Features and content may change.',
 		'layout.subtitle': '- questions worth asking continuously',
 		'layout.description':
 			'A question bank for civil society surveys: search tested questions and reuse them as XLSForm or DDI.',
@@ -187,6 +189,9 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'layout.about': 'Über',
 		'layout.imprint': 'Impressum',
 		'layout.upload': 'Hochladen',
+		'layout.alpha': 'Alpha',
+		'layout.alphaNote':
+			'QWAC befindet sich noch in Entwicklung. Funktionen und Inhalte können sich ändern.',
 		// The acronym's expansion stays English in every language.
 		'layout.subtitle': '- questions worth asking continuously',
 		'layout.description':
