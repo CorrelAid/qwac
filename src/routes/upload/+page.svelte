@@ -2,6 +2,8 @@
 	/* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
 	import { resolve } from '$app/paths';
 	import { client, clearOnAuthError } from '$lib/pocketbase';
+	import { invalidateAll } from '$app/navigation';
+	import { clearCache } from '$lib/cache';
 	import LoginGuard from '$lib/components/LoginGuard.svelte';
 	import LoginForm from '$lib/components/LoginForm.svelte';
 	import { metadata } from '$lib/metadata';
@@ -20,12 +22,14 @@
 	}
 
 	type ValidationError = { rule?: string; test?: string; location?: string; message?: string };
-	type UploadResult = {
-		valid: boolean;
-		message?: string;
-		errors?: (string | ValidationError)[];
-		error?: string;
-	};
+	/**
+	 * The outcome of an upload: imported (with the new study, if the backend
+	 * says which), rejected with validation findings, or failed with a message.
+	 */
+	type UploadResult =
+		| { kind: 'imported'; studyId?: string }
+		| { kind: 'invalid'; errors: (string | ValidationError)[] }
+		| { kind: 'failed'; message: string };
 
 	let file = $state<File | null>(null);
 	let fileInput = $state<HTMLInputElement>();
@@ -39,7 +43,7 @@
 		if (selected) {
 			const err = validateFile(selected);
 			if (err) {
-				result = { valid: false, message: err };
+				result = { kind: 'failed', message: err };
 				file = null;
 				return;
 			}
@@ -55,7 +59,7 @@
 		if (dropped) {
 			const err = validateFile(dropped);
 			if (err) {
-				result = { valid: false, message: err };
+				result = { kind: 'failed', message: err };
 				return;
 			}
 			file = dropped;
@@ -76,7 +80,7 @@
 		if (!file) return;
 		const fileErr = validateFile(file);
 		if (fileErr) {
-			result = { valid: false, message: fileErr };
+			result = { kind: 'failed', message: fileErr };
 			return;
 		}
 		uploading = true;
@@ -84,7 +88,16 @@
 		try {
 			const fd = new FormData();
 			fd.append('file', file);
-			result = await client.send('/api/validate', { method: 'POST', body: fd });
+			// Validates and stores the codebook; superusers only.
+			const res = await client.send('/api/import', { method: 'POST', body: fd });
+			if (res.imported === false) {
+				result = { kind: 'failed', message: $t('upload.notStored') };
+			} else {
+				result = { kind: 'imported', studyId: res.study_id };
+				// The explore and study pages must show the new study right away.
+				clearCache();
+				await invalidateAll();
+			}
 		} catch (e: any) {
 			clearOnAuthError(e);
 			if (import.meta.env.DEV) {
@@ -94,9 +107,11 @@
 			const resp = e.response || e.data || {};
 			if (resp.valid === false && resp.errors) {
 				// Backend returned validation errors (400)
-				result = { valid: false, errors: resp.errors };
+				result = { kind: 'invalid', errors: resp.errors };
+			} else if (e.status === 401 || e.status === 403) {
+				result = { kind: 'failed', message: $t('upload.notAllowed') };
 			} else {
-				result = { valid: false, message: $t('upload.uploadFailed') };
+				result = { kind: 'failed', message: $t('upload.uploadFailed') };
 			}
 		} finally {
 			uploading = false;
@@ -117,15 +132,25 @@
 		<p class="description">{$t('upload.description')}</p>
 
 		{#if result}
-			<div class="result-box" class:success={result.valid} class:error={!result.valid}>
-				<strong>{result.valid ? $t('upload.importSuccess') : $t('upload.importFailed')}</strong>
-				{#if result.message}
+			<div
+				class="result-box"
+				class:success={result.kind === 'imported'}
+				class:error={result.kind !== 'imported'}
+			>
+				<strong
+					>{result.kind === 'imported'
+						? $t('upload.importSuccess')
+						: $t('upload.importFailed')}</strong
+				>
+				{#if result.kind === 'imported' && result.studyId}
+					<p>
+						<a href={resolve('/studies/[id]', { id: result.studyId })}>{$t('upload.viewStudy')}</a>
+					</p>
+				{/if}
+				{#if result.kind === 'failed'}
 					<p>{result.message}</p>
 				{/if}
-				{#if result.error}
-					<p>{result.error}</p>
-				{/if}
-				{#if result.errors?.length}
+				{#if result.kind === 'invalid' && result.errors.length}
 					<ul class="error-list">
 						{#each result.errors as err, i (i)}
 							<li>

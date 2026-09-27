@@ -62,7 +62,7 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'auth.passwordPlaceholder': 'Password',
 		'auth.emptyFields': 'Please enter your email and password.',
 		'auth.invalidCredentials': 'Invalid email or password. Please try again.',
-		'auth.signInRequired': 'Please sign in to upload codebooks.',
+		'auth.signInRequired': 'Importing codebooks is for administrators. Please sign in.',
 		'auth.profilePicture': 'Profile picture',
 
 		// Explore / Home
@@ -136,6 +136,10 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'upload.uploadFailed': 'Upload failed. Please try again.',
 		'upload.xmlOnly': 'File must be an XML file.',
 		'upload.tooLarge': 'File must be smaller than 10 MB.',
+		'upload.viewStudy': 'View the imported study →',
+		'upload.notStored': 'The file is valid, but it could not be stored. Please try again later.',
+		'upload.notAllowed':
+			'Only administrators can import codebooks. Please sign in with an administrator account.',
 		'upload.unknownError': 'Unknown error',
 
 		// Survey preview
@@ -188,7 +192,8 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'auth.passwordPlaceholder': 'Passwort',
 		'auth.emptyFields': 'Bitte E-Mail und Passwort eingeben.',
 		'auth.invalidCredentials': 'Ungültige E-Mail oder Passwort. Bitte erneut versuchen.',
-		'auth.signInRequired': 'Bitte anmelden, um Codebooks hochzuladen.',
+		'auth.signInRequired':
+			'Das Importieren von Codebooks ist Administrator*innen vorbehalten. Bitte anmelden.',
 		'auth.profilePicture': 'Profilbild',
 
 		// Explore / Home
@@ -262,6 +267,11 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'upload.uploadFailed': 'Hochladen fehlgeschlagen. Bitte erneut versuchen.',
 		'upload.xmlOnly': 'Die Datei muss eine XML-Datei sein.',
 		'upload.tooLarge': 'Die Datei darf maximal 10 MB groß sein.',
+		'upload.viewStudy': 'Importierte Studie ansehen →',
+		'upload.notStored':
+			'Die Datei ist gültig, konnte aber nicht gespeichert werden. Bitte später erneut versuchen.',
+		'upload.notAllowed':
+			'Nur Administrator*innen können Codebooks importieren. Bitte mit einem Administratorkonto anmelden.',
 		'upload.unknownError': 'Unbekannter Fehler',
 
 		// Survey preview

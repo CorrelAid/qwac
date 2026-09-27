@@ -53,7 +53,15 @@ test('uploading a valid and an invalid codebook', async ({ page }) => {
 	await page.getByRole('button', { name: 'Codebook importieren' }).click();
 	await expect(page.getByText('Import erfolgreich')).toBeVisible();
 
-	await page.getByRole('button', { name: 'Weitere Datei hochladen' }).click();
+	// #19: the new study is linked and shows up without a reload.
+	await page.getByRole('link', { name: 'Importierte Studie ansehen' }).click();
+	await expect(page.getByRole('heading', { name: 'Imported Study' })).toBeVisible();
+	await page.getByRole('link', { name: 'Zurück zu Fragen' }).click();
+	await expect(page.locator('.count')).toContainText('25 Fragen');
+	await page.getByRole('searchbox').fill('trust');
+	await expect(page.getByText('How much do you trust the council?')).toBeVisible();
+	await page.getByRole('link', { name: 'Hochladen' }).click();
+
 	const chooser2 = page.waitForEvent('filechooser');
 	await page.getByRole('button', { name: 'Datei auswählen' }).click();
 	await (
