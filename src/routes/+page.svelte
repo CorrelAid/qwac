@@ -10,6 +10,7 @@
 	import AnswerTypeTag from '$lib/components/AnswerTypeTag.svelte';
 	import { t, locale } from '$lib/i18n';
 	import { questionText } from '$lib/translations';
+	import { baseType, typeLabel } from '$lib/questionTypes';
 
 	$effect(() => {
 		$metadata.title = $t('explore.title');
@@ -92,23 +93,12 @@
 			.sort((a, b) => rank.get(a.id)! - rank.get(b.id)!);
 	});
 
-	function normalizeAnswerType(type: string): string {
-		return (type || '').replace(/_other$/, '').replace(/_long_list$/, '');
-	}
-
-	function answerTypeLabel(type: string): string {
-		if (!type) return '';
-		return normalizeAnswerType(type)
-			.replace(/_/g, ' ')
-			.replace(/\b\w/g, (c) => c.toUpperCase());
-	}
-
 	function studyForQuestion(q: any): any | undefined {
 		return studies.get(q.study_id);
 	}
 
 	let answerTypeOptions = $derived(
-		[...new Set(questions.map((q) => normalizeAnswerType(q.answer_type)).filter(Boolean))].sort()
+		[...new Set(questions.map((q) => baseType(q.answer_type)).filter(Boolean))].sort()
 	);
 
 	let surveyTypeOptions = $derived(
@@ -122,7 +112,7 @@
 	function matchesFilter(q: any, key: string, val: string): boolean {
 		switch (key) {
 			case 'answer_type':
-				return normalizeAnswerType(q.answer_type) === val;
+				return baseType(q.answer_type) === val;
 			case 'survey_type':
 				return studyForQuestion(q)?.topic_classifications?.includes(val);
 			default:
@@ -159,7 +149,7 @@
 			label: $t('explore.filterAnswerType'),
 			key: 'answer_type',
 			values: answerTypeOptions,
-			labels: Object.fromEntries(answerTypeOptions.map((v) => [v, answerTypeLabel(v)])),
+			labels: Object.fromEntries(answerTypeOptions.map((v) => [v, typeLabel(v)])),
 			counts: computeCounts(searchedQuestions, 'answer_type', answerTypeOptions)
 		}
 	]);

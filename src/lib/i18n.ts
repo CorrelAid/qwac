@@ -146,10 +146,6 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'longList.select': 'Select...',
 		'longList.standard': 'Standard:',
 
-		// Answer type tag
-		'answerType.other': 'Other',
-		'answerType.longList': 'Long list',
-
 		// About
 		'about.title': 'About QWAC',
 		'about.back': 'Back to questions',
@@ -271,10 +267,6 @@ export const translations: Record<Locale, Record<string, string>> = {
 		// Long list
 		'longList.select': 'Auswählen...',
 		'longList.standard': 'Standard:',
-
-		// Answer type tag
-		'answerType.other': 'Sonstiges',
-		'answerType.longList': 'Lange Liste',
 
 		// About
 		'about.title': 'Über QWAC',

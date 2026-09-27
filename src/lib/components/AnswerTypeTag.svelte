@@ -1,26 +1,14 @@
 <script lang="ts">
-	import { t } from '$lib/i18n';
+	import { typeLabel } from '$lib/questionTypes';
 
 	let { type }: { type: string } = $props();
 
-	let base = $derived((type || '').replace(/_other$/, '').replace(/_long_list$/, ''));
-	let baseLabel = $derived(
-		base.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())
-	);
-	let suffix = $derived(
-		(type || '').endsWith('_other')
-			? $t('answerType.other')
-			: (type || '').endsWith('_long_list')
-				? $t('answerType.longList')
-				: null
-	);
+	// The registry's label; an unknown type still gets a tag, made from its name.
+	let label = $derived(typeLabel(type));
 </script>
 
 {#if type}
-	<span class="type-tag">
-		{baseLabel}{#if suffix}
-			<span class="sep">&rsaquo;</span> {suffix}{/if}
-	</span>
+	<span class="type-tag">{label}</span>
 {/if}
 
 <style>
@@ -34,10 +22,5 @@
 		background-color: var(--color-tertiary);
 		color: var(--color-text-primary);
 		white-space: nowrap;
-	}
-
-	.sep {
-		opacity: 0.4;
-		font-weight: var(--font-weight-bold);
 	}
 </style>

@@ -1,24 +1,15 @@
 <script lang="ts">
 	/* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
-	import SelectOneInput from './question-types/SelectOneInput.svelte';
-	import SelectMultipleInput from './question-types/SelectMultipleInput.svelte';
-	import TextInput from './question-types/TextInput.svelte';
-	import IntegerInput from './question-types/IntegerInput.svelte';
-	import DecimalInput from './question-types/DecimalInput.svelte';
-	import DateInput from './question-types/DateInput.svelte';
-	import TimeInput from './question-types/TimeInput.svelte';
-	import DateTimeInput from './question-types/DateTimeInput.svelte';
-	import LongListInput from './question-types/LongListInput.svelte';
+	import { typeInfo } from '$lib/questionTypes';
 	import { t } from '$lib/i18n';
 	let { variable }: { variable: any } = $props();
 
-	let answerType = $derived(
-		(variable?.answer_type || '').replace(/_other$/, '').replace(/_long_list$/, '')
-	);
+	let info = $derived(typeInfo(variable?.answer_type ?? ''));
+	let Input = $derived(info?.component ?? null);
 	let categories = $derived(variable?.categories || []);
 	let hasCategories = $derived(Array.isArray(categories) && categories.length > 0);
-	let hasLongList = $derived(variable?.has_long_list === true);
-	let hasOther = $derived(variable?.has_other === true);
+	let showInput = $derived(!!Input && (!info?.needsCategories || hasCategories));
+	let hasOther = $derived(variable?.has_other ?? info?.withOther ?? false);
 	let otherLabel = $derived(variable?.other_label || $t('preview.other'));
 </script>
 
@@ -43,14 +34,16 @@
 	{/if}
 
 	<div class="response-area">
-		{#if hasLongList}
-			<LongListInput concept={variable.concept || ''} standard={variable.long_list_standard} />
-		{:else if (answerType === 'select_one' || answerType === 'single_choice') && hasCategories}
-			<SelectOneInput {categories} />
-			{#if hasOther}
+		{#if showInput && Input}
+			<Input {categories} concept={variable.concept || ''} standard={variable.long_list_standard} />
+			{#if hasOther && info?.choice && info.needsCategories}
 				<div class="other-option">
 					<label class="option">
-						<input type="radio" name="preview-radio" disabled />
+						<input
+							type={info.choice === 'multiple' ? 'checkbox' : 'radio'}
+							name="preview-radio"
+							disabled
+						/>
 						<span>{otherLabel}:</span>
 					</label>
 					<input
@@ -61,34 +54,6 @@
 					/>
 				</div>
 			{/if}
-		{:else if (answerType === 'select_multiple' || answerType === 'multiple_choice') && hasCategories}
-			<SelectMultipleInput {categories} />
-			{#if hasOther}
-				<div class="other-option">
-					<label class="option">
-						<input type="checkbox" disabled />
-						<span>{otherLabel}:</span>
-					</label>
-					<input
-						type="text"
-						class="other-input"
-						placeholder={$t('preview.pleaseSpecify')}
-						disabled
-					/>
-				</div>
-			{/if}
-		{:else if answerType === 'text'}
-			<TextInput />
-		{:else if answerType === 'integer'}
-			<IntegerInput />
-		{:else if answerType === 'decimal'}
-			<DecimalInput />
-		{:else if answerType === 'date'}
-			<DateInput />
-		{:else if answerType === 'time'}
-			<TimeInput />
-		{:else if answerType === 'datetime'}
-			<DateTimeInput />
 		{/if}
 	</div>
 </div>
