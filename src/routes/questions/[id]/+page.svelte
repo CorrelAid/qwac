@@ -99,7 +99,6 @@
 
 	$effect(() => {
 		$metadata.title = displayConcept;
-		$metadata.headline = '';
 	});
 </script>
 

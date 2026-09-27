@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { authModel, client } from '$lib/pocketbase';
+	import { authModel, client, logout } from '$lib/pocketbase';
 	import { resolve } from '$app/paths';
 	import { t } from '$lib/i18n';
 
 	let open = $state(false);
 
-	async function logout() {
-		client.authStore.clear();
+	function signOut() {
+		logout();
 		open = false;
 	}
 
@@ -51,7 +51,7 @@
 		</button>
 		{#if open}
 			<div class="dropdown">
-				<button class="dropdown-item" onclick={logout}>{$t('auth.signOut')}</button>
+				<button class="dropdown-item" onclick={signOut}>{$t('auth.signOut')}</button>
 			</div>
 		{/if}
 	</div>

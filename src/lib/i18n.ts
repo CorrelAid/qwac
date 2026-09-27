@@ -49,6 +49,8 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'layout.imprint': 'Imprint',
 		'layout.upload': 'Upload',
 		'layout.subtitle': '- questions worth asking continuously',
+		'layout.description':
+			'A question bank for civil society surveys: search tested questions and reuse them as XLSForm or DDI.',
 
 		// Auth
 		'auth.signIn': 'Sign In',
@@ -173,6 +175,8 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'layout.imprint': 'Impressum',
 		'layout.upload': 'Hochladen',
 		'layout.subtitle': '- Fragen, die es sich zu stellen lohnt',
+		'layout.description':
+			'Eine Fragendatenbank für zivilgesellschaftliche Umfragen: erprobte Fragen finden und als XLSForm oder DDI wiederverwenden.',
 
 		// Auth
 		'auth.signIn': 'Anmelden',

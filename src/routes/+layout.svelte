@@ -9,7 +9,7 @@
 	import { metadata } from '$lib/metadata';
 	const { children } = $props();
 
-	const siteName = 'QWAC Frontend';
+	const siteName = 'QWAC';
 
 	const locales = LOCALES.map((code) => ({ code, label: code.toUpperCase() }));
 
@@ -19,7 +19,8 @@
 </script>
 
 <svelte:head>
-	<title>{$metadata.title} | {siteName}</title>
+	<title>{$metadata.title ? `${$metadata.title} | ${siteName}` : siteName}</title>
+	<meta name="description" content={$t('layout.description')} />
 </svelte:head>
 
 <header class="header-full">

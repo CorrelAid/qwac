@@ -32,7 +32,6 @@
 
 	$effect(() => {
 		$metadata.title = study.title;
-		$metadata.headline = '';
 	});
 
 	async function exportDdiXml() {
