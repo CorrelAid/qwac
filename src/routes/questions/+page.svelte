@@ -1,5 +1,5 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { base } from '$app/paths';
-	goto(`${base}/`, { replaceState: true });
+	import { resolve } from '$app/paths';
+	goto(resolve('/'), { replaceState: true });
 </script>

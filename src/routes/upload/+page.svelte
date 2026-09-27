@@ -1,4 +1,6 @@
 <script lang="ts">
+	/* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
+	import { resolve } from '$app/paths';
 	import { client, clearOnAuthError } from '$lib/pocketbase';
 	import LoginGuard from '$lib/components/LoginGuard.svelte';
 	import LoginForm from '$lib/components/LoginForm.svelte';
@@ -109,7 +111,7 @@
 
 <LoginGuard>
 	<div class="upload-page">
-		<a href="/" class="back-link">&larr; {$t('upload.back')}</a>
+		<a href={resolve('/')} class="back-link">&larr; {$t('upload.back')}</a>
 
 		<h2>{$t('upload.title')}</h2>
 		<p class="description">{$t('upload.description')}</p>
@@ -125,7 +127,7 @@
 				{/if}
 				{#if result.errors?.length}
 					<ul class="error-list">
-						{#each result.errors as err}
+						{#each result.errors as err, i (i)}
 							<li>
 								{#if typeof err === 'string'}
 									{err}

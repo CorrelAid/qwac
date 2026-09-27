@@ -1,4 +1,6 @@
 <script lang="ts">
+	/* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
+	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import { client, clearOnAuthError, fetchApiBlob, fetchApiJson } from '$lib/pocketbase';
 	import QuestionCard from '$lib/components/QuestionCard.svelte';
@@ -9,15 +11,6 @@
 	import AnswerTypeTag from '$lib/components/AnswerTypeTag.svelte';
 	import { t, locale } from '$lib/i18n';
 	import { questionText } from '$lib/translations';
-
-	function answerTypeLabel(type: string): string {
-		if (!type) return '';
-		return type
-			.replace(/_other$/, '')
-			.replace(/_long_list$/, '')
-			.replace(/_/g, ' ')
-			.replace(/\b\w/g, (c) => c.toUpperCase());
-	}
 
 	function formatAuthor(val: unknown): string {
 		let parsed = typeof val === 'string' && val.trim().startsWith('map[') ? parseGoValue(val) : val;
@@ -95,7 +88,7 @@
 	<p>{$t('study.loading')}</p>
 {:else}
 	<article class="study-detail">
-		<a href="/" class="back-link">&larr; {$t('study.back')}</a>
+		<a href={resolve('/')} class="back-link">&larr; {$t('study.back')}</a>
 
 		<div class="title-row">
 			<h2>{study.title}</h2>
@@ -139,6 +132,7 @@
 			{#if study.holdings_uri}
 				<div class="meta-item">
 					<strong>{$t('study.source')}</strong>
+					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- external source URL -->
 					<a href={extractUri(study.holdings_uri)} target="_blank" rel="noopener">
 						{extractText(study.holdings_description) || extractUri(study.holdings_uri)}
 					</a>
@@ -148,7 +142,7 @@
 
 		{#if study.topic_classifications?.length}
 			<div class="tags">
-				{#each study.topic_classifications as tc}
+				{#each study.topic_classifications as tc (tc)}
 					<span class="tag">{tc}</span>
 				{/each}
 			</div>
@@ -170,7 +164,7 @@
 					{#each questions as question (question.id)}
 						<li id="q-{question.id}">
 							<QuestionCard>
-								<a href="/questions/{question.id}" class="var-name"
+								<a href={resolve('/questions/[id]', { id: question.id })} class="var-name"
 									>{question.concept || question.name}</a
 								>
 								{@const text = questionText(question, $locale)}

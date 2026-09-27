@@ -38,13 +38,11 @@
 	/>
 
 	<div class="filters">
-		{#each filterOptions as option (option.key)}
-			{#if option.hidden}
-				{''}
-			{:else if option.kind === 'chip'}
+		{#each filterOptions.filter((o) => !o.hidden) as option (option.key)}
+			{#if option.kind === 'chip'}
 				<div class="chip-group">
 					<span class="chip-label">{option.label}</span>
-					{#each option.values as val}
+					{#each option.values as val (val)}
 						{@const count = option.counts?.[val]}
 						<button
 							class="chip"
@@ -59,7 +57,7 @@
 			{:else}
 				<select id={option.key} bind:value={filters[option.key]} aria-label={option.label}>
 					<option value="">{option.label}</option>
-					{#each option.values as val}
+					{#each option.values as val (val)}
 						{@const count = option.counts?.[val]}
 						<option value={val}>{val}{count != null ? ` (${count})` : ''}</option>
 					{/each}

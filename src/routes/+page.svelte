@@ -1,4 +1,6 @@
 <script lang="ts">
+	/* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
+	import { resolve } from '$app/paths';
 	import { client, clearOnAuthError, fetchApiJson } from '$lib/pocketbase';
 	import type { PageStore } from '$lib/pocketbase';
 	import FilterBar from '$lib/components/FilterBar.svelte';
@@ -204,14 +206,14 @@
 	let filteredQuestions = $derived(applyFilters(searchedQuestions));
 
 	const PER_PAGE = 20;
-	let clientPage = $state(1);
-
-	// Reset to page 1 whenever search query or filters change
-	$effect(() => {
-		searchQuery;
-		JSON.stringify(filters);
-		clientPage = 1;
-	});
+	// The chosen page belongs to one search and filter combination; any change
+	// to those goes back to page 1.
+	const resultKey = $derived(JSON.stringify([searchQuery, filters]));
+	let chosenPage = $state({ key: '', page: 1 });
+	const clientPage = $derived(chosenPage.key === resultKey ? chosenPage.page : 1);
+	function setClientPage(page: number) {
+		chosenPage = { key: resultKey, page };
+	}
 
 	const totalPages = $derived(Math.max(1, Math.ceil(filteredQuestions.length / PER_PAGE)));
 	const currentPage = $derived(Math.min(Math.max(1, clientPage), totalPages));
@@ -239,13 +241,13 @@
 	const pageStore: PageStore = {
 		subscribe: _pageData.subscribe,
 		setPage: async (n: number) => {
-			clientPage = n;
+			setClientPage(n);
 		},
 		next: async () => {
-			clientPage = Math.min(clientPage + 1, totalPages);
+			setClientPage(Math.min(clientPage + 1, totalPages));
 		},
 		prev: async () => {
-			clientPage = Math.max(clientPage - 1, 1);
+			setClientPage(Math.max(clientPage - 1, 1));
 		}
 	};
 </script>
@@ -291,7 +293,9 @@
 									<AnswerTypeTag type={question.answer_type} />
 								{/if}
 								{#if study}
-									<a href="/studies/{study.id}" class="study-tag">{study.title}</a>
+									<a href={resolve('/studies/[id]', { id: study.id })} class="study-tag"
+										>{study.title}</a
+									>
 								{/if}
 							</div>
 
@@ -302,7 +306,9 @@
 								</p>
 							{/if}
 
-							<a href="/questions/{question.id}" class="detail-link">{$t('explore.viewDetails')}</a>
+							<a href={resolve('/questions/[id]', { id: question.id })} class="detail-link"
+								>{$t('explore.viewDetails')}</a
+							>
 						</QuestionCard>
 					</li>
 				{/each}

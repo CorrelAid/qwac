@@ -1,6 +1,6 @@
 <script lang="ts">
 	import '$lib/styles/main.css';
-	import { base } from '$app/paths';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import { LanguageSwitcher } from '@correlaid/cdl-design';
 	import { locale, t, type Locale } from '$lib/i18n';
@@ -33,13 +33,13 @@
 </svelte:head>
 
 <header class="header-full">
-	<a href="{base}/" class="site-title"
+	<a href={resolve('/')} class="site-title"
 		>QWAC <span class="site-subtitle">{$t('layout.subtitle')}</span></a
 	>
 	<nav class="header-nav">
 		<LanguageSwitcher {locales} currentLocale={$locale} onLocaleChange={switchLocale} />
 		{#if $authModel}
-			<a href="{base}/upload" class="nav-link">{$t('layout.upload')}</a>
+			<a href={resolve('/upload')} class="nav-link">{$t('layout.upload')}</a>
 		{/if}
 		<LoginBadge />
 	</nav>
@@ -54,8 +54,8 @@
 </div>
 
 <footer class="footer">
-	<a href="{base}/about" class="footer-link">{$t('layout.about')}</a>
-	<a href="{base}/imprint" class="footer-link">{$t('layout.imprint')}</a>
+	<a href={resolve('/about')} class="footer-link">{$t('layout.about')}</a>
+	<a href={resolve('/imprint')} class="footer-link">{$t('layout.imprint')}</a>
 </footer>
 
 <style>

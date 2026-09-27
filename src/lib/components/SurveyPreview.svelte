@@ -1,4 +1,5 @@
 <script lang="ts">
+	/* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
 	import SelectOneInput from './question-types/SelectOneInput.svelte';
 	import SelectMultipleInput from './question-types/SelectMultipleInput.svelte';
 	import TextInput from './question-types/TextInput.svelte';

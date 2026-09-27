@@ -1,4 +1,5 @@
-import PocketBase, { type AuthProviderInfo, RecordService } from 'pocketbase';
+/* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
+import PocketBase from 'pocketbase';
 import type {
 	AuthModel,
 	ListResult,
@@ -61,12 +62,7 @@ if (browser && client.authStore.isValid) {
 }
 
 export async function login(email: string, password: string) {
-	try {
-		const authData = await client.collection('users').authWithPassword(email, password);
-		return authData;
-	} catch (e: any) {
-		throw e;
-	}
+	return await client.collection('users').authWithPassword(email, password);
 }
 
 export function logout() {
@@ -202,7 +198,7 @@ export async function watch<T extends RecordModel>(
 			collection
 				.subscribe<T>(
 					'*',
-					(e) => {
+					() => {
 						// Refresh list on any change for simplicity in this basic version
 						collection.getList<T>(result.page, result.perPage, queryParams).then((res) => {
 							result = res;
