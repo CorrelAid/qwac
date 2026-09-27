@@ -1,4 +1,6 @@
 <script lang="ts">
+	/* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
+	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import { clearOnAuthError, fetchApiText, fetchApiJson } from '$lib/pocketbase';
 	import { XlsFormDisplay, DdiDisplay } from '@correlaid/cdl-design';
@@ -137,7 +139,7 @@
 	<p>{$t('question.loading')}</p>
 {:else}
 	<article class="question-detail">
-		<a href="/" class="back-link">&larr; {$t('question.back')}</a>
+		<a href={resolve('/')} class="back-link">&larr; {$t('question.back')}</a>
 
 		<p class="concept-line">
 			<span class="field-label">{$t('question.concept')}</span>
@@ -163,8 +165,9 @@
 				<AnswerTypeTag type={rawAnswerType} />
 			{/if}
 			{#if study}
-				<a href="/studies/{study.id}#q-{group?.id || variable?.id}" class="study-tag"
-					>{study.title}</a
+				<a
+					href="{resolve('/studies/[id]', { id: study.id })}#q-{group?.id || variable?.id}"
+					class="study-tag">{study.title}</a
 				>
 			{/if}
 		</div>

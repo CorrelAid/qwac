@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { authModel, client } from '$lib/pocketbase';
-	import { base } from '$app/paths';
+	import { resolve } from '$app/paths';
 	import { t } from '$lib/i18n';
 
 	let open = $state(false);
@@ -53,7 +53,7 @@
 		{/if}
 	</div>
 {:else}
-	<a href="{base}/login" class="sign-in-link">{$t('auth.signIn')}</a>
+	<a href={resolve('/login')} class="sign-in-link">{$t('auth.signIn')}</a>
 {/if}
 
 <style>

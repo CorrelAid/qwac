@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { metadata } from '$lib/metadata';
 	import { locale, t } from '$lib/i18n';
 	import { content } from 'virtual:cdl-content';
@@ -9,11 +10,12 @@
 </script>
 
 <article class="about">
-	<a href="/" class="back-link">&larr; {$t('about.back')}</a>
+	<a href={resolve('/')} class="back-link">&larr; {$t('about.back')}</a>
 
 	<h2>{$t('about.title')}</h2>
 
 	<section>
+		<!-- eslint-disable-next-line svelte/no-at-html-tags -- build-time CDL snippet; sanitising is #27 -->
 		{@html content.qwac[$locale]}
 	</section>
 </article>

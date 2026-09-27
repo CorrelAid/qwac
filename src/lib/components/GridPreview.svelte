@@ -1,4 +1,6 @@
 <script lang="ts">
+	/* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
+	import { resolve } from '$app/paths';
 	let {
 		variables,
 		activeId = null,
@@ -29,11 +31,11 @@
 			{#each variables as variable (variable.id)}
 				<tr class:active-row={activeId && variable.id === activeId}>
 					<td class="item-cell">
-						<a href="/questions/{variable.id}" class="item-name"
+						<a href={resolve('/questions/[id]', { id: variable.id })} class="item-name"
 							>{variable.question || variable.concept}</a
 						>
 					</td>
-					{#each categories as _, i (i)}
+					{#each categories, i (i)}
 						<td class="input-cell">
 							{#if isMultiple}
 								<input type="checkbox" disabled />

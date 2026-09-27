@@ -72,7 +72,7 @@ function findPlainValueEnd(str: string, pos: number): number {
 			depth--;
 		} else if (depth === 0 && str[i] === ' ') {
 			const rest = str.substring(i + 1);
-			const m = rest.match(/^([^\s\[\]:]+):([\s\S]*)/);
+			const m = rest.match(/^([^\s[\]:]+):([\s\S]*)/);
 			if (m && isLikelyKey(m[1], m[2])) return i;
 		}
 		i++;

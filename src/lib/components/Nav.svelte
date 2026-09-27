@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { base } from '$app/paths';
+	import { base, resolve } from '$app/paths';
 
 	const links = [
 		['/', 'Home'],
 		['/questions', 'Questions']
-	];
+	] as const;
 </script>
 
 <nav>
@@ -13,7 +13,7 @@
 		{#each links as [href, label] (href)}
 			<li>
 				<a
-					href="{base}{href}"
+					href={resolve(href)}
 					class:active={$page.url.pathname === (base + href).replace(/\/$/, '') ||
 						$page.url.pathname === base + href}
 				>

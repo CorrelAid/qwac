@@ -1,4 +1,5 @@
 <script lang="ts">
+	/* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
 	import { client } from '$lib/pocketbase';
 
 	let {
@@ -16,7 +17,7 @@
 		</tr>
 	</thead>
 	<tbody>
-		{#each record[fieldName] as file, index}
+		{#each record[fieldName] as file (file)}
 			{@const deleted = toBeRemoved.includes(file)}
 			{@const icon = deleted ? 'trash-alt' : 'trash'}
 			{@const title = deleted ? 'click to restore' : 'click to remove'}
@@ -25,6 +26,7 @@
 				: () => (toBeRemoved = [...toBeRemoved, file])}
 			<tr>
 				<td class:deleted>
+					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- PocketBase file URL, not an app route -->
 					<a href={client.files.getUrl(record, file)} target="_blank">
 						{file}
 					</a>

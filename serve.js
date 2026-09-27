@@ -105,7 +105,9 @@ const server = createServer((req, res) => {
 					writeHead(res, 200, { 'Content-Type': 'text/html' });
 					res.end(htmlContent);
 					return;
-				} catch (_) {}
+				} catch {
+					// No prerendered page; fall through.
+				}
 			}
 
 			// Return 404 for missing assets — don't serve index.html for JS/CSS/etc.
@@ -136,7 +138,7 @@ const server = createServer((req, res) => {
 				const indexContent = readFileSync(join(BUILD_DIR, 'index.html'));
 				writeHead(res, 200, { 'Content-Type': 'text/html' });
 				res.end(indexContent);
-			} catch (indexErr) {
+			} catch {
 				writeHead(res, 404);
 				res.end('Not Found');
 			}
