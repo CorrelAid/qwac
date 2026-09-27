@@ -1,10 +1,48 @@
 import { writable, derived } from 'svelte/store';
+import { browser } from '$app/environment';
 
-export type Locale = 'en' | 'de';
+/** Supported locales, in the order the language switcher lists them. */
+export const LOCALES = ['de', 'en'] as const;
+export type Locale = (typeof LOCALES)[number];
 
-export const locale = writable<Locale>('en');
+/** German is the default; an explicit choice in the switcher wins (#33). */
+export const DEFAULT_LOCALE: Locale = 'de';
 
-const translations: Record<Locale, Record<string, string>> = {
+const STORAGE_KEY = 'qwac.locale';
+
+function isLocale(value: unknown): value is Locale {
+	return LOCALES.includes(value as Locale);
+}
+
+/** The locale the user picked earlier, if any. Storage can be unavailable. */
+function storedLocale(): Locale | undefined {
+	if (!browser) return undefined;
+	try {
+		const value = localStorage.getItem(STORAGE_KEY);
+		return isLocale(value) ? value : undefined;
+	} catch {
+		return undefined;
+	}
+}
+
+export const locale = writable<Locale>(storedLocale() ?? DEFAULT_LOCALE);
+
+if (browser) {
+	// Screen readers and hyphenation read the page language from <html lang>.
+	locale.subscribe((l) => (document.documentElement.lang = l));
+}
+
+/** Switches the UI language and remembers the choice for the next visit. */
+export function setLocale(l: Locale): void {
+	locale.set(l);
+	try {
+		localStorage.setItem(STORAGE_KEY, l);
+	} catch {
+		// Private mode or blocked storage: the choice lasts for this visit only.
+	}
+}
+
+export const translations: Record<Locale, Record<string, string>> = {
 	en: {
 		// Layout
 		'layout.about': 'About',
@@ -23,6 +61,7 @@ const translations: Record<Locale, Record<string, string>> = {
 		'auth.emptyFields': 'Please enter your email and password.',
 		'auth.invalidCredentials': 'Invalid email or password. Please try again.',
 		'auth.signInRequired': 'Please sign in to upload codebooks.',
+		'auth.profilePicture': 'Profile picture',
 
 		// Explore / Home
 		'explore.title': 'Explore Questions',
@@ -90,16 +129,23 @@ const translations: Record<Locale, Record<string, string>> = {
 		'upload.uploadFailed': 'Upload failed. Please try again.',
 		'upload.xmlOnly': 'File must be an XML file.',
 		'upload.tooLarge': 'File must be smaller than 10 MB.',
+		'upload.unknownError': 'Unknown error',
 
 		// Survey preview
 		'preview.interviewerNote': 'Interviewer note',
 		'preview.pleaseSpecify': 'Please specify...',
 		'preview.other': 'Other',
 		'preview.selectAll': 'Select all that apply',
+		'preview.selectOne': 'Select one',
+		'preview.textResponse': 'Text response...',
 
 		// Long list
 		'longList.select': 'Select...',
 		'longList.standard': 'Standard:',
+
+		// Answer type tag
+		'answerType.other': 'Other',
+		'answerType.longList': 'Long list',
 
 		// About
 		'about.title': 'About QWAC',
@@ -138,6 +184,7 @@ const translations: Record<Locale, Record<string, string>> = {
 		'auth.emptyFields': 'Bitte E-Mail und Passwort eingeben.',
 		'auth.invalidCredentials': 'Ungültige E-Mail oder Passwort. Bitte erneut versuchen.',
 		'auth.signInRequired': 'Bitte anmelden, um Codebooks hochzuladen.',
+		'auth.profilePicture': 'Profilbild',
 
 		// Explore / Home
 		'explore.title': 'Fragen durchsuchen',
@@ -205,16 +252,23 @@ const translations: Record<Locale, Record<string, string>> = {
 		'upload.uploadFailed': 'Hochladen fehlgeschlagen. Bitte erneut versuchen.',
 		'upload.xmlOnly': 'Die Datei muss eine XML-Datei sein.',
 		'upload.tooLarge': 'Die Datei darf maximal 10 MB groß sein.',
+		'upload.unknownError': 'Unbekannter Fehler',
 
 		// Survey preview
 		'preview.interviewerNote': 'Interviewerhinweis',
 		'preview.pleaseSpecify': 'Bitte angeben...',
 		'preview.other': 'Sonstiges',
 		'preview.selectAll': 'Alles Zutreffende auswählen',
+		'preview.selectOne': 'Eine Antwort auswählen',
+		'preview.textResponse': 'Textantwort...',
 
 		// Long list
 		'longList.select': 'Auswählen...',
 		'longList.standard': 'Standard:',
+
+		// Answer type tag
+		'answerType.other': 'Sonstiges',
+		'answerType.longList': 'Lange Liste',
 
 		// About
 		'about.title': 'Über QWAC',
@@ -238,8 +292,14 @@ const translations: Record<Locale, Record<string, string>> = {
 	}
 };
 
-export const t = derived(locale, ($locale) => {
-	return (key: string): string => {
-		return translations[$locale][key] ?? key;
-	};
-});
+/** The text for `key` in `l`, falling back to German, then to the key itself. */
+export function translate(l: Locale, key: string): string {
+	return translations[l]?.[key] ?? translations[DEFAULT_LOCALE][key] ?? key;
+}
+
+export const t = derived(
+	locale,
+	($locale) =>
+		(key: string): string =>
+			translate($locale, key)
+);

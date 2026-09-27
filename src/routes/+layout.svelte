@@ -2,7 +2,7 @@
 	import '$lib/styles/main.css';
 	import { resolve } from '$app/paths';
 	import { LanguageSwitcher } from '@correlaid/cdl-design';
-	import { locale, t, type Locale } from '$lib/i18n';
+	import { locale, setLocale, t, LOCALES, type Locale } from '$lib/i18n';
 
 	import LoginBadge from '$lib/components/LoginBadge.svelte';
 	import { authModel } from '$lib/pocketbase';
@@ -11,13 +11,10 @@
 
 	const siteName = 'QWAC Frontend';
 
-	const locales = [
-		{ code: 'en', label: 'EN' },
-		{ code: 'de', label: 'DE' }
-	];
+	const locales = LOCALES.map((code) => ({ code, label: code.toUpperCase() }));
 
 	function switchLocale(lang: string) {
-		locale.set(lang as Locale);
+		setLocale(lang as Locale);
 	}
 </script>
 
