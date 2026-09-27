@@ -86,6 +86,20 @@ describe('typeInfo', () => {
 	});
 });
 
+describe('the answer types qwacback added (#61)', () => {
+	it.each([
+		['decimal', 'decimal', 'Dezimalzahl'],
+		['range', 'range', 'Schieberegler'],
+		['date', 'date', 'Datum'],
+		['time', 'time', 'Uhrzeit']
+	])('%s maps to %s with a preview and a German label', (answerType, registry, de) => {
+		expect(typeInfo(answerType)?.id).toBe(registry);
+		expect(typeInfo(answerType)?.component).toBeTruthy();
+		expect(typeLabel(answerType, 'de')).toBe(de);
+		expect(baseType(answerType)).toBe(registry);
+	});
+});
+
 describe('labels', () => {
 	it('are German or English', () => {
 		expect(typeLabel('single_choice', 'de')).toBe('Einfachauswahl');

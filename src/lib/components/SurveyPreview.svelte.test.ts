@@ -31,13 +31,29 @@ describe('SurveyPreview', () => {
 		await expect.element(page.getByText('Interviewer note')).toBeInTheDocument();
 	});
 
+	it('shows the hint and the skip-logic condition without evaluating it (#60)', async () => {
+		await render(SurveyPreview, {
+			variable: {
+				answer_type: 'integer',
+				question: 'Seit wann sind Sie in Rente?',
+				hint: 'Jahr angeben',
+				universe: 'Only if “Wie alt sind Sie?” > 60'
+			}
+		});
+		await expect.element(page.getByText('Jahr angeben')).toBeInTheDocument();
+		await expect.element(page.getByText('Only if “Wie alt sind Sie?” > 60')).toBeInTheDocument();
+		await expect.element(page.getByText('Condition')).toBeInTheDocument();
+	});
+
 	it.each([
 		['text', 'input[type=text]'],
 		['integer', 'input[type=number][step="1"]'],
 		['decimal', 'input[type=number][step=any]'],
 		['date', 'input[type=date]'],
 		['time', 'input[type=time]'],
-		['datetime', 'input[type=datetime-local]']
+		['datetime', 'input[type=datetime-local]'],
+		// New in qwacback (#61).
+		['range', 'input[type=range]']
 	])('renders %s as %s', async (answer_type, selector) => {
 		const { container } = await render(SurveyPreview, { variable: { answer_type } });
 		const found = inputs(container);

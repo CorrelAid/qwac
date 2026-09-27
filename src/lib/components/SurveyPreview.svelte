@@ -20,10 +20,22 @@
 		</div>
 	{/if}
 
+	{#if variable.universe}
+		<!-- The skip logic, as a sentence; the preview doesn't evaluate it. -->
+		<p class="universe">
+			<span class="universe-label">{$t('preview.condition')}</span>
+			{variable.universe}
+		</p>
+	{/if}
+
 	{#if variable.question}
 		<div class="question-prompt">
 			<p>{variable.question}</p>
 		</div>
+	{/if}
+
+	{#if variable.hint}
+		<p class="hint">{variable.hint}</p>
 	{/if}
 
 	{#if variable.ivu_instructions}
@@ -97,6 +109,26 @@
 		line-height: 1.4;
 		color: var(--color-text-primary);
 		margin: 0;
+	}
+
+	.universe {
+		margin: 0 0 var(--spacing-sm);
+		font-size: var(--font-size-small-min);
+		color: var(--color-text-muted);
+	}
+
+	.universe-label {
+		font-weight: var(--font-weight-bold);
+		text-transform: uppercase;
+		letter-spacing: var(--letter-spacing-wider);
+		font-size: var(--font-size-caption-min);
+		margin-right: var(--spacing-2xs);
+	}
+
+	.hint {
+		margin: calc(-1 * var(--spacing-sm)) 0 var(--spacing-base);
+		font-size: var(--font-size-small-min);
+		color: var(--color-text-muted);
 	}
 
 	.instructions {

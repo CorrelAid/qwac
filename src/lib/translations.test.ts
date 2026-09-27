@@ -55,6 +55,8 @@ describe('localizeVariable', () => {
 		question: 'Wie zufrieden sind Sie?',
 		prequestion_text: '',
 		ivu_instructions: 'Vorlesen',
+		hint: 'Eine Antwort',
+		universe: 'Nur wenn erwerbstätig',
 		categories: [
 			{ value: '1', label: 'Sehr zufrieden' },
 			{ value: '2', label: 'Unzufrieden' }
@@ -63,6 +65,8 @@ describe('localizeVariable', () => {
 			en: {
 				question: 'How satisfied are you?',
 				ivu_instructions: 'Read out',
+				hint: 'One answer',
+				universe: 'Only if employed',
 				categories: { '1': 'Very satisfied' }
 			}
 		}
@@ -72,6 +76,8 @@ describe('localizeVariable', () => {
 		const v = localizeVariable(variable, 'de', 'en');
 		expect(v.question).toBe('How satisfied are you?');
 		expect(v.ivu_instructions).toBe('Read out');
+		expect(v.hint).toBe('One answer');
+		expect(v.universe).toBe('Only if employed');
 		expect(v.categories.map((c) => c.label)).toEqual(['Very satisfied', 'Unzufrieden']);
 	});
 

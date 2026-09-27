@@ -104,6 +104,8 @@ const age: Fixture = {
 				name: 'age',
 				concept: 'Age',
 				question: 'How old are you?',
+				hint: 'In full years.',
+				universe: 'Only if “Do you live here?” is yes',
 				answer_type: 'integer',
 				categories: []
 			}
@@ -239,7 +241,10 @@ const xlsform = (f: Fixture) => ({
 			label: String(f.question.question_text)
 		}
 	],
-	choices: []
+	choices: [],
+	// formtransform v0.7: settings is a list of rows; warnings are informational.
+	settings: [{ default_language: 'English (en)' }],
+	warnings: [{ code: 'ddi-field-missing', message: 'no skip logic' }]
 });
 const ddi = (f: Fixture) =>
 	`<var ID="${f.question.id}" name="${f.question.name}"><labl>${f.question.concept}</labl></var>`;

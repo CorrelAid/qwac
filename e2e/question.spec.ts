@@ -83,3 +83,15 @@ test('the DDI XML can be downloaded (#30)', async ({ page }) => {
 	]);
 	expect(download.suggestedFilename()).toBe('Age.xml');
 });
+
+test('the preview shows the hint and the condition; XLSForm shows settings (#60)', async ({
+	page
+}) => {
+	await page.goto(`/questions/${fixtures.age.question.id}`);
+	await expect(page.getByText('In full years.')).toBeVisible();
+	await expect(page.getByText('Only if “Do you live here?” is yes')).toBeVisible();
+	await page.getByRole('tab', { name: 'XLSForm' }).click();
+	await expect(page.getByText('settings', { exact: true })).toBeVisible();
+	await expect(page.getByText('English (en)')).toBeVisible();
+	await expect(page.getByText('no skip logic')).toHaveCount(0);
+});

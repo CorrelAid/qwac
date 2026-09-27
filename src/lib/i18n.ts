@@ -152,6 +152,7 @@ export const translations: Record<Locale, Record<string, string>> = {
 
 		// Survey preview
 		'preview.interviewerNote': 'Interviewer note',
+		'preview.condition': 'Condition',
 		'preview.pleaseSpecify': 'Please specify...',
 		'preview.other': 'Other',
 		'preview.selectAll': 'Select all that apply',
@@ -296,6 +297,7 @@ export const translations: Record<Locale, Record<string, string>> = {
 
 		// Survey preview
 		'preview.interviewerNote': 'Interviewerhinweis',
+		'preview.condition': 'Bedingung',
 		'preview.pleaseSpecify': 'Bitte angeben...',
 		'preview.other': 'Sonstiges',
 		'preview.selectAll': 'Alles Zutreffende auswählen',
