@@ -142,7 +142,6 @@
 					>
 				</p>
 				<p>{$t('upload.scopeLifetime')}</p>
-				<p>{$t('notice.onlineSurveys')}</p>
 			</Notice>
 		</div>
 

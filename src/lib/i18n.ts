@@ -167,10 +167,6 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'about.title': 'About QWAC',
 		'about.back': 'Back to questions',
 
-		// Notices
-		'notice.onlineSurveys':
-			'QWAC is for online surveys for now: questions, previews and exports are made for online questionnaires.',
-
 		// Error page
 		'error.title': 'Something went wrong',
 		'error.text': "The question bank can't be reached right now. Please try again in a moment.",
@@ -191,7 +187,8 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'layout.about': 'Über',
 		'layout.imprint': 'Impressum',
 		'layout.upload': 'Hochladen',
-		'layout.subtitle': '- Fragen, die es sich zu stellen lohnt',
+		// The acronym's expansion stays English in every language.
+		'layout.subtitle': '- questions worth asking continuously',
 		'layout.description':
 			'Eine Fragendatenbank für zivilgesellschaftliche Umfragen: erprobte Fragen finden und als XLSForm oder DDI wiederverwenden.',
 
@@ -311,10 +308,6 @@ export const translations: Record<Locale, Record<string, string>> = {
 		// About
 		'about.title': 'Über QWAC',
 		'about.back': 'Zurück zu Fragen',
-
-		// Notices
-		'notice.onlineSurveys':
-			'QWAC ist vorerst für Online-Umfragen gedacht: Fragen, Vorschauen und Exporte sind auf Online-Fragebögen ausgelegt.',
 
 		// Error page
 		'error.title': 'Etwas ist schiefgelaufen',
