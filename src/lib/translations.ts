@@ -21,7 +21,10 @@ function primary(lang: string | undefined | null): string {
 }
 
 /** Returns the entry of `map` for `locale`, matching on the primary language subtag. */
-export function pickLang<T>(map: Record<string, T> | null | undefined, locale: string): T | undefined {
+export function pickLang<T>(
+	map: Record<string, T> | null | undefined,
+	locale: string
+): T | undefined {
 	if (!map || typeof map !== 'object') return undefined;
 	const want = primary(locale);
 	for (const [lang, value] of Object.entries(map)) {
@@ -46,16 +49,31 @@ export function localizedText(
 
 /** A question's text in the UI locale. */
 export function questionText(
-	question: { question_text?: string; language?: string; translations?: Record<string, string> | null } | null | undefined,
+	question:
+		| { question_text?: string; language?: string; translations?: Record<string, string> | null }
+		| null
+		| undefined,
 	locale: string
 ): string {
-	return localizedText(question?.question_text ?? '', question?.language, question?.translations, locale);
+	return localizedText(
+		question?.question_text ?? '',
+		question?.language,
+		question?.translations,
+		locale
+	);
 }
 
 /** A variable with its texts and category labels in the UI locale. */
-export function localizeVariable<T extends Record<string, unknown>>(variable: T, language: string | undefined, locale: string): T {
+export function localizeVariable<T extends Record<string, unknown>>(
+	variable: T,
+	language: string | undefined,
+	locale: string
+): T {
 	if (!variable || (language && primary(language) === primary(locale))) return variable;
-	const tr = pickLang(variable.translations as Record<string, VariableTranslation> | undefined, locale);
+	const tr = pickLang(
+		variable.translations as Record<string, VariableTranslation> | undefined,
+		locale
+	);
 	if (!tr) return variable;
 	const categories = Array.isArray(variable.categories)
 		? variable.categories.map((c: { value?: string; label?: string }) => {
@@ -68,13 +86,20 @@ export function localizeVariable<T extends Record<string, unknown>>(variable: T,
 		question: tr.question || variable.question,
 		prequestion_text: tr.prequestion_text || variable.prequestion_text,
 		ivu_instructions: tr.ivu_instructions || variable.ivu_instructions,
-		categories,
+		categories
 	};
 }
 
 /** A variable group with its description in the UI locale. */
-export function localizeGroup<T extends Record<string, unknown>>(group: T, language: string | undefined, locale: string): T {
+export function localizeGroup<T extends Record<string, unknown>>(
+	group: T,
+	language: string | undefined,
+	locale: string
+): T {
 	if (!group || (language && primary(language) === primary(locale))) return group;
-	const tr = pickLang(group.translations as Record<string, VariableTranslation> | undefined, locale);
+	const tr = pickLang(
+		group.translations as Record<string, VariableTranslation> | undefined,
+		locale
+	);
 	return tr?.description ? { ...group, description: tr.description } : group;
 }

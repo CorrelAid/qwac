@@ -1,2 +1,2 @@
-export * from "./pocketbase";
-export * from "./metadata";
+export * from './pocketbase';
+export * from './metadata';

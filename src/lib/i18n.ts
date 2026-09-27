@@ -80,7 +80,8 @@ const translations: Record<Locale, Record<string, string>> = {
 
 		// Upload
 		'upload.title': 'Upload DDI Codebook',
-		'upload.description': 'Upload a DDI Codebook XML file to import a study with its variables and groups.',
+		'upload.description':
+			'Upload a DDI Codebook XML file to import a study with its variables and groups.',
 		'upload.back': 'Back to questions',
 		'upload.importSuccess': 'Import successful',
 		'upload.importFailed': 'Import failed',
@@ -111,7 +112,8 @@ const translations: Record<Locale, Record<string, string>> = {
 		// Imprint
 		'imprint.title': 'Imprint',
 		'imprint.back': 'Back to questions',
-		'imprint.text': 'This tool is hosted by <a href="https://correlaid.org" target="_blank" rel="noopener noreferrer">CorrelAid e.V.</a> as part of the <a href="https://civic-data.de" target="_blank" rel="noopener noreferrer">Civic Data Lab</a>. For legal details, please refer to <a href="https://civic-data.de/impressum/" target="_blank" rel="noopener noreferrer">civic-data.de/impressum/</a>.',
+		'imprint.text':
+			'This tool is hosted by <a href="https://correlaid.org" target="_blank" rel="noopener noreferrer">CorrelAid e.V.</a> as part of the <a href="https://civic-data.de" target="_blank" rel="noopener noreferrer">Civic Data Lab</a>. For legal details, please refer to <a href="https://civic-data.de/impressum/" target="_blank" rel="noopener noreferrer">civic-data.de/impressum/</a>.'
 	},
 	de: {
 		// Layout
@@ -188,7 +190,8 @@ const translations: Record<Locale, Record<string, string>> = {
 
 		// Upload
 		'upload.title': 'DDI Codebook hochladen',
-		'upload.description': 'Laden Sie eine DDI-Codebook-XML-Datei hoch, um eine Studie mit ihren Variablen und Gruppen zu importieren.',
+		'upload.description':
+			'Laden Sie eine DDI-Codebook-XML-Datei hoch, um eine Studie mit ihren Variablen und Gruppen zu importieren.',
 		'upload.back': 'Zurück zu Fragen',
 		'upload.importSuccess': 'Import erfolgreich',
 		'upload.importFailed': 'Import fehlgeschlagen',
@@ -219,7 +222,8 @@ const translations: Record<Locale, Record<string, string>> = {
 		// Imprint
 		'imprint.title': 'Impressum',
 		'imprint.back': 'Zurück zu Fragen',
-		'imprint.text': 'Dieses Tool wird bereitgestellt von <a href="https://correlaid.org" target="_blank" rel="noopener noreferrer">CorrelAid e.V.</a> im Rahmen des <a href="https://civic-data.de" target="_blank" rel="noopener noreferrer">Civic Data Lab</a>. Das vollständige Impressum finden Sie unter <a href="https://civic-data.de/impressum/" target="_blank" rel="noopener noreferrer">civic-data.de/impressum/</a>.',
+		'imprint.text':
+			'Dieses Tool wird bereitgestellt von <a href="https://correlaid.org" target="_blank" rel="noopener noreferrer">CorrelAid e.V.</a> im Rahmen des <a href="https://civic-data.de" target="_blank" rel="noopener noreferrer">Civic Data Lab</a>. Das vollständige Impressum finden Sie unter <a href="https://civic-data.de/impressum/" target="_blank" rel="noopener noreferrer">civic-data.de/impressum/</a>.'
 	}
 };
 

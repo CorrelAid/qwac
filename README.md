@@ -29,21 +29,21 @@ cp .env.example .env
 
 ## Environment Variables
 
-| Variable | Required | Description |
-|---|---|---|
-| `PUBLIC_POCKETBASE_URL` | Yes | URL of the qwacback/PocketBase backend |
-| `GITHUB_TOKEN` | No | GitHub PAT to avoid rate limits when fetching snippets at build time |
+| Variable                | Required | Description                                                          |
+| ----------------------- | -------- | -------------------------------------------------------------------- |
+| `PUBLIC_POCKETBASE_URL` | Yes      | URL of the qwacback/PocketBase backend                               |
+| `GITHUB_TOKEN`          | No       | GitHub PAT to avoid rate limits when fetching snippets at build time |
 
 ## Scripts
 
-| Command | Description |
-|---|---|
-| `bun run dev` | Start dev server |
-| `bun run build` | Build for production |
-| `bun run preview` | Preview production build |
-| `bun run check` | Type-check the project |
-| `bun run lint` | Run linting |
-| `bun run format` | Format code with Prettier |
+| Command           | Description               |
+| ----------------- | ------------------------- |
+| `bun run dev`     | Start dev server          |
+| `bun run build`   | Build for production      |
+| `bun run preview` | Preview production build  |
+| `bun run check`   | Type-check the project    |
+| `bun run lint`    | Run linting               |
+| `bun run format`  | Format code with Prettier |
 
 ## Architecture
 

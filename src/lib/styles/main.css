@@ -6,8 +6,10 @@
    RESET
    =========================== */
 
-*, *::before, *::after {
-    box-sizing: border-box;
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
 }
 
 /* ===========================
@@ -15,15 +17,15 @@
    =========================== */
 
 dialog {
-    border: var(--dimension-border-width) solid var(--color-primary-darker);
-    border-radius: var(--radius-md);
-    padding: 0;
-    background-color: var(--color-white);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    max-width: 90vw;
+	border: var(--dimension-border-width) solid var(--color-primary-darker);
+	border-radius: var(--radius-md);
+	padding: 0;
+	background-color: var(--color-white);
+	box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+	max-width: 90vw;
 }
 
 dialog::backdrop {
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(2px);
+	background: rgba(0, 0, 0, 0.3);
+	backdrop-filter: blur(2px);
 }
