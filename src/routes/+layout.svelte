@@ -31,7 +31,11 @@
 
 <header class="header-full">
 	<a href={resolve('/')} class="site-title"
-		>QWAC <span class="site-subtitle">{$t('layout.subtitle')}</span></a
+		>QWAC
+		<span class="alpha-badge" title={$t('layout.alphaNote')}
+			>{$t('layout.alpha')}<span class="sr-only">: {$t('layout.alphaNote')}</span></span
+		>
+		<span class="site-subtitle">{$t('layout.subtitle')}</span></a
 	>
 	<nav class="header-nav">
 		<LanguageSwitcher {locales} currentLocale={$locale} onLocaleChange={switchLocale} />
@@ -115,6 +119,23 @@
 		color: var(--color-secondary);
 		text-decoration: none;
 		min-width: 0;
+	}
+
+	/* Shown on every page and screen size: QWAC is still in development. */
+	.alpha-badge {
+		display: inline-block;
+		margin: 0 var(--spacing-2xs);
+		padding: 0 var(--spacing-2xs);
+		border-radius: var(--radius-sm);
+		background-color: var(--color-secondary);
+		color: var(--color-white);
+		font-family: var(--font-family-body);
+		font-size: 0.6em;
+		font-weight: var(--font-weight-bold);
+		letter-spacing: var(--letter-spacing-wider);
+		line-height: 1.4;
+		text-transform: uppercase;
+		vertical-align: middle;
 	}
 
 	.site-subtitle {

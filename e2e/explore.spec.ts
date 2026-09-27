@@ -15,6 +15,15 @@ test('lists all questions in German by default', async ({ page }) => {
 	await expect(page.getByText(/Online-Umfragen/)).toHaveCount(0);
 });
 
+test('QWAC is marked as alpha in both languages', async ({ page }) => {
+	await page.goto('/');
+	const badge = page.locator('.alpha-badge');
+	await expect(badge).toContainText('Alpha');
+	await expect(badge).toHaveAttribute('title', /noch in Entwicklung/);
+	await page.getByRole('button', { name: 'EN', exact: true }).click();
+	await expect(badge).toHaveAttribute('title', /still in development/);
+});
+
 test('search, filter and page survive opening a question and going back (#23)', async ({
 	page
 }) => {
