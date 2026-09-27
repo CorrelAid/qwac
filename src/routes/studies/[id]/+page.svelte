@@ -3,25 +3,15 @@
 	import { clearOnAuthError, fetchApiBlob } from '$lib/pocketbase';
 	import QuestionCard from '$lib/components/QuestionCard.svelte';
 	import { metadata } from '$lib/metadata';
-	import { extractText, extractUri, parseGoValue } from '$lib/ddi';
+	import { stripMarkup } from '$lib/text';
 	import { t } from '$lib/i18n';
 	import { downloadBlob, safeFilename } from '$lib/download';
-
-	function formatAuthor(val: unknown): string {
-		let parsed = typeof val === 'string' && val.trim().startsWith('map[') ? parseGoValue(val) : val;
-		if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-			const obj = parsed as Record<string, unknown>;
-			const name = extractText(obj['#text'] ?? '');
-			const affiliation = extractText(obj['-affiliation'] ?? '');
-			if (name && affiliation) return `${name}, ${affiliation}`;
-			return name || affiliation;
-		}
-		return extractText(val);
-	}
 
 	let { data } = $props();
 
 	let study = $derived(data.study);
+	// Name and affiliation, e.g. "New Economics Foundation, NEF Consulting".
+	let author = $derived([study.author, study.author_affiliation].filter(Boolean).join(', '));
 	let questions = $derived(data.questions);
 	let exporting = $state(false);
 	// The export error belongs to one study; it disappears on navigation.
@@ -67,7 +57,7 @@
 		{#if study.author}
 			<div class="meta-item">
 				<strong>{$t('study.author')}</strong>
-				<span>{formatAuthor(study.author)}</span>
+				<span>{author}</span>
 			</div>
 		{/if}
 		{#if study.time_period}
@@ -99,8 +89,8 @@
 			<div class="meta-item">
 				<strong>{$t('study.source')}</strong>
 				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- external source URL -->
-				<a href={extractUri(study.holdings_uri)} target="_blank" rel="noopener">
-					{extractText(study.holdings_description) || extractUri(study.holdings_uri)}
+				<a href={study.holdings_uri} target="_blank" rel="noopener">
+					{study.holdings_description || study.holdings_uri}
 				</a>
 			</div>
 		{/if}
@@ -117,7 +107,7 @@
 	{#if study.abstract}
 		<div class="abstract">
 			<h2>{$t('study.abstract')}</h2>
-			<p>{extractText(study.abstract)}</p>
+			<p>{stripMarkup(study.abstract)}</p>
 		</div>
 	{/if}
 

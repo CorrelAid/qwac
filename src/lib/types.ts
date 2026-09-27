@@ -99,9 +99,9 @@ export interface Study {
 	collectionName?: string;
 	title: string;
 	id_no?: string;
+	/** May contain the codebook's XHTML markup. */
 	abstract?: string;
-	/** Plain text, or a Go map rendering from old imports (see ddi.ts). */
-	author?: unknown;
+	author?: string;
 	author_affiliation?: string;
 	producer?: string;
 	producer_affiliation?: string;
@@ -110,8 +110,8 @@ export interface Study {
 	universe?: string;
 	analysis_unit?: string;
 	data_kind?: string;
-	holdings_uri?: unknown;
-	holdings_description?: unknown;
+	holdings_uri?: string;
+	holdings_description?: string;
 	keywords?: string[];
 	topic_classifications?: string[];
 	language?: string;
