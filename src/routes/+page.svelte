@@ -14,7 +14,6 @@
 	$effect(() => {
 		$metadata.title = $t('explore.title');
 	});
-	$metadata.headline = '';
 
 	let { data } = $props();
 

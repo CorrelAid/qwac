@@ -9,7 +9,6 @@
 	$effect(() => {
 		$metadata.title = $t('auth.signIn');
 	});
-	$metadata.headline = '';
 
 	$effect(() => {
 		if ($authModel) {

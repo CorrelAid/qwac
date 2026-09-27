@@ -10,7 +10,6 @@
 	$effect(() => {
 		$metadata.title = $t('upload.title');
 	});
-	$metadata.headline = '';
 
 	const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
