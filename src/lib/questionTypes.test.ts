@@ -1,58 +1,34 @@
 import { describe, it, expect } from 'vitest';
 import { readdirSync } from 'node:fs';
-import { QUESTION_TYPES as CATALOGUE } from '@correlaid/formtransform';
+import catalogue from './question-types.fixture.json';
 import {
 	PREVIEWS,
-	PREVIEW_LESS,
-	QUESTION_TYPES,
 	allowsMultiple,
 	baseType,
 	isChoiceType,
-	registryType,
+	isTextType,
 	typeInfo,
 	typeLabel,
-	variableType
+	type Catalogue
 } from './questionTypes';
 import SelectOneInput from './components/question-types/SelectOneInput.svelte';
 import SelectMultipleInput from './components/question-types/SelectMultipleInput.svelte';
 import LongListInput from './components/question-types/LongListInput.svelte';
+
+// src/test-setup.ts loads this fixture of GET /api/question-types.
+const fixture = catalogue as Catalogue;
 
 const previewModules = import.meta.glob<{ default: unknown }>(
 	'./components/question-types/*.svelte',
 	{ eager: true }
 );
 
-describe('registry coverage', () => {
-	const registryQuestionTypes = Object.entries(CATALOGUE)
-		.filter(([, e]) => e.kind === 'question')
-		.map(([type]) => type);
-
-	it.each(registryQuestionTypes)(
-		'%s has a preview component or is preview-less on purpose',
-		(type) => {
-			expect(PREVIEWS, `add ${type} to PREVIEWS in questionTypes.ts`).toHaveProperty(type);
-			if (!PREVIEW_LESS.has(type)) {
-				expect(typeInfo(type)?.component, `${type} has no preview component`).toBeTruthy();
-			}
-		}
-	);
-
-	it('takes every registered label from the catalogue', () => {
-		for (const [type, info] of Object.entries(QUESTION_TYPES)) {
-			const entry = (CATALOGUE as Record<string, { label: string }>)[type];
-			if (entry) expect(info.label, type).toBe(entry.label);
-			else expect(info.unregistered, type).toBe(true);
-		}
-	});
-});
-
-describe('QUESTION_TYPES', () => {
-	it('every component resolves to a real component', () => {
-		for (const [type, info] of Object.entries(QUESTION_TYPES)) {
-			if (info.component != null) expect(typeof info.component, type).toBe('function');
-			const resolved = typeInfo(type);
-			if (resolved?.component != null) expect(typeof resolved.component, type).toBe('function');
-		}
+describe("coverage of qwacback's catalogue", () => {
+	it.each(Object.keys(fixture))('%s has a preview component', (answerType) => {
+		expect(
+			typeInfo(answerType)?.component,
+			`add ${fixture[answerType].registryType} to PREVIEWS`
+		).toBeTruthy();
 	});
 
 	it('references every preview component', () => {
@@ -60,40 +36,48 @@ describe('QUESTION_TYPES', () => {
 			(f) => f.endsWith('.svelte')
 		);
 		expect(Object.keys(previewModules)).toHaveLength(files.length);
-		const used = new Set(Object.keys(QUESTION_TYPES).map((t) => typeInfo(t)?.component));
+		const used = new Set(Object.values(PREVIEWS));
 		for (const [path, mod] of Object.entries(previewModules)) {
 			expect(used.has(mod.default as never), path).toBe(true);
 		}
 	});
 
-	it('bases exist', () => {
-		for (const [type, info] of Object.entries(QUESTION_TYPES)) {
-			if (info.base) expect(QUESTION_TYPES[info.base], type).toBeDefined();
+	it("takes labels from qwacback's catalogue", () => {
+		for (const [answerType, entry] of Object.entries(fixture)) {
+			expect(typeLabel(answerType, 'de'), answerType).toBe(entry.label.de);
+			expect(typeLabel(answerType, 'en'), answerType).toBe(entry.label.en);
 		}
 	});
 });
 
 describe('typeInfo', () => {
-	it('falls back to the base for a variant', () => {
-		expect(typeInfo('select_one_other')?.component).toBe(SelectOneInput);
-		expect(typeInfo('select_multiple_other')?.component).toBe(SelectMultipleInput);
-		expect(typeInfo('select_one_other')).toMatchObject({ choice: 'one', withOther: true });
+	it("finds a type by qwacback's name, the registry's name and aliases", () => {
+		expect(typeInfo('single_choice_other')?.id).toBe('select_one_other');
+		expect(typeInfo('select_one_other')?.id).toBe('select_one_other');
+		expect(typeInfo('int')?.id).toBe('integer');
 	});
 
-	it('uses the long list component for long list variants', () => {
-		expect(typeInfo('select_one_long_list')).toMatchObject({
+	it('uses the base component for a variant', () => {
+		expect(typeInfo('single_choice_other')).toMatchObject({
+			component: SelectOneInput,
+			choice: 'one',
+			withOther: true,
+			needsCategories: true
+		});
+		expect(typeInfo('multiple_choice_other')?.component).toBe(SelectMultipleInput);
+	});
+
+	it('uses the long list component for long lists, without categories', () => {
+		expect(typeInfo('single_choice_long_list')).toMatchObject({
 			component: LongListInput,
+			longList: true,
 			needsCategories: false
 		});
 	});
 
-	it("maps qwacback's answer types to the registry's", () => {
-		expect(registryType('single_choice')).toBe('select_one');
-		expect(registryType('multiple_choice_other')).toBe('select_multiple_other');
-		expect(registryType('multiple_choice_long_list')).toBe('select_multiple_long_list');
-		expect(registryType('int')).toBe('integer');
-		expect(registryType('string')).toBe('text');
-		expect(typeInfo('single_choice_other')?.label).toBe('Select One with Other');
+	it('knows the unregistered datetime type', () => {
+		expect(typeInfo('datetime')).toMatchObject({ unregistered: true });
+		expect(typeLabel('datetime', 'de')).toBe('Datum und Uhrzeit');
 	});
 
 	it('returns null for an unknown type', () => {
@@ -103,11 +87,14 @@ describe('typeInfo', () => {
 });
 
 describe('labels', () => {
-	it('are the registry labels', () => {
-		expect(typeLabel('text')).toBe('Text (Short Free Text)');
-		expect(typeLabel('decimal')).toBe('Decimal/Float');
-		expect(typeLabel('single_choice')).toBe('Select One');
-		expect(typeLabel('grid')).toBe('Grid / Matrix Group');
+	it('are German or English', () => {
+		expect(typeLabel('single_choice', 'de')).toBe('Einfachauswahl');
+		expect(typeLabel('single_choice', 'en')).toBe('Select One');
+		expect(typeLabel('grid', 'en')).toBe('Grid / Matrix Group');
+	});
+
+	it('fall back to English for another language', () => {
+		expect(typeLabel('text', 'fr')).toBe('Text (Short Free Text)');
 	});
 
 	it('are made from the name for an unknown type, without throwing', () => {
@@ -125,21 +112,12 @@ describe('helpers', () => {
 		expect(baseType('geo_point_long_list')).toBe('geo_point');
 	});
 
-	it('knows choice types', () => {
+	it('knows choice and text types', () => {
 		expect(isChoiceType('single_choice')).toBe(true);
 		expect(isChoiceType('multiple_choice_other')).toBe(true);
 		expect(isChoiceType('text')).toBe(false);
 		expect(allowsMultiple('multiple_choice')).toBe(true);
 		expect(allowsMultiple('single_choice')).toBe(false);
-	});
-
-	it('variableType adds the variant from the flags', () => {
-		expect(variableType({ answer_type: 'single_choice', has_long_list: true })).toBe(
-			'select_one_long_list'
-		);
-		expect(variableType({ answer_type: 'multiple_choice', has_other: true })).toBe(
-			'select_multiple_other'
-		);
-		expect(variableType({ answer_type: 'integer' })).toBe('integer');
+		expect(isTextType('text')).toBe(true);
 	});
 });

@@ -109,10 +109,11 @@ describe('questionView', () => {
 		).toBe('single_choice');
 	});
 
-	it('shows a standalone variable with its variant from the flags', () => {
+	it('shows a standalone variable with its full answer type', () => {
 		const variable = mkVar({
 			id: 'v',
-			answer_type: 'single_choice',
+			// qwacback sends the variant in the type.
+			answer_type: 'single_choice_long_list',
 			has_long_list: true,
 			long_list_standard: 'iso_3166_1',
 			concept: 'Country'
@@ -123,7 +124,7 @@ describe('questionView', () => {
 		expect(view.concept).toBe('Country');
 		expect(view.preview).toMatchObject({
 			kind: 'survey',
-			variable: { answer_type: 'select_one_long_list', has_other: false }
+			variable: { answer_type: 'single_choice_long_list', has_other: false }
 		});
 	});
 

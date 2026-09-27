@@ -4,6 +4,7 @@
  * returns (see qwacback's internal/routes/routes.go).
  */
 import type { Page, Route } from '@playwright/test';
+import questionTypes from '../src/lib/question-types.fixture.json' with { type: 'json' };
 
 export const BACKEND = 'http://pb.test';
 
@@ -318,6 +319,7 @@ function answer(method: string, url: URL, postData: string): [number, unknown] {
 		return [200, { valid: true, imported: true, study_id: imported.study.id, message: 'imported' }];
 	}
 
+	if (path === '/api/question-types') return [200, questionTypes];
 	if (path === '/api/questions') return [200, questions];
 	if ((m = path.match(/^\/api\/questions\/(\w+)(\/xml|\/xlsform)?$/))) {
 		const f = all.find((f) => f.question.id === m![1]);

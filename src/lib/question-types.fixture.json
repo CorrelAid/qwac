@@ -1,0 +1,98 @@
+{
+	"date": {
+		"registryType": "date",
+		"label": { "de": "Datum", "en": "Date" },
+		"kind": "question",
+		"presentation": { "withOther": false, "longList": false, "grid": false }
+	},
+	"decimal": {
+		"registryType": "decimal",
+		"label": { "de": "Dezimalzahl", "en": "Decimal/Float" },
+		"kind": "question",
+		"presentation": { "withOther": false, "longList": false, "grid": false }
+	},
+	"grid": {
+		"registryType": "grid",
+		"label": { "de": "Matrix-Gruppe", "en": "Grid / Matrix Group" },
+		"kind": "question",
+		"presentation": { "choice": "one", "withOther": false, "longList": false, "grid": true }
+	},
+	"integer": {
+		"registryType": "integer",
+		"label": { "de": "Ganzzahl", "en": "Integer" },
+		"kind": "question",
+		"aliases": ["int"],
+		"presentation": { "withOther": false, "longList": false, "grid": false }
+	},
+	"multiple_choice": {
+		"registryType": "select_multiple",
+		"label": { "de": "Mehrfachauswahl", "en": "Select Multiple" },
+		"kind": "question",
+		"presentation": { "choice": "multiple", "withOther": false, "longList": false, "grid": false }
+	},
+	"multiple_choice_long_list": {
+		"registryType": "select_multiple_long_list",
+		"label": { "de": "Mehrfachauswahl (lange Liste)", "en": "Select Multiple (Long List)" },
+		"kind": "question",
+		"base": "select_multiple",
+		"presentation": {
+			"choice": "multiple",
+			"withOther": false,
+			"longList": true,
+			"grid": false,
+			"appearance": "minimal"
+		}
+	},
+	"multiple_choice_other": {
+		"registryType": "select_multiple_other",
+		"label": { "de": "Mehrfachauswahl mit „Sonstiges“", "en": "Select Multiple with Other" },
+		"kind": "question",
+		"base": "select_multiple",
+		"presentation": { "choice": "multiple", "withOther": true, "longList": false, "grid": false }
+	},
+	"range": {
+		"registryType": "range",
+		"label": { "de": "Schieberegler", "en": "Range" },
+		"kind": "question",
+		"presentation": { "withOther": false, "longList": false, "grid": false }
+	},
+	"single_choice": {
+		"registryType": "select_one",
+		"label": { "de": "Einfachauswahl", "en": "Select One" },
+		"kind": "question",
+		"presentation": { "choice": "one", "withOther": false, "longList": false, "grid": false }
+	},
+	"single_choice_long_list": {
+		"registryType": "select_one_long_list",
+		"label": { "de": "Einfachauswahl (lange Liste)", "en": "Select One (Long List)" },
+		"kind": "question",
+		"base": "select_one",
+		"presentation": {
+			"choice": "one",
+			"withOther": false,
+			"longList": true,
+			"grid": false,
+			"appearance": "minimal"
+		}
+	},
+	"single_choice_other": {
+		"registryType": "select_one_other",
+		"label": { "de": "Einfachauswahl mit „Sonstiges“", "en": "Select One with Other" },
+		"kind": "question",
+		"base": "select_one",
+		"presentation": { "choice": "one", "withOther": true, "longList": false, "grid": false }
+	},
+	"text": {
+		"registryType": "text",
+		"label": { "de": "Text (kurze Freitextantwort)", "en": "Text (Short Free Text)" },
+		"kind": "question",
+		"aliases": ["string"],
+		"presentation": { "withOther": false, "longList": false, "grid": false }
+	},
+	"time": {
+		"registryType": "time",
+		"label": { "de": "Uhrzeit", "en": "Time" },
+		"kind": "question",
+		"presentation": { "withOther": false, "longList": false, "grid": false }
+	}
+}

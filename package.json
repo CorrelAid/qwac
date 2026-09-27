@@ -46,7 +46,6 @@
 	},
 	"dependencies": {
 		"@correlaid/cdl-design": "github:CorrelAid/cdl-design",
-		"@correlaid/formtransform": "https://github.com/CorrelAid/formtransform/releases/download/v0.6.0/correlaid-formtransform-0.6.0.tgz",
 		"@isaacs/ttlcache": "^2.1.4",
 		"pocketbase": "^0.26.8",
 		"zod": "^4.3.6"
