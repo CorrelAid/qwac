@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { typeLabel } from '$lib/questionTypes';
+	import { locale } from '$lib/i18n';
 
 	let { type }: { type: string } = $props();
 
 	// The registry's label; an unknown type still gets a tag, made from its name.
-	let label = $derived(typeLabel(type));
+	let label = $derived(typeLabel(type, $locale));
 </script>
 
 {#if type}

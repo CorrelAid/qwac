@@ -7,7 +7,7 @@
 	import QuestionCard from '$lib/components/QuestionCard.svelte';
 	import Paginator from '$lib/components/Paginator.svelte';
 	import { metadata } from '$lib/metadata';
-	import { t } from '$lib/i18n';
+	import { t, locale } from '$lib/i18n';
 	import { typeLabel } from '$lib/questionTypes';
 	import {
 		answerTypeOptions,
@@ -106,7 +106,7 @@
 			label: $t('explore.filterAnswerType'),
 			key: 'answer_type',
 			values: answerTypes,
-			labels: Object.fromEntries(answerTypes.map((v) => [v, typeLabel(v)])),
+			labels: Object.fromEntries(answerTypes.map((v) => [v, typeLabel(v, $locale)])),
 			counts: computeCounts(searchedQuestions, filters, studies, 'answer_type', answerTypes)
 		}
 	]);

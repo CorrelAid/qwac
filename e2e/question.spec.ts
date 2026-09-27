@@ -58,7 +58,8 @@ test('a choice group shows its options, "Other" and tags', async ({ page }) => {
 	await expect(page.getByText('Was ist Ihr Geschlecht?')).toBeVisible();
 	await expect(page.locator('.tab-content input[type=checkbox]')).toHaveCount(3);
 	await expect(page.getByText('eigene Angabe:')).toBeVisible();
-	await expect(page.getByText('Select Multiple with Other')).toBeVisible();
+	// German label from qwacback's catalogue (#59).
+	await expect(page.getByText('Mehrfachauswahl mit „Sonstiges“')).toBeVisible();
 	await expect(page.locator('.search-tag')).toHaveText('Gender');
 });
 

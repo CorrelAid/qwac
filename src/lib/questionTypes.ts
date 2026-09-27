@@ -1,13 +1,13 @@
 /**
  * The question types qwac knows, and how it labels and previews them.
  *
- * Labels, variant bases and aliases come from the CDL survey type registry's
- * catalogue, exported by @correlaid/formtransform. This file adds what's
- * the app's concern: the preview component for each type and how it's
- * presented. PREVIEWS is the only hardcoded list of type names here.
+ * Labels (German and English), variant bases, presentation and the registry
+ * name of each of qwacback's answer types come from qwacback's catalogue,
+ * GET /api/question-types, which the root layout loads (setCatalogue). This
+ * file adds only what's the app's concern: the preview component for each
+ * registry type (PREVIEWS).
  */
 import type { Component } from 'svelte';
-import { QUESTION_TYPES as CATALOGUE } from '@correlaid/formtransform';
 import GridPreview from './components/GridPreview.svelte';
 import DateInput from './components/question-types/DateInput.svelte';
 import DateTimeInput from './components/question-types/DateTimeInput.svelte';
@@ -20,146 +20,134 @@ import SelectOneInput from './components/question-types/SelectOneInput.svelte';
 import TextInput from './components/question-types/TextInput.svelte';
 import TimeInput from './components/question-types/TimeInput.svelte';
 
-/** How the app previews a type. */
-interface Preview {
-	/**
-	 * Preview component, or null if this type has no interactive preview.
-	 * Left out on a variant, which then uses its base type's component.
-	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- the components take different props
-	component?: Component<any> | null;
-	/** For choice types: whether one or several answers can be picked. */
-	choice?: 'one' | 'multiple';
-	/** The preview needs the answer categories (otherwise it shows nothing). */
-	needsCategories?: boolean;
-	/** Variant with an open "Other" answer. */
-	withOther?: boolean;
-	/** Not in the registry, but qwacback data may still contain it: its label. */
-	unregisteredLabel?: string;
-}
-
-export interface QuestionTypeInfo extends Omit<Preview, 'unregisteredLabel'> {
-	/** Human label shown in the UI (the registry's). */
-	label: string;
-	/** Base type for a variant (e.g. select_one_other → select_one). */
+/** An entry of /api/question-types, keyed by qwacback's answer type. */
+export interface CatalogueEntry {
+	/** The registry's type name, e.g. select_one_other for single_choice_other. */
+	registryType: string;
+	/** Label per language. */
+	label: Record<string, string>;
+	kind: string;
+	/** A variant's registry base type. */
 	base?: string;
-	/** Not in the registry, but qwacback data may still contain it. */
-	unregistered?: boolean;
+	aliases?: string[];
+	presentation: {
+		choice?: 'one' | 'multiple';
+		withOther: boolean;
+		longList: boolean;
+		grid: boolean;
+		appearance?: string;
+	};
 }
 
+export type Catalogue = Record<string, CatalogueEntry>;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- the components take different props
+type PreviewComponent = Component<any>;
+
 /**
- * The preview of every question type. The coverage test checks that each
- * registry question type is listed.
+ * The preview component of each registry type. A variant (e.g.
+ * select_one_other) without its own entry uses its base type's. The coverage
+ * test checks this against qwacback's catalogue.
  */
-export const PREVIEWS: Record<string, Preview> = {
-	date: { component: DateInput },
-	decimal: { component: DecimalInput },
+export const PREVIEWS: Record<string, PreviewComponent> = {
+	date: DateInput,
+	decimal: DecimalInput,
 	// The question page renders it with the group's variables (questionView.ts).
-	grid: { component: GridPreview, choice: 'one' },
-	integer: { component: IntegerInput },
-	// Display text: there's nothing to answer.
-	note: { component: null },
-	range: { component: RangeInput },
-	select_multiple: { component: SelectMultipleInput, choice: 'multiple', needsCategories: true },
-	select_multiple_from_file: { component: LongListInput, choice: 'multiple' },
-	select_multiple_long_list: { component: LongListInput, needsCategories: false },
-	select_multiple_other: { withOther: true },
-	select_one: { component: SelectOneInput, choice: 'one', needsCategories: true },
-	select_one_from_file: { component: LongListInput, choice: 'one' },
-	select_one_long_list: { component: LongListInput, needsCategories: false },
-	select_one_other: { withOther: true },
-	text: { component: TextInput },
-	time: { component: TimeInput },
-	// The registry has no date-time type; kept for existing data.
-	datetime: { component: DateTimeInput, unregisteredLabel: 'Date and Time' }
+	grid: GridPreview,
+	integer: IntegerInput,
+	range: RangeInput,
+	select_multiple: SelectMultipleInput,
+	select_multiple_long_list: LongListInput,
+	select_one: SelectOneInput,
+	select_one_long_list: LongListInput,
+	text: TextInput,
+	time: TimeInput,
+	datetime: DateTimeInput
 };
 
-/** Types without a preview on purpose. */
-export const PREVIEW_LESS = new Set(['note']);
-
-type CatalogueEntry = { label: string; kind: string; base?: string; aliases?: readonly string[] };
-const catalogue = CATALOGUE as unknown as Record<string, CatalogueEntry>;
-
-/** The registry's question types with their previews, plus the unregistered ones. */
-export const QUESTION_TYPES: Record<string, QuestionTypeInfo> = Object.fromEntries(
-	Object.entries(PREVIEWS).map(([type, { unregisteredLabel, ...preview }]) => {
-		const entry = catalogue[type];
-		const info: QuestionTypeInfo = entry
-			? { ...preview, label: entry.label, ...(entry.base ? { base: entry.base } : {}) }
-			: { ...preview, label: unregisteredLabel ?? type, unregistered: true };
-		return [type, info];
-	})
-);
-
-/**
- * qwacback's answer types that differ from the registry's type names, plus
- * the registry's own aliases (int → integer, …). qwacback also appends
- * _other / _long_list, which match the registry's variant names once the
- * base is mapped.
- */
-const ALIASES: Record<string, string> = {
-	single_choice: 'select_one',
-	multiple_choice: 'select_multiple',
-	...Object.fromEntries(
-		Object.entries(catalogue).flatMap(([type, e]) => (e.aliases ?? []).map((a) => [a, type]))
-	)
+/** Types qwacback's data may hold but the registry doesn't know. */
+const UNREGISTERED: Catalogue = {
+	datetime: {
+		registryType: 'datetime',
+		label: { de: 'Datum und Uhrzeit', en: 'Date and Time' },
+		kind: 'question',
+		presentation: { withOther: false, longList: false, grid: false }
+	}
 };
 
-const VARIANT_SUFFIXES = ['_other', '_long_list'];
+/** Every name a type can be looked up by: qwacback's, the registry's, aliases. */
+let byName: Record<string, CatalogueEntry> = {};
 
-/** The registry's name for an answer type from qwacback (single_choice_other → select_one_other). */
-export function registryType(type: string): string {
-	const t = (type || '').trim();
-	if (ALIASES[t]) return ALIASES[t];
-	for (const suffix of VARIANT_SUFFIXES) {
-		if (t.endsWith(suffix)) {
-			const base = t.slice(0, -suffix.length);
-			if (ALIASES[base]) return ALIASES[base] + suffix;
+/** Sets the catalogue from GET /api/question-types (done by the root layout). */
+export function setCatalogue(catalogue: Catalogue): void {
+	byName = {};
+	for (const entries of [UNREGISTERED, catalogue]) {
+		for (const [answerType, entry] of Object.entries(entries)) {
+			for (const name of [entry.registryType, ...(entry.aliases ?? []), answerType]) {
+				byName[name] = entry;
+			}
 		}
 	}
-	return t;
 }
 
-/** A known type with the fields it inherits from its base filled in. */
-export type ResolvedTypeInfo = Required<Pick<QuestionTypeInfo, 'label'>> &
-	QuestionTypeInfo & {
-		/** Registry type name. */
-		id: string;
-	};
+/** What qwac knows about a type. */
+export interface TypeInfo {
+	/** Registry type name. */
+	id: string;
+	label: Record<string, string>;
+	/** A variant's registry base type. */
+	base?: string;
+	/** Preview component, or null if the type has none. */
+	component: PreviewComponent | null;
+	/** For choice types: whether one or several answers can be picked. */
+	choice?: 'one' | 'multiple';
+	/** Variant with an open "Other" answer. */
+	withOther: boolean;
+	longList: boolean;
+	grid: boolean;
+	/** The preview needs the answer categories (otherwise it shows nothing). */
+	needsCategories: boolean;
+	/** Not in the registry, but qwacback data may still contain it. */
+	unregistered: boolean;
+}
 
 /**
- * Everything qwac knows about a type: exact match (after mapping qwacback's
- * names), with a variant falling back to its base for what it doesn't set.
- * null for a type qwac hasn't been taught about.
+ * Everything qwac knows about a type, by qwacback's answer type or the
+ * registry's name. null for a type the catalogue doesn't list.
  */
-export function typeInfo(type: string): ResolvedTypeInfo | null {
-	const id = registryType(type);
-	const info = QUESTION_TYPES[id];
-	if (!info) return null;
-	const base = info.base ? QUESTION_TYPES[info.base] : undefined;
+export function typeInfo(type: string): TypeInfo | null {
+	const entry = byName[(type || '').trim()];
+	if (!entry) return null;
+	const { choice, withOther, longList, grid } = entry.presentation;
 	return {
-		...base,
-		...info,
-		// A variant doesn't inherit its base's `base`.
-		base: info.base,
-		component: info.component === undefined ? (base?.component ?? null) : info.component,
-		id
+		id: entry.registryType,
+		label: entry.label,
+		base: entry.base,
+		component:
+			PREVIEWS[entry.registryType] ?? (entry.base ? PREVIEWS[entry.base] : undefined) ?? null,
+		choice,
+		withOther,
+		longList,
+		grid,
+		needsCategories: !!choice && !longList && !grid,
+		unregistered: entry.registryType in UNREGISTERED
 	};
 }
 
-/** The type without its variant: select_one_other → select_one; unknown types lose _other / _long_list. */
+/** The registry type without its variant: single_choice_other → select_one. */
 export function baseType(type: string): string {
 	const info = typeInfo(type);
-	if (info) return info.base ?? info.id;
-	let t = registryType(type);
-	for (const suffix of VARIANT_SUFFIXES) if (t.endsWith(suffix)) t = t.slice(0, -suffix.length);
-	return t;
+	// A type the catalogue doesn't know loses qwacback's variant suffix.
+	return info ? (info.base ?? info.id) : (type || '').trim().replace(/_(other|long_list)$/, '');
 }
 
-/** Label for a type: the registry's, or one made from the type name for an unknown type. */
-export function typeLabel(type: string): string {
-	const info = typeInfo(type);
-	if (info) return info.label;
+/**
+ * Label for a type in `locale` (falling back to English): the registry's, or
+ * one made from the type name for a type the catalogue doesn't know.
+ */
+export function typeLabel(type: string, locale = 'en'): string {
+	const label = typeInfo(type)?.label;
+	if (label) return label[locale] ?? label.en ?? Object.values(label)[0] ?? type;
 	return baseType(type)
 		.replace(/_/g, ' ')
 		.replace(/\b\w/g, (c) => c.toUpperCase());
@@ -177,10 +165,10 @@ export function allowsMultiple(type: string): boolean {
 
 /** Whether a variable of this type holds free text (e.g. the "Other" field of a choice group). */
 export function isTextType(type: string): boolean {
-	return registryType(type) === 'text';
+	return typeInfo(type)?.id === 'text';
 }
 
-/** qwacback's answer types for questions built from a variable group, by DDI group type. */
+/** qwacback's answer type for a question built from a variable group, by DDI group type. */
 export function groupAnswerType(groupType: string): string | null {
 	const t = (groupType || '').toLowerCase();
 	if (t.includes('grid') || t.includes('matrix')) return 'grid';
@@ -193,18 +181,4 @@ export function isGridGroup(groupType: string): boolean {
 	return groupAnswerType(groupType) === 'grid';
 }
 
-/**
- * The full answer type of a variable from /api/questions/{id}, whose
- * answer_type is the base and whose variant is in has_long_list / has_other.
- * A long list wins, since it decides the preview.
- */
-export function variableType(variable: {
-	answer_type?: string;
-	has_long_list?: boolean;
-	has_other?: boolean;
-}): string {
-	const base = baseType(variable?.answer_type ?? '');
-	if (variable?.has_long_list) return `${base}_long_list`;
-	if (variable?.has_other) return `${base}_other`;
-	return registryType(variable?.answer_type ?? '');
-}
+setCatalogue({});

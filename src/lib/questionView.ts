@@ -9,8 +9,7 @@ import {
 	isChoiceType,
 	isGridGroup,
 	isTextType,
-	typeInfo,
-	variableType
+	typeInfo
 } from '$lib/questionTypes';
 import type { GridRow, Group, PreviewVariable, Variable } from '$lib/types';
 
@@ -93,7 +92,8 @@ export function questionView(
 			kind: 'survey',
 			variable: {
 				...variable,
-				answer_type: variableType(variable),
+				// qwacback sends the full answer type, variant included.
+				answer_type: variable.answer_type,
 				has_other: variable.has_other === true || !!typeInfo(variable.answer_type)?.withOther
 			}
 		};
