@@ -1,10 +1,11 @@
 <script lang="ts">
 	/* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
+	import { t } from '$lib/i18n';
 	let { categories }: { categories: any[] } = $props();
 </script>
 
 <fieldset disabled>
-	<legend class="sr-only">Select one</legend>
+	<legend class="sr-only">{$t('preview.selectOne')}</legend>
 	{#each categories as cat, i (i)}
 		<label class="option">
 			<input type="radio" name="preview-radio" disabled />

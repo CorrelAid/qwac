@@ -1,4 +1,8 @@
-<input type="text" class="text-input" disabled placeholder="Text response..." />
+<script lang="ts">
+	import { t } from '$lib/i18n';
+</script>
+
+<input type="text" class="text-input" disabled placeholder={$t('preview.textResponse')} />
 
 <style>
 	.text-input {

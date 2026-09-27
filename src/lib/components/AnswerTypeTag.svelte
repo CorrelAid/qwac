@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { t } from '$lib/i18n';
+
 	let { type }: { type: string } = $props();
 
 	let base = $derived((type || '').replace(/_other$/, '').replace(/_long_list$/, ''));
@@ -6,7 +8,11 @@
 		base.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())
 	);
 	let suffix = $derived(
-		(type || '').endsWith('_other') ? 'Other' : (type || '').endsWith('_long_list') ? 'Long' : null
+		(type || '').endsWith('_other')
+			? $t('answerType.other')
+			: (type || '').endsWith('_long_list')
+				? $t('answerType.longList')
+				: null
 	);
 </script>
 

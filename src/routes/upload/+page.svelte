@@ -132,7 +132,9 @@
 								{#if typeof err === 'string'}
 									{err}
 								{:else}
-									<span class="error-message">{err.message || err.rule || 'Unknown error'}</span>
+									<span class="error-message"
+										>{err.message || err.rule || $t('upload.unknownError')}</span
+									>
 									{#if err.location}
 										<span class="error-location">{err.location}</span>
 									{/if}

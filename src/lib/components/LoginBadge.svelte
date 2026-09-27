@@ -33,7 +33,10 @@
 	<div class="user-menu">
 		<button class="badge" onclick={toggle}>
 			{#if $authModel.avatar}
-				<img src={client.getFileUrl($authModel, $authModel.avatar)} alt="profile pic" />
+				<img
+					src={client.getFileUrl($authModel, $authModel.avatar)}
+					alt={$t('auth.profilePicture')}
+				/>
 			{/if}
 			<samp>{$authModel?.name || $authModel?.username || $authModel?.email}</samp>
 			<svg class="chevron" class:open width="12" height="12" viewBox="0 0 12 12" fill="none">
