@@ -1,7 +1,7 @@
 <script lang="ts">
 	/* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
 	import { resolve } from '$app/paths';
-	import { client, clearOnAuthError, fetchApiJson } from '$lib/pocketbase';
+	import { clearOnAuthError, fetchApiJson } from '$lib/pocketbase';
 	import type { PageStore } from '$lib/pocketbase';
 	import FilterBar from '$lib/components/FilterBar.svelte';
 	import QuestionCard from '$lib/components/QuestionCard.svelte';
@@ -19,15 +19,15 @@
 	});
 	$metadata.headline = '';
 
-	let questions = $state<any[]>([]);
-	let studies = $state<Map<string, any>>(new Map());
-	let loaded = $state(false);
+	let { data } = $props();
+
+	let questions = $derived<any[]>(data.questions);
+	let studies = $derived(new Map<string, any>(data.studies.map((s: any) => [s.id, s])));
 	let searchQuery = $state('');
 	let filters = $state<Record<string, string>>({
 		answer_type: '',
 		survey_type: ''
 	});
-	let error = $state<string | null>(null);
 
 	// Search runs on the backend (stemming, umlaut folding, German/English
 	// tags and translations); searchRank maps question id → rank.
@@ -35,6 +35,7 @@
 	let searching = $state(false);
 	let searchError = $state<string | null>(null);
 	let searchSeq = 0;
+	let searchTimer: ReturnType<typeof setTimeout> | undefined;
 
 	const SEARCH_PER_PAGE = 100;
 	const SEARCH_DEBOUNCE_MS = 250;
@@ -58,9 +59,12 @@
 		return ids;
 	}
 
-	$effect(() => {
+	// Called for every change of the search box, including "Clear".
+	function setSearchQuery(value: string) {
+		searchQuery = value;
+		clearTimeout(searchTimer);
 		// Backend limit is 200 characters.
-		const q = searchQuery.trim().slice(0, 200);
+		const q = value.trim().slice(0, 200);
 		const seq = ++searchSeq;
 		searchError = null;
 		if (!q) {
@@ -69,7 +73,7 @@
 			return;
 		}
 		searching = true;
-		const timer = setTimeout(() => {
+		searchTimer = setTimeout(() => {
 			searchQuestions(q)
 				.then((ids) => {
 					if (seq === searchSeq) searchRank = new Map(ids.map((id, i) => [id, i]));
@@ -84,8 +88,7 @@
 					if (seq === searchSeq) searching = false;
 				});
 		}, SEARCH_DEBOUNCE_MS);
-		return () => clearTimeout(timer);
-	});
+	}
 
 	// Questions matching the search, in relevance order; all questions without a query.
 	let searchedQuestions = $derived.by(() => {
@@ -94,39 +97,6 @@
 		return questions
 			.filter((q) => rank.has(q.id))
 			.sort((a, b) => rank.get(a.id)! - rank.get(b.id)!);
-	});
-
-	async function loadAll(skipCache = false) {
-		const cachedQuestions = !skipCache ? getCached<any[]>('questions:all') : undefined;
-		const cachedStudies = !skipCache ? getCached<any[]>('studies:all') : undefined;
-
-		const [questionsData, studiesList] = await Promise.all([
-			cachedQuestions ??
-				fetchApiJson('/api/questions').then((d: any[]) => {
-					setCached('questions:all', d);
-					return d;
-				}),
-			cachedStudies ??
-				client
-					.collection('studies')
-					.getFullList({ requestKey: null })
-					.then((d: any[]) => {
-						setCached('studies:all', d);
-						return d;
-					})
-		]);
-		questions = questionsData;
-		studies = new Map(studiesList.map((s: any) => [s.id, s]));
-		loaded = true;
-	}
-
-	$effect(() => {
-		loaded = false;
-		loadAll().catch((e: any) => {
-			clearOnAuthError(e);
-			error = safeErrorMessage(e, $t('explore.loadError'));
-			loaded = true;
-		});
 	});
 
 	function normalizeAnswerType(type: string): string {
@@ -253,14 +223,14 @@
 </script>
 
 <div class="explore-container">
-	<FilterBar bind:searchQuery bind:filters filterOptions={filterOptionsList} />
+	<FilterBar
+		bind:searchQuery={() => searchQuery, setSearchQuery}
+		bind:filters
+		filterOptions={filterOptionsList}
+	/>
 
 	<div class="results">
-		{#if error}
-			<div class="error-box">{error}</div>
-		{:else if !loaded}
-			<p>{$t('explore.loading')}</p>
-		{:else if searchError}
+		{#if searchError}
 			<div class="error-box">{searchError}</div>
 		{:else if searching && !searchRank}
 			<p>{$t('explore.searching')}</p>

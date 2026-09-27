@@ -1,7 +1,6 @@
 <script lang="ts">
 	import '$lib/styles/main.css';
 	import { resolve } from '$app/paths';
-	import { page } from '$app/stores';
 	import { LanguageSwitcher } from '@correlaid/cdl-design';
 	import { locale, t, type Locale } from '$lib/i18n';
 
@@ -20,12 +19,6 @@
 	function switchLocale(lang: string) {
 		locale.set(lang as Locale);
 	}
-
-	$effect(() => {
-		if ($page.error) {
-			$metadata.title = $page.error.message;
-		}
-	});
 </script>
 
 <svelte:head>

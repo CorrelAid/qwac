@@ -26,7 +26,6 @@ const translations: Record<Locale, Record<string, string>> = {
 
 		// Explore / Home
 		'explore.title': 'Explore Questions',
-		'explore.loading': 'Loading questions...',
 		'explore.noResults': 'No questions found.',
 		'explore.question': 'question',
 		'explore.questions': 'questions',
@@ -36,7 +35,6 @@ const translations: Record<Locale, Record<string, string>> = {
 		'explore.conceptLabel': 'Concept:',
 		'explore.filterKind': 'Kind',
 		'explore.filterAnswerType': 'Answer Type',
-		'explore.loadError': 'Failed to load questions.',
 		'explore.searching': 'Searching...',
 		'explore.searchError': 'Search failed. Please try again.',
 
@@ -49,7 +47,6 @@ const translations: Record<Locale, Record<string, string>> = {
 		'paginator.of': 'of',
 
 		// Question detail
-		'question.loading': 'Loading question...',
 		'question.back': 'Back to questions',
 		'question.concept': 'Concept:',
 		'question.standard': 'Standard:',
@@ -59,10 +56,10 @@ const translations: Record<Locale, Record<string, string>> = {
 		'question.tabDdi': 'DDI XML',
 		'question.loadingXlsform': 'Loading XLSForm data...',
 		'question.loadingDdi': 'Loading DDI XML...',
-		'question.loadError': 'Failed to load question.',
+		'question.xlsformUnavailable': 'The XLSForm for this question is not available.',
+		'question.ddiUnavailable': 'The DDI XML for this question is not available.',
 
 		// Study detail
-		'study.loading': 'Loading study...',
 		'study.back': 'Back to questions',
 		'study.exportDdi': 'Export DDI XML',
 		'study.exporting': 'Exporting...',
@@ -76,7 +73,6 @@ const translations: Record<Locale, Record<string, string>> = {
 		'study.abstract': 'Abstract',
 		'study.questions': 'Questions',
 		'study.noQuestions': 'No questions found for this study.',
-		'study.loadError': 'Failed to load study.',
 
 		// Upload
 		'upload.title': 'Upload DDI Codebook',
@@ -109,6 +105,15 @@ const translations: Record<Locale, Record<string, string>> = {
 		'about.title': 'About QWAC',
 		'about.back': 'Back to questions',
 
+		// Error page
+		'error.title': 'Something went wrong',
+		'error.text': "The question bank can't be reached right now. Please try again in a moment.",
+		'error.notFoundTitle': 'Page not found',
+		'error.notFoundText': "This page, question or study doesn't exist.",
+		'error.retry': 'Try again',
+		'error.retrying': 'Trying again...',
+		'error.back': 'Back to questions',
+
 		// Imprint
 		'imprint.title': 'Imprint',
 		'imprint.back': 'Back to questions',
@@ -136,7 +141,6 @@ const translations: Record<Locale, Record<string, string>> = {
 
 		// Explore / Home
 		'explore.title': 'Fragen durchsuchen',
-		'explore.loading': 'Fragen werden geladen...',
 		'explore.noResults': 'Keine Fragen gefunden.',
 		'explore.question': 'Frage',
 		'explore.questions': 'Fragen',
@@ -146,7 +150,6 @@ const translations: Record<Locale, Record<string, string>> = {
 		'explore.conceptLabel': 'Konzept:',
 		'explore.filterKind': 'Art',
 		'explore.filterAnswerType': 'Antworttyp',
-		'explore.loadError': 'Fragen konnten nicht geladen werden.',
 		'explore.searching': 'Suche läuft...',
 		'explore.searchError': 'Suche fehlgeschlagen. Bitte erneut versuchen.',
 
@@ -159,7 +162,6 @@ const translations: Record<Locale, Record<string, string>> = {
 		'paginator.of': 'von',
 
 		// Question detail
-		'question.loading': 'Frage wird geladen...',
 		'question.back': 'Zurück zu Fragen',
 		'question.concept': 'Konzept:',
 		'question.standard': 'Standard:',
@@ -169,10 +171,10 @@ const translations: Record<Locale, Record<string, string>> = {
 		'question.tabDdi': 'DDI XML',
 		'question.loadingXlsform': 'XLSForm-Daten werden geladen...',
 		'question.loadingDdi': 'DDI XML wird geladen...',
-		'question.loadError': 'Frage konnte nicht geladen werden.',
+		'question.xlsformUnavailable': 'Das XLSForm für diese Frage ist nicht verfügbar.',
+		'question.ddiUnavailable': 'Das DDI XML für diese Frage ist nicht verfügbar.',
 
 		// Study detail
-		'study.loading': 'Studie wird geladen...',
 		'study.back': 'Zurück zu Fragen',
 		'study.exportDdi': 'DDI XML exportieren',
 		'study.exporting': 'Wird exportiert...',
@@ -186,7 +188,6 @@ const translations: Record<Locale, Record<string, string>> = {
 		'study.abstract': 'Zusammenfassung',
 		'study.questions': 'Fragen',
 		'study.noQuestions': 'Keine Fragen für diese Studie gefunden.',
-		'study.loadError': 'Studie konnte nicht geladen werden.',
 
 		// Upload
 		'upload.title': 'DDI Codebook hochladen',
@@ -218,6 +219,16 @@ const translations: Record<Locale, Record<string, string>> = {
 		// About
 		'about.title': 'Über QWAC',
 		'about.back': 'Zurück zu Fragen',
+
+		// Error page
+		'error.title': 'Etwas ist schiefgelaufen',
+		'error.text':
+			'Die Fragendatenbank ist gerade nicht erreichbar. Bitte versuchen Sie es gleich noch einmal.',
+		'error.notFoundTitle': 'Seite nicht gefunden',
+		'error.notFoundText': 'Diese Seite, Frage oder Studie gibt es nicht.',
+		'error.retry': 'Erneut versuchen',
+		'error.retrying': 'Wird erneut versucht...',
+		'error.back': 'Zurück zu Fragen',
 
 		// Imprint
 		'imprint.title': 'Impressum',
