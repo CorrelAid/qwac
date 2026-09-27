@@ -39,6 +39,8 @@ export interface VariableTranslation {
 	question?: string;
 	prequestion_text?: string;
 	ivu_instructions?: string;
+	hint?: string;
+	universe?: string;
 	/** Category value → label. */
 	categories?: Record<string, string>;
 }
@@ -51,6 +53,10 @@ export interface Variable {
 	question: string;
 	prequestion_text: string;
 	ivu_instructions: string;
+	/** The XLSForm hint (DDI postQTxt). */
+	hint?: string;
+	/** The skip logic as a sentence, e.g. "Only if “Wie alt sind Sie?” > 60". */
+	universe?: string;
 	answer_type: string;
 	has_other: boolean;
 	has_long_list: boolean;
@@ -66,6 +72,8 @@ export interface PreviewVariable {
 	question?: string;
 	prequestion_text?: string | null;
 	ivu_instructions?: string;
+	hint?: string;
+	universe?: string;
 	categories?: Pick<Category, 'label' | 'value'>[] | null;
 	has_other?: boolean;
 	other_label?: string;
@@ -140,9 +148,18 @@ export interface ValidationRejection {
 	errors: (string | import('./findings').Finding)[];
 }
 
-/** The XLSForm JSON of /api/questions/{id}/xlsform. */
+/** A note from qwacback's DDI → XLSForm conversion, e.g. code "ddi-field-missing". */
+export interface XlsFormWarning {
+	code: string;
+	message: string;
+}
+
+/** The XLSForm JSON of /api/questions/{id}/xlsform and /api/studies/{id}/xlsform. */
 export interface XlsForm {
 	survey: Record<string, string>[];
 	choices: Record<string, string>[];
-	settings?: Record<string, string>;
+	/** Empty, or one row (e.g. default_language). */
+	settings?: Record<string, string>[];
+	/** Informational; qwac doesn't show them. */
+	warnings?: XlsFormWarning[];
 }

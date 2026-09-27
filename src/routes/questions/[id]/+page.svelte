@@ -10,6 +10,7 @@
 	import { t, locale } from '$lib/i18n';
 	import { localizeGroup, localizeVariable } from '$lib/translations';
 	import { questionView } from '$lib/questionView';
+	import { xlsformSheets } from '$lib/xlsform';
 	import { downloadBlob, safeFilename } from '$lib/download';
 
 	let { data } = $props();
@@ -144,7 +145,7 @@
 				<p class="hint">{$t('question.loadingXlsform')}</p>
 			{:then xlsform}
 				{#if xlsform}
-					<XlsFormDisplay survey={xlsform.survey} choices={xlsform.choices} />
+					<XlsFormDisplay worksheets={xlsformSheets(xlsform)} />
 				{:else}
 					<p class="hint">{$t('question.xlsformUnavailable')}</p>
 				{/if}
