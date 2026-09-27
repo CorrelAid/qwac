@@ -20,10 +20,30 @@
 	// Another question opens on the preview, since its links carry no tab.
 	type Tab = 'preview' | 'xlsform' | 'ddi';
 	const TABS: Tab[] = ['preview', 'xlsform', 'ddi'];
+	const TAB_LABELS: Record<Tab, string> = {
+		preview: 'question.tabPreview',
+		xlsform: 'question.tabXlsform',
+		ddi: 'question.tabDdi'
+	};
 	let activeTab = $derived.by((): Tab => {
 		const tab = page.url.searchParams.get('tab') as Tab;
 		return TABS.includes(tab) ? tab : 'preview';
 	});
+	// Arrow keys, Home and End move between tabs (WAI-ARIA tabs pattern).
+	function onTabKeydown(event: KeyboardEvent) {
+		const i = TABS.indexOf(activeTab);
+		const next = {
+			ArrowRight: TABS[(i + 1) % TABS.length],
+			ArrowLeft: TABS[(i - 1 + TABS.length) % TABS.length],
+			Home: TABS[0],
+			End: TABS[TABS.length - 1]
+		}[event.key];
+		if (!next) return;
+		event.preventDefault();
+		selectTab(next);
+		document.getElementById(`tab-${next}`)?.focus();
+	}
+
 	function selectTab(tab: Tab) {
 		const href = resolve('/questions/[id]', { id: data.id });
 		// eslint-disable-next-line svelte/no-navigation-without-resolve -- the resolved route plus ?tab
@@ -60,10 +80,10 @@
 <article class="question-detail">
 	<a href={resolve('/')} class="back-link">&larr; {$t('question.back')}</a>
 
-	<p class="concept-line">
+	<h1 class="concept-line">
 		<span class="field-label">{$t('question.concept')}</span>
 		{displayConcept}
-	</p>
+	</h1>
 	{#if view.longListStandard}
 		<p class="concept-line">
 			<span class="field-label">{$t('question.standard')}</span>
@@ -91,23 +111,23 @@
 		{/if}
 	</div>
 
-	<div class="view-tabs">
-		<button
-			class="view-tab"
-			class:active={activeTab === 'preview'}
-			onclick={() => selectTab('preview')}>{$t('question.tabPreview')}</button
-		>
-		<button
-			class="view-tab"
-			class:active={activeTab === 'xlsform'}
-			onclick={() => selectTab('xlsform')}>{$t('question.tabXlsform')}</button
-		>
-		<button class="view-tab" class:active={activeTab === 'ddi'} onclick={() => selectTab('ddi')}
-			>{$t('question.tabDdi')}</button
-		>
+	<div class="view-tabs" role="tablist" aria-label={$t('question.tabsLabel')}>
+		{#each TABS as tab (tab)}
+			<button
+				id="tab-{tab}"
+				class="view-tab"
+				class:active={activeTab === tab}
+				role="tab"
+				aria-selected={activeTab === tab}
+				aria-controls="tab-panel"
+				tabindex={activeTab === tab ? 0 : -1}
+				onclick={() => selectTab(tab)}
+				onkeydown={onTabKeydown}>{$t(TAB_LABELS[tab])}</button
+			>
+		{/each}
 	</div>
 
-	<div class="tab-content">
+	<div class="tab-content" id="tab-panel" role="tabpanel" aria-labelledby="tab-{activeTab}">
 		{#if activeTab === 'preview'}
 			{#if view.preview?.kind === 'grid'}
 				<GridPreview variables={view.preview.variables} question={view.preview.question} />
@@ -157,15 +177,18 @@
 	}
 
 	.concept-line {
+		font-family: var(--font-family-body);
+		letter-spacing: normal;
+		font-weight: inherit;
+		line-height: inherit;
 		font-size: var(--font-size-small-min);
 		margin: 0 0 var(--spacing-xs);
 	}
 
 	.field-label {
 		font-size: var(--font-size-caption-min);
-		color: var(--color-text-primary);
-		opacity: 0.6;
 		font-weight: var(--font-weight-medium);
+		color: var(--color-text-muted);
 	}
 
 	.search-tag {
@@ -189,7 +212,7 @@
 		font-size: var(--font-size-caption-min);
 		padding: 1px var(--spacing-xs);
 		border-radius: var(--radius-sm);
-		background-color: var(--color-primary-darker);
+		background-color: var(--color-tag-bg);
 		color: var(--color-white);
 		text-decoration: none;
 	}
@@ -214,17 +237,15 @@
 		font-family: var(--font-family-body);
 		cursor: pointer;
 		border-bottom: 2px solid transparent;
-		color: var(--color-text-primary);
-		opacity: 0.6;
 		transition: all 0.15s;
+		color: var(--color-text-muted);
 	}
 
 	.view-tab:hover {
-		opacity: 1;
+		color: var(--color-secondary);
 	}
 
 	.view-tab.active {
-		opacity: 1;
 		border-bottom-color: var(--color-secondary);
 		font-weight: var(--font-weight-bold);
 		color: var(--color-secondary);
@@ -236,8 +257,7 @@
 
 	.hint {
 		font-size: var(--font-size-small-min);
-		color: var(--color-text-primary);
-		opacity: 0.6;
 		margin-bottom: var(--spacing-sm);
+		color: var(--color-text-muted);
 	}
 </style>

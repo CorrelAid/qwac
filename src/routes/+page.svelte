@@ -122,6 +122,7 @@
 </script>
 
 <div class="explore-container">
+	<h1 class="sr-only">{$t('explore.title')}</h1>
 	<FilterBar
 		bind:searchQuery={() => searchQuery, setSearchQuery}
 		{filters}
@@ -200,7 +201,7 @@
 	}
 
 	.searching {
-		opacity: 0.6;
+		color: var(--color-text-muted);
 	}
 
 	.variable-list {
@@ -226,7 +227,7 @@
 		font-size: var(--font-size-caption-min);
 		padding: 1px var(--spacing-xs);
 		border-radius: var(--radius-sm);
-		background-color: var(--color-primary-darker);
+		background-color: var(--color-tag-bg);
 		color: var(--color-white);
 		text-decoration: none;
 		white-space: normal;
@@ -245,9 +246,8 @@
 
 	.field-label {
 		font-size: var(--font-size-caption-min);
-		color: var(--color-text-primary);
-		opacity: 0.6;
 		font-weight: var(--font-weight-medium);
+		color: var(--color-text-muted);
 	}
 
 	.detail-link {
@@ -262,17 +262,16 @@
 
 	.categories-summary {
 		font-size: var(--font-size-small-min);
-		color: var(--color-text-primary);
-		opacity: 0.6;
 		margin: var(--spacing-xs) 0;
+		color: var(--color-text-muted);
 	}
 
 	.error-box {
 		padding: var(--spacing-base);
-		background-color: #fff1f1;
-		border: 1px solid #ffa3a3;
+		background-color: var(--color-error-bg);
+		border: 1px solid var(--color-error-border);
 		border-radius: var(--radius-base);
-		color: #d32f2f;
+		color: var(--color-error);
 	}
 
 	:global(.paginator) {

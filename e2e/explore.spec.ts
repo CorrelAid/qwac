@@ -20,7 +20,7 @@ test('search, filter and page survive opening a question and going back (#23)', 
 	await expect(page).toHaveURL(/topic=Impact/);
 	await expect(page.locator('.count')).toContainText('23 Fragen');
 
-	await page.getByRole('button', { name: '»' }).click();
+	await page.getByRole('button', { name: 'Nächste Seite' }).click();
 	await expect(page).toHaveURL(/page=2/);
 	await expect(page.getByText('Seite 2 von 2')).toBeVisible();
 

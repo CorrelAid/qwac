@@ -113,7 +113,7 @@
 	<div class="upload-page">
 		<a href={resolve('/')} class="back-link">&larr; {$t('upload.back')}</a>
 
-		<h2>{$t('upload.title')}</h2>
+		<h1>{$t('upload.title')}</h1>
 		<p class="description">{$t('upload.description')}</p>
 
 		{#if result}
@@ -203,16 +203,18 @@
 		text-decoration: underline;
 	}
 
-	h2 {
+	h1 {
+		/* Same size as before it became the page heading. */
+		--min-size: var(--font-size-h2-min);
+		--max-size: var(--font-size-h2-max);
 		color: var(--color-secondary);
 		margin: var(--spacing-sm) 0 var(--spacing-xs);
 	}
 
 	.description {
 		font-size: var(--font-size-small-min);
-		color: var(--color-text-primary);
-		opacity: 0.7;
 		margin-bottom: var(--spacing-lg);
+		color: var(--color-text-muted);
 	}
 
 	.drop-zone {
@@ -226,19 +228,17 @@
 
 	.drop-zone.dragover {
 		border-color: var(--color-secondary);
-		background-color: #f0f7ff;
+		background-color: var(--color-drop-highlight);
 	}
 
 	.drop-zone p {
 		margin: 0 0 var(--spacing-xs);
-		color: var(--color-text-primary);
-		opacity: 0.7;
+		color: var(--color-text-muted);
 	}
 
 	.file-name {
 		font-weight: var(--font-weight-bold);
 		font-family: var(--font-family-mono);
-		opacity: 1 !important;
 		color: var(--color-secondary) !important;
 	}
 
@@ -258,11 +258,6 @@
 		font-family: var(--font-family-body);
 		cursor: pointer;
 		transition: all 0.15s;
-	}
-
-	.file-btn:focus-visible {
-		outline: 3px solid var(--color-secondary);
-		outline-offset: 2px;
 	}
 
 	.file-btn:hover {
@@ -301,15 +296,15 @@
 	}
 
 	.result-box.success {
-		background-color: #f0fdf4;
-		border: 1px solid #86efac;
-		color: #166534;
+		background-color: var(--color-success-bg);
+		border: 1px solid var(--color-success-border);
+		color: var(--color-success);
 	}
 
 	.result-box.error {
-		background-color: #fff1f1;
-		border: 1px solid #ffa3a3;
-		color: #d32f2f;
+		background-color: var(--color-error-bg);
+		border: 1px solid var(--color-error-border);
+		color: var(--color-error);
 	}
 
 	.result-box p {
@@ -334,8 +329,8 @@
 		display: block;
 		font-size: var(--font-size-caption-min);
 		font-family: var(--font-family-mono);
-		opacity: 0.7;
 		margin-top: 2px;
+		color: var(--color-text-muted);
 	}
 
 	.reset-btn {

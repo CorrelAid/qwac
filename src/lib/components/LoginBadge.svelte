@@ -21,17 +21,34 @@
 		}
 	}
 
+	function handleKeydown(event: KeyboardEvent) {
+		if (event.key === 'Escape') {
+			open = false;
+			document.querySelector<HTMLButtonElement>('.user-menu .badge')?.focus();
+		}
+	}
+
 	$effect(() => {
 		if (open) {
 			document.addEventListener('click', handleClickOutside, true);
-			return () => document.removeEventListener('click', handleClickOutside, true);
+			document.addEventListener('keydown', handleKeydown);
+			return () => {
+				document.removeEventListener('click', handleClickOutside, true);
+				document.removeEventListener('keydown', handleKeydown);
+			};
 		}
 	});
 </script>
 
 {#if $authModel}
 	<div class="user-menu">
-		<button class="badge" onclick={toggle}>
+		<button
+			class="badge"
+			onclick={toggle}
+			aria-expanded={open}
+			aria-haspopup="true"
+			aria-controls="user-menu-dropdown"
+		>
 			{#if $authModel.avatar}
 				<img
 					src={client.files.getURL($authModel, $authModel.avatar)}
@@ -39,7 +56,15 @@
 				/>
 			{/if}
 			<samp>{$authModel?.name || $authModel?.username || $authModel?.email}</samp>
-			<svg class="chevron" class:open width="12" height="12" viewBox="0 0 12 12" fill="none">
+			<svg
+				class="chevron"
+				class:open
+				aria-hidden="true"
+				width="12"
+				height="12"
+				viewBox="0 0 12 12"
+				fill="none"
+			>
 				<path
 					d="M3 4.5L6 7.5L9 4.5"
 					stroke="currentColor"
@@ -50,7 +75,7 @@
 			</svg>
 		</button>
 		{#if open}
-			<div class="dropdown">
+			<div class="dropdown" id="user-menu-dropdown">
 				<button class="dropdown-item" onclick={signOut}>{$t('auth.signOut')}</button>
 			</div>
 		{/if}
@@ -116,7 +141,7 @@
 		border-radius: var(--radius-md);
 		min-width: 140px;
 		z-index: 200;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+		box-shadow: var(--shadow-sm);
 	}
 
 	.dropdown-item {

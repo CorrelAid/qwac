@@ -24,7 +24,7 @@
 	}
 </script>
 
-<main class="container">
+<div class="container">
 	<h1>{title}</h1>
 	<p>{notFound ? $t('error.notFoundText') : $t('error.text')}</p>
 
@@ -36,7 +36,7 @@
 		{/if}
 		<a href={resolve('/')} class="back-link">&larr; {$t('error.back')}</a>
 	</div>
-</main>
+</div>
 
 <style>
 	.container {

@@ -8,6 +8,9 @@
 	}: { variables: any[]; activeId?: string | null; question?: string } = $props();
 
 	let categories = $derived(variables[0]?.categories || []);
+	const categoryLabel = (cat: any): string =>
+		cat.label ?? cat.labl ?? cat.value ?? cat.catValu ?? '';
+
 	let isMultiple = $derived(allowsMultiple(variables[0]?.answer_type ?? ''));
 </script>
 
@@ -20,7 +23,7 @@
 			<tr>
 				<th class="item-col"></th>
 				{#each categories as cat, i (i)}
-					<th class="cat-col">{cat.label ?? cat.labl ?? cat.value ?? cat.catValu ?? ''}</th>
+					<th class="cat-col">{categoryLabel(cat)}</th>
 				{/each}
 			</tr>
 		</thead>
@@ -32,12 +35,13 @@
 						     so it has no detail page (#14). -->
 						<span class="item-name">{variable.question || variable.concept}</span>
 					</td>
-					{#each categories, i (i)}
+					{#each categories as cat, i (i)}
+						{@const label = `${variable.question || variable.concept}: ${categoryLabel(cat)}`}
 						<td class="input-cell">
 							{#if isMultiple}
-								<input type="checkbox" disabled />
+								<input type="checkbox" aria-label={label} disabled />
 							{:else}
-								<input type="radio" name="grid-{variable.id}" disabled />
+								<input type="radio" name="grid-{variable.id}" aria-label={label} disabled />
 							{/if}
 						</td>
 					{/each}
@@ -108,7 +112,7 @@
 	}
 
 	tbody tr:hover {
-		background-color: #fafafa;
+		background-color: var(--color-surface-subtle);
 	}
 
 	tbody tr.active-row {

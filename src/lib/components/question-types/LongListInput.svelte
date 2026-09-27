@@ -29,8 +29,7 @@
 
 	.hint {
 		font-size: var(--font-size-caption-min);
-		color: var(--color-text-primary);
-		opacity: 0.5;
 		margin-top: var(--spacing-xs);
+		color: var(--color-text-muted);
 	}
 </style>

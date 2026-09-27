@@ -53,7 +53,7 @@
 
 <form onsubmit={submit}>
 	{#if passwordLogin}
-		<h2>{$t('auth.signIn')}</h2>
+		<h1>{$t('auth.signIn')}</h1>
 		{@render signin()}
 	{/if}
 </form>
@@ -66,10 +66,10 @@
 		background-color: var(--color-white);
 		border: var(--dimension-border-width) solid var(--color-primary-darker);
 		border-radius: var(--radius-lg);
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+		box-shadow: var(--shadow-sm);
 	}
 
-	h2 {
+	h1 {
 		margin-top: 0;
 		margin-bottom: var(--spacing-xl);
 		color: var(--color-secondary);
@@ -99,24 +99,20 @@
 		border-radius: var(--radius-sm);
 		font-family: var(--font-family-body);
 		font-size: var(--font-size-body-min);
-		transition:
-			border-color 0.2s,
-			box-shadow 0.2s;
+		transition: border-color 0.2s;
 	}
 
 	input[type='text']:focus,
 	input[type='password']:focus {
-		outline: none;
 		border-color: var(--color-secondary);
-		box-shadow: 0 0 0 2px rgba(134, 24, 79, 0.1);
 	}
 
 	.error-message {
 		padding: var(--spacing-xs) var(--spacing-sm);
-		background-color: #fff1f1;
-		border: 1px solid #ffa3a3;
+		background-color: var(--color-error-bg);
+		border: 1px solid var(--color-error-border);
 		border-radius: var(--radius-sm);
-		color: #d32f2f;
+		color: var(--color-error);
 		font-size: var(--font-size-small-min);
 		margin-bottom: var(--spacing-base);
 	}
@@ -138,7 +134,7 @@
 	form button:hover {
 		background-color: var(--color-primary-darker);
 		transform: translateY(-1px);
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+		box-shadow: var(--shadow-sm);
 	}
 
 	form button:active {

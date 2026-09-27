@@ -54,7 +54,7 @@
 	<a href={resolve('/')} class="back-link">&larr; {$t('study.back')}</a>
 
 	<div class="title-row">
-		<h2>{study.title}</h2>
+		<h1>{study.title}</h1>
 		<div class="export">
 			<button class="export-btn" onclick={exportDdiXml} disabled={exporting}>
 				{exporting ? $t('study.exporting') : $t('study.exportDdi')}
@@ -118,13 +118,13 @@
 
 	{#if study.abstract}
 		<div class="abstract">
-			<h3>{$t('study.abstract')}</h3>
+			<h2>{$t('study.abstract')}</h2>
 			<p>{extractText(study.abstract)}</p>
 		</div>
 	{/if}
 
 	<section class="variables-section">
-		<h3>{$t('study.questions')} ({questions.length})</h3>
+		<h2>{$t('study.questions')} ({questions.length})</h2>
 		{#if questions.length === 0}
 			<p>{$t('study.noQuestions')}</p>
 		{:else}
@@ -174,7 +174,10 @@
 		flex-wrap: wrap;
 	}
 
-	h2 {
+	h1 {
+		/* Same size as before it became the page heading. */
+		--min-size: var(--font-size-h2-min);
+		--max-size: var(--font-size-h2-max);
 		color: var(--color-secondary);
 		margin: var(--spacing-sm) 0 var(--spacing-base);
 	}
@@ -189,7 +192,7 @@
 	.export-error {
 		margin: var(--spacing-2xs) 0 0;
 		font-size: var(--font-size-small-min);
-		color: #d32f2f;
+		color: var(--color-error);
 		text-align: right;
 	}
 
@@ -232,11 +235,10 @@
 	}
 
 	.meta-item strong {
-		color: var(--color-text-primary);
-		opacity: 0.7;
 		font-size: var(--font-size-caption-min);
 		text-transform: uppercase;
 		letter-spacing: var(--letter-spacing-wider);
+		color: var(--color-text-muted);
 	}
 
 	.tags {
@@ -258,7 +260,9 @@
 		margin-bottom: var(--spacing-lg);
 	}
 
-	.abstract h3 {
+	.abstract h2 {
+		--min-size: var(--font-size-h3-min);
+		--max-size: var(--font-size-h3-max);
 		margin-bottom: var(--spacing-xs);
 		color: var(--color-secondary);
 	}
@@ -267,7 +271,9 @@
 		line-height: var(--line-height-relaxed);
 	}
 
-	.variables-section h3 {
+	.variables-section h2 {
+		--min-size: var(--font-size-h3-min);
+		--max-size: var(--font-size-h3-max);
 		color: var(--color-secondary);
 		margin-bottom: var(--spacing-sm);
 		border-bottom: 1px solid var(--color-tertiary);
