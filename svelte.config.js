@@ -6,7 +6,9 @@ const config = {
 	preprocess: vitePreprocess(),
 	kit: {
 		adapter: adapter({
-			fallback: 'index.html'
+			fallback: 'index.html',
+			// .br and .gz next to each file, served by serve.js.
+			precompress: true
 		})
 	}
 };

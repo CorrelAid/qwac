@@ -85,4 +85,12 @@ The About and Imprint pages fetch HTML snippets from the [cdl-wp-eins](https://g
 
 ## Deployment
 
-The production build is served by `serve.js`, a minimal Node.js static file server. It sets security headers (CSP, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`) and reads `PUBLIC_POCKETBASE_URL` at runtime to configure the `connect-src` CSP directive.
+Built and started with Bun (`nixpacks.toml`): `bun install --frozen-lockfile`, `bun run build`, `bun serve.js`. `bun.lock` is the only lockfile.
+
+`serve.js` is a small static file server for `build/`:
+
+- **Security headers** (CSP, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`) come from `security-headers.js`. The Vite dev and preview servers use the same file, so all three send the same headers. `PUBLIC_POCKETBASE_URL` is read at runtime for the CSP's `connect-src` and `img-src`.
+- **Caching**: `/_app/immutable/*` gets `Cache-Control: public, max-age=31536000, immutable`; HTML gets `no-cache`; other files one hour.
+- **Compression**: the adapter writes `.br` and `.gz` next to each file (`precompress`), and `serve.js` sends them to clients that accept them.
+- **SPA fallback**: unknown page routes get `index.html`; missing assets get a 404.
+- Health checks at `/health` and `/healthz`.

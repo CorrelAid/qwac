@@ -7,7 +7,6 @@
       "dependencies": {
         "@correlaid/cdl-design": "github:CorrelAid/cdl-design",
         "@isaacs/ttlcache": "^2.1.4",
-        "@sveltejs/adapter-static": "^3.0.10",
         "pocketbase": "^0.26.8",
         "zod": "^4.3.6",
       },
@@ -16,6 +15,7 @@
         "@eslint/compat": "^2.0.2",
         "@eslint/js": "^9.39.2",
         "@playwright/test": "1.63.0",
+        "@sveltejs/adapter-static": "^3.0.10",
         "@sveltejs/kit": "^2.50.2",
         "@sveltejs/vite-plugin-svelte": "^6.2.4",
         "@types/node": "^22",

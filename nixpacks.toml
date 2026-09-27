@@ -1,6 +1,7 @@
 buildImage = 'ghcr.io/railwayapp/nixpacks:latest'
 
 [phases.setup]
+# Node runs the build: vite and svelte-kit are started through a node shebang.
 nixPkgs = ["nodejs_20", "bun"]
 # Bun 1.3.10
 # track latest commit sha: https://github.com/NixOS/nixpkgs/blob/nixpkgs-unstable/pkgs/by-name/bu/bun/package.nix
