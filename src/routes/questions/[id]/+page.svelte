@@ -8,7 +8,8 @@
   import { validatePbId, safePath, safeErrorMessage } from "$lib/validation";
   import { getCached, setCached } from "$lib/cache";
   import AnswerTypeTag from "$lib/components/AnswerTypeTag.svelte";
-  import { t } from "$lib/i18n";
+  import { t, locale } from "$lib/i18n";
+  import { localizeGroup, localizeVariable } from "$lib/translations";
 
   let questionData = $state<any>(null);
   let variableXml = $state<string | null>(null);
@@ -16,10 +17,13 @@
   let error = $state<string | null>(null);
   let activeTab = $state<'preview' | 'xlsform' | 'ddi'>('preview');
 
-  // Derived from the single API response
-  let group = $derived(questionData?.group ?? null);
+  // Derived from the single API response; texts in the UI locale when the
+  // study has a translation for it.
+  let language = $derived(questionData?.language || questionData?.study?.language || undefined);
+  let group = $derived(questionData?.group ? localizeGroup(questionData.group, language, $locale) : null);
   let study = $derived(questionData?.study ?? null);
-  let variables = $derived(questionData?.variables ?? []);
+  let variables = $derived((questionData?.variables ?? []).map((v: any) => localizeVariable(v, language, $locale)));
+  let tags = $derived<{ lang?: string; text: string }[]>(questionData?.tags ?? []);
 
   // For standalone questions, the single variable is variables[0]
   let variable = $derived(group ? null : (variables[0] ?? null));
@@ -120,6 +124,14 @@
     {#if longListStandard}
       <p class="concept-line"><span class="field-label">{$t('question.standard')}</span> {longListStandard}</p>
     {/if}
+    {#if tags.length}
+      <p class="concept-line">
+        <span class="field-label">{$t('question.tags')}</span>
+        {#each tags as tag, i (i)}
+          <span class="search-tag" lang={tag.lang || undefined}>{tag.text}</span>
+        {/each}
+      </p>
+    {/if}
 
     <div class="meta-row">
       {#if rawAnswerType}
@@ -206,6 +218,15 @@
     color: var(--color-text-primary);
     opacity: 0.6;
     font-weight: var(--font-weight-medium);
+  }
+
+  .search-tag {
+    display: inline-block;
+    font-size: var(--font-size-caption-min);
+    padding: 1px var(--spacing-xs);
+    margin-right: var(--spacing-2xs);
+    border: 1px solid var(--color-primary-darker);
+    border-radius: var(--radius-sm);
   }
 
   .meta-row {

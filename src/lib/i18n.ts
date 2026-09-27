@@ -37,6 +37,8 @@ const translations: Record<Locale, Record<string, string>> = {
 		'explore.filterKind': 'Kind',
 		'explore.filterAnswerType': 'Answer Type',
 		'explore.loadError': 'Failed to load questions.',
+		'explore.searching': 'Searching...',
+		'explore.searchError': 'Search failed. Please try again.',
 
 		// Filter bar
 		'filter.search': 'Search questions...',
@@ -51,6 +53,7 @@ const translations: Record<Locale, Record<string, string>> = {
 		'question.back': 'Back to questions',
 		'question.concept': 'Concept:',
 		'question.standard': 'Standard:',
+		'question.tags': 'Tags:',
 		'question.tabPreview': 'Survey Preview',
 		'question.tabXlsform': 'XLSForm',
 		'question.tabDdi': 'DDI XML',
@@ -68,6 +71,7 @@ const translations: Record<Locale, Record<string, string>> = {
 		'study.analysisUnit': 'Analysis Unit',
 		'study.universe': 'Universe',
 		'study.dataKind': 'Data Kind',
+		'study.language': 'Language',
 		'study.source': 'Source',
 		'study.abstract': 'Abstract',
 		'study.questions': 'Questions',
@@ -141,6 +145,8 @@ const translations: Record<Locale, Record<string, string>> = {
 		'explore.filterKind': 'Art',
 		'explore.filterAnswerType': 'Antworttyp',
 		'explore.loadError': 'Fragen konnten nicht geladen werden.',
+		'explore.searching': 'Suche läuft...',
+		'explore.searchError': 'Suche fehlgeschlagen. Bitte erneut versuchen.',
 
 		// Filter bar
 		'filter.search': 'Fragen suchen...',
@@ -155,6 +161,7 @@ const translations: Record<Locale, Record<string, string>> = {
 		'question.back': 'Zurück zu Fragen',
 		'question.concept': 'Konzept:',
 		'question.standard': 'Standard:',
+		'question.tags': 'Schlagwörter:',
 		'question.tabPreview': 'Vorschau',
 		'question.tabXlsform': 'XLSForm',
 		'question.tabDdi': 'DDI XML',
@@ -172,6 +179,7 @@ const translations: Record<Locale, Record<string, string>> = {
 		'study.analysisUnit': 'Analyseeinheit',
 		'study.universe': 'Grundgesamtheit',
 		'study.dataKind': 'Datenart',
+		'study.language': 'Sprache',
 		'study.source': 'Quelle',
 		'study.abstract': 'Zusammenfassung',
 		'study.questions': 'Fragen',

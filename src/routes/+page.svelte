@@ -5,12 +5,12 @@
   import QuestionCard from "$lib/components/QuestionCard.svelte";
   import Paginator from "$lib/components/Paginator.svelte";
   import { metadata } from "$lib/metadata";
-  import Fuse from "fuse.js";
   import { safeErrorMessage } from "$lib/validation";
   import { writable } from "svelte/store";
   import { getCached, setCached } from "$lib/cache";
   import AnswerTypeTag from "$lib/components/AnswerTypeTag.svelte";
-  import { t } from "$lib/i18n";
+  import { t, locale } from "$lib/i18n";
+  import { questionText } from "$lib/translations";
 
   $effect(() => { $metadata.title = $t('explore.title'); });
   $metadata.headline = "";
@@ -24,6 +24,69 @@
     survey_type: "",
   });
   let error = $state<string | null>(null);
+
+  // Search runs on the backend (stemming, umlaut folding, German/English
+  // tags and translations); searchRank maps question id → rank.
+  let searchRank = $state<Map<string, number> | null>(null);
+  let searching = $state(false);
+  let searchError = $state<string | null>(null);
+  let searchSeq = 0;
+
+  const SEARCH_PER_PAGE = 100;
+  const SEARCH_DEBOUNCE_MS = 250;
+
+  async function searchQuestions(q: string): Promise<string[]> {
+    const key = `search:${q}`;
+    const cached = getCached<string[]>(key);
+    if (cached) return cached;
+    const ids: string[] = [];
+    for (let page = 1; ; page++) {
+      const params = new URLSearchParams({ q, page: String(page), perPage: String(SEARCH_PER_PAGE) });
+      const res = await fetchApiJson(`/api/search/questions?${params}`);
+      for (const item of res.items ?? []) ids.push(item.id);
+      if (page >= (res.totalPages ?? 0)) break;
+    }
+    setCached(key, ids);
+    return ids;
+  }
+
+  $effect(() => {
+    // Backend limit is 200 characters.
+    const q = searchQuery.trim().slice(0, 200);
+    const seq = ++searchSeq;
+    searchError = null;
+    if (!q) {
+      searchRank = null;
+      searching = false;
+      return;
+    }
+    searching = true;
+    const timer = setTimeout(() => {
+      searchQuestions(q)
+        .then((ids) => {
+          if (seq === searchSeq) searchRank = new Map(ids.map((id, i) => [id, i]));
+        })
+        .catch((e: any) => {
+          if (seq !== searchSeq) return;
+          clearOnAuthError(e);
+          searchRank = new Map();
+          searchError = safeErrorMessage(e, $t('explore.searchError'));
+        })
+        .finally(() => {
+          if (seq === searchSeq) searching = false;
+        });
+    }, SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  });
+
+  // Questions matching the search, in relevance order; all questions without a query.
+  let searchedQuestions = $derived.by(() => {
+    if (!searchRank) return questions;
+    const rank = searchRank;
+    return questions
+      .filter(q => rank.has(q.id))
+      .sort((a, b) => rank.get(a.id)! - rank.get(b.id)!);
+  });
 
   async function loadAll(skipCache = false) {
     const cachedQuestions = !skipCache ? getCached<any[]>("questions:all") : undefined;
@@ -97,24 +160,12 @@
   let filterOptionsList = $derived.by(() => {
     const atValues = answerTypeOptions.map(t => answerTypeLabel(t));
     return [
-      { label: $t('explore.filterKind'), key: "survey_type", values: surveyTypeOptions, counts: computeCounts(questions, "survey_type", surveyTypeOptions) },
-      { label: $t('explore.filterAnswerType'), key: "answer_type", values: atValues, counts: computeCounts(questions, "answer_type", atValues) },
+      { label: $t('explore.filterKind'), key: "survey_type", values: surveyTypeOptions, counts: computeCounts(searchedQuestions, "survey_type", surveyTypeOptions) },
+      { label: $t('explore.filterAnswerType'), key: "answer_type", values: atValues, counts: computeCounts(searchedQuestions, "answer_type", atValues) },
     ];
   });
 
-  let filteredQuestions = $derived.by(() => {
-    let result = applyFilters(questions);
-
-    if (searchQuery.trim()) {
-      const fuse = new Fuse(result, {
-        keys: ["name", "concept", "question_text"],
-        threshold: 0.3
-      });
-      result = fuse.search(searchQuery).map(r => r.item);
-    }
-
-    return result;
-  });
+  let filteredQuestions = $derived(applyFilters(searchedQuestions));
 
   const PER_PAGE = 20;
   let clientPage = $state(1);
@@ -157,6 +208,10 @@
       <div class="error-box">{error}</div>
     {:else if !loaded}
       <p>{$t('explore.loading')}</p>
+    {:else if searchError}
+      <div class="error-box">{searchError}</div>
+    {:else if searching && !searchRank}
+      <p>{$t('explore.searching')}</p>
     {:else if filteredQuestions.length === 0}
       <p>{$t('explore.noResults')}</p>
     {:else}
@@ -164,10 +219,11 @@
       <ul class="variable-list">
         {#each paginatedQuestions as question (question.id)}
           {@const study = studyForQuestion(question)}
+          {@const text = questionText(question, $locale)}
           <li>
             <QuestionCard>
-              {#if question.question_text}
-                <p class="meta-text"><span class="field-label">{$t('explore.questionLabel')}</span> {question.question_text}</p>
+              {#if text}
+                <p class="meta-text"><span class="field-label">{$t('explore.questionLabel')}</span> {text}</p>
               {/if}
               <p class="meta-text"><span class="field-label">{$t('explore.conceptLabel')}</span> {question.concept}</p>
 

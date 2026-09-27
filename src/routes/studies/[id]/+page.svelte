@@ -7,7 +7,8 @@
   import { validatePbId, safePath, safeErrorMessage } from "$lib/validation";
   import { getCached, setCached } from "$lib/cache";
   import AnswerTypeTag from "$lib/components/AnswerTypeTag.svelte";
-  import { t } from "$lib/i18n";
+  import { t, locale } from "$lib/i18n";
+  import { questionText } from "$lib/translations";
 
   function answerTypeLabel(type: string): string {
     if (!type) return '';
@@ -104,6 +105,9 @@
       {#if study.universe}
         <div class="meta-item"><strong>{$t('study.universe')}</strong><span>{study.universe}</span></div>
       {/if}
+      {#if study.language}
+        <div class="meta-item"><strong>{$t('study.language')}</strong><span>{study.language}</span></div>
+      {/if}
       {#if study.data_kind}
         <div class="meta-item"><strong>{$t('study.dataKind')}</strong><span>{study.data_kind}</span></div>
       {/if}
@@ -142,8 +146,9 @@
             <li id="q-{question.id}">
               <QuestionCard>
                 <a href="/questions/{question.id}" class="var-name">{question.concept || question.name}</a>
-                {#if question.question_text}
-                  <p class="question-text">{question.question_text}</p>
+                {@const text = questionText(question, $locale)}
+                {#if text}
+                  <p class="question-text">{text}</p>
                 {/if}
                 <AnswerTypeTag type={question.answer_type} />
               </QuestionCard>
