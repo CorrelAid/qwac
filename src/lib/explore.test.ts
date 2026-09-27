@@ -9,9 +9,9 @@ import {
 } from './explore';
 
 const studies = new Map([
-	['s1', { id: 's1', topic_classifications: ['Impact', 'Demographics'] }],
-	['s2', { id: 's2', topic_classifications: ['Impact'] }],
-	['s3', { id: 's3', topic_classifications: [] }]
+	['s1', { id: 's1', title: 'One', topic_classifications: ['Impact', 'Demographics'] }],
+	['s2', { id: 's2', title: 'Two', topic_classifications: ['Impact'] }],
+	['s3', { id: 's3', title: 'Three', topic_classifications: [] }]
 ]);
 
 const questions = [

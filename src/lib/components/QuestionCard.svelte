@@ -1,9 +1,9 @@
 <script lang="ts">
-	/* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
 	import { resolve } from '$app/paths';
 	import AnswerTypeTag from '$lib/components/AnswerTypeTag.svelte';
 	import { t, locale } from '$lib/i18n';
 	import { questionText } from '$lib/translations';
+	import type { Question } from '$lib/types';
 
 	let {
 		question,
@@ -11,7 +11,7 @@
 		headingLevel = 2
 	}: {
 		/** An entry of /api/questions or /api/studies/{id}/questions. */
-		question: any;
+		question: Question;
 		/** The question's study, to link to; left out on the study's own page. */
 		study?: { id: string; title: string } | null;
 		/** Level of the card title, below the page's headings. */

@@ -1,5 +1,4 @@
 <script lang="ts">
-	/* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
 	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -63,7 +62,7 @@
 	);
 	let study = $derived(questionData?.study ?? null);
 	let variables = $derived(
-		(questionData?.variables ?? []).map((v: any) => localizeVariable(v, language, $locale))
+		(questionData?.variables ?? []).map((v) => localizeVariable(v, language, $locale))
 	);
 	let tags = $derived<{ lang?: string; text: string }[]>(questionData?.tags ?? []);
 

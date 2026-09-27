@@ -1,8 +1,9 @@
 <script lang="ts">
-	/* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
 	import { resolve } from '$app/paths';
 	import { client, clearOnAuthError } from '$lib/pocketbase';
 	import { invalidateAll } from '$app/navigation';
+	import { ClientResponseError } from 'pocketbase';
+	import type { ImportResponse, ValidationRejection } from '$lib/types';
 	import { clearCache } from '$lib/cache';
 	import Notice from '$lib/components/Notice.svelte';
 	import { groupFindings, type Finding } from '$lib/findings';
@@ -90,7 +91,7 @@
 			const fd = new FormData();
 			fd.append('file', file);
 			// Validates and stores the codebook; superusers only.
-			const res = await client.send('/api/import', { method: 'POST', body: fd });
+			const res = await client.send<ImportResponse>('/api/import', { method: 'POST', body: fd });
 			if (res.imported === false) {
 				result = { kind: 'failed', message: $t('upload.notStored') };
 			} else {
@@ -99,17 +100,18 @@
 				clearCache();
 				await invalidateAll();
 			}
-		} catch (e: any) {
+		} catch (e) {
 			clearOnAuthError(e);
 			if (import.meta.env.DEV) {
 				console.error('Upload error:', e);
 			}
 			// client.send() throws ClientResponseError — actual data is in e.response
-			const resp = e.response || e.data || {};
+			const err = e instanceof ClientResponseError ? e : null;
+			const resp = (err?.response ?? {}) as Partial<ValidationRejection>;
 			if (resp.valid === false && resp.errors) {
 				// Backend returned validation errors (400)
 				result = { kind: 'invalid', errors: resp.errors };
-			} else if (e.status === 401 || e.status === 403) {
+			} else if (err?.status === 401 || err?.status === 403) {
 				result = { kind: 'failed', message: $t('upload.notAllowed') };
 			} else {
 				result = { kind: 'failed', message: $t('upload.uploadFailed') };

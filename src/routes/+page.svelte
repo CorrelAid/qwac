@@ -1,5 +1,4 @@
 <script lang="ts">
-	/* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
 	import { resolve } from '$app/paths';
 	import { goto, invalidateAll } from '$app/navigation';
 	import Notice from '$lib/components/Notice.svelte';
@@ -49,8 +48,8 @@
 		});
 	}
 
-	let questions = $derived<any[]>(data.questions);
-	let studies = $derived(new Map<string, any>(data.studies.map((s: any) => [s.id, s])));
+	let questions = $derived(data.questions);
+	let studies = $derived(new Map(data.studies.map((s) => [s.id, s])));
 
 	let filters = $derived(
 		Object.fromEntries(

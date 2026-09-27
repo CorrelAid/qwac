@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
 /**
  * What the question page shows, derived from /api/questions/{id}: a question
  * is a grid (matrix group), a choice group (one variable per category, maybe
@@ -13,15 +12,16 @@ import {
 	typeInfo,
 	variableType
 } from '$lib/questionTypes';
+import type { GridRow, Group, PreviewVariable, Variable } from '$lib/types';
 
 export type QuestionPreview =
-	| { kind: 'grid'; variables: any[]; question: string }
-	| { kind: 'survey'; variable: any }
+	| { kind: 'grid'; variables: GridRow[]; question: string }
+	| { kind: 'survey'; variable: PreviewVariable }
 	| null;
 
 export interface QuestionView {
 	/** The standalone variable; null for a group. */
-	variable: any | null;
+	variable: Variable | null;
 	/** Answer type for the tag. */
 	answerType: string;
 	concept: string;
@@ -36,8 +36,8 @@ export interface QuestionView {
  * @param otherLabel label for an "Other" option whose variable has none
  */
 export function questionView(
-	group: any | null,
-	variables: any[],
+	group: Group | null,
+	variables: Variable[],
 	answerType: string | undefined,
 	otherLabel: string
 ): QuestionView {
@@ -80,11 +80,10 @@ export function questionView(
 					first?.prequestion_text || group?.description || group?.concept || first?.question,
 				answer_type: baseType(type),
 				has_other: !!otherVariable,
-				other_label:
-					otherVariable?.question || otherVariable?.label || otherVariable?.concept || otherLabel,
+				other_label: otherVariable?.question || otherVariable?.concept || otherLabel,
 				// Each variable of a choice group is one category.
 				categories: choiceVariables.map((v) => ({
-					label: v.question || v.label || v.concept,
+					label: v.question || v.concept,
 					value: v.name || v.id
 				}))
 			}

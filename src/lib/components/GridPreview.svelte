@@ -1,15 +1,15 @@
 <script lang="ts">
 	import { allowsMultiple } from '$lib/questionTypes';
-	/* eslint-disable @typescript-eslint/no-explicit-any -- TODO(#25): type the API responses */
+	import type { Category, GridRow } from '$lib/types';
 	let {
 		variables = [],
 		activeId = null,
 		question = ''
-	}: { variables: any[]; activeId?: string | null; question?: string } = $props();
+	}: { variables?: GridRow[]; activeId?: string | null; question?: string } = $props();
 
 	let categories = $derived(variables[0]?.categories || []);
-	const categoryLabel = (cat: any): string =>
-		cat.label ?? cat.labl ?? cat.value ?? cat.catValu ?? '';
+	const categoryLabel = (cat: Pick<Category, 'label' | 'value'>): string =>
+		cat.label || cat.value || '';
 
 	let isMultiple = $derived(allowsMultiple(variables[0]?.answer_type ?? ''));
 </script>
