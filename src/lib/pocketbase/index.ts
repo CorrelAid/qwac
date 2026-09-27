@@ -70,57 +70,76 @@ export function logout() {
 	client.authStore.clear();
 }
 
-/** Reject API paths that don't start with /api/ or contain traversal sequences. */
+/** A failed call to a custom API endpoint. `status` is the HTTP status. */
+export class ApiError extends Error {
+	constructor(
+		readonly status: number,
+		message: string,
+		/** The parsed JSON error body, if the response had one. */
+		readonly data?: unknown
+	) {
+		super(message);
+		this.name = 'ApiError';
+	}
+}
+
+/**
+ * Reject API paths that don't start with /api/ or contain traversal
+ * sequences. Only the path is checked; the query string may contain
+ * anything (a search for "usw.." is fine).
+ */
 function assertSafePath(path: string): void {
-	if (!path.startsWith('/api/')) {
+	const pathname = path.split('?')[0];
+	if (!pathname.startsWith('/api/')) {
 		throw new Error('API path must start with /api/');
 	}
-	if (path.includes('..') || path.includes('//')) {
+	if (pathname.includes('..') || pathname.includes('//')) {
 		throw new Error('API path contains invalid sequences');
 	}
 }
 
-/** Fetch text from a custom PocketBase API endpoint (authenticated). */
-export async function fetchApiText(path: string): Promise<string> {
-	assertSafePath(path);
-	const res = await fetch(`${POCKETBASE_URL}${path}`, {
-		headers: { Authorization: client.authStore.token }
-	});
-	if (!res.ok) {
-		const err = { status: res.status, message: res.statusText };
-		clearOnAuthError(err);
-		throw err;
-	}
-	return res.text();
-}
-
-/** Fetch JSON from a custom PocketBase API endpoint (authenticated). Supports custom request options (method, body, etc). */
-export async function fetchApiJson(path: string, options?: RequestInit): Promise<any> {
+/**
+ * Fetch a custom PocketBase API endpoint (authenticated). Checks the status
+ * before reading the body, so a non-JSON error page (502 from a proxy, empty
+ * 500) still becomes an ApiError with its status. A 401 clears stale auth.
+ */
+async function apiFetch(path: string, options?: RequestInit): Promise<Response> {
 	assertSafePath(path);
 	const res = await fetch(`${POCKETBASE_URL}${path}`, {
 		...options,
 		headers: { Authorization: client.authStore.token, ...options?.headers }
 	});
-	const json = await res.json();
 	if (!res.ok) {
-		clearOnAuthError({ status: res.status });
-		throw json;
+		let data: unknown;
+		try {
+			data = await res.json();
+		} catch {
+			// Not JSON: keep the status and statusText.
+		}
+		const message =
+			data && typeof data === 'object' && 'message' in data && typeof data.message === 'string'
+				? data.message
+				: res.statusText;
+		const err = new ApiError(res.status, message, data);
+		clearOnAuthError(err);
+		throw err;
 	}
-	return json;
+	return res;
+}
+
+/** Fetch text from a custom PocketBase API endpoint (authenticated). */
+export async function fetchApiText(path: string): Promise<string> {
+	return (await apiFetch(path)).text();
+}
+
+/** Fetch JSON from a custom PocketBase API endpoint (authenticated). Supports custom request options (method, body, etc). */
+export async function fetchApiJson(path: string, options?: RequestInit): Promise<any> {
+	return (await apiFetch(path, options)).json();
 }
 
 /** Fetch a blob from a custom PocketBase API endpoint (authenticated). */
 export async function fetchApiBlob(path: string): Promise<Blob> {
-	assertSafePath(path);
-	const res = await fetch(`${POCKETBASE_URL}${path}`, {
-		headers: { Authorization: client.authStore.token }
-	});
-	if (!res.ok) {
-		const err = { status: res.status, message: res.statusText };
-		clearOnAuthError(err);
-		throw err;
-	}
-	return res.blob();
+	return (await apiFetch(path)).blob();
 }
 
 /**
