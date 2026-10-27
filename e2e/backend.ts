@@ -22,6 +22,11 @@ export const studies: Json[] = [
 		collectionName: 'studies',
 		title: 'Community Survey',
 		abstract: 'Questions about local involvement.',
+		license: 'CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/).',
+		license_id: 'CC-BY-SA-4.0',
+		copyright: '© The authors 2024',
+		citation: 'Doe, J. (2024). Community Survey. Journal, 1, 1–2.',
+		holdings_uri: 'https://doi.org/10.0000/example',
 		topic_classifications: ['Impact'],
 		language: 'en'
 	},
@@ -37,7 +42,15 @@ export const studies: Json[] = [
 
 const study = (id: string) => {
 	const s = studies.find((s) => s.id === id)!;
-	return { id: s.id, title: s.title };
+	return {
+		id: s.id,
+		title: s.title,
+		license: s.license ?? '',
+		license_id: s.license_id ?? '',
+		copyright: s.copyright ?? '',
+		citation: s.citation ?? '',
+		source_uri: s.holdings_uri ?? ''
+	};
 };
 
 interface Fixture {

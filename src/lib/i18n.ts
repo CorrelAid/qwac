@@ -122,6 +122,16 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'study.questions': 'Questions',
 		'study.noQuestions': 'No questions found for this study.',
 
+		// License and citation (#66)
+		'license.heading': 'License and citation',
+		'license.license': 'License',
+		'license.notStated': 'License not stated',
+		'license.copyright': 'Copyright',
+		'license.citation': 'Citation',
+		'license.source': 'Source',
+		'license.shareAlike': 'Adapted versions must be shared under the same license.',
+		'license.credit': 'When reusing, credit:',
+
 		// Upload
 		'upload.title': 'Upload DDI Codebook',
 		'upload.description':
@@ -265,6 +275,17 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'study.abstract': 'Zusammenfassung',
 		'study.questions': 'Fragen',
 		'study.noQuestions': 'Keine Fragen für diese Studie gefunden.',
+
+		// Lizenz und Zitation (#66)
+		'license.heading': 'Lizenz und Zitation',
+		'license.license': 'Lizenz',
+		'license.notStated': 'Lizenz nicht angegeben',
+		'license.copyright': 'Urheberrecht',
+		'license.citation': 'Zitation',
+		'license.source': 'Quelle',
+		'license.shareAlike':
+			'Bearbeitete Fassungen müssen unter derselben Lizenz weitergegeben werden.',
+		'license.credit': 'Bei Weiterverwendung angeben:',
 
 		// Upload
 		'upload.title': 'DDI Codebook hochladen',

@@ -7,6 +7,7 @@
 	import GridPreview from '$lib/components/GridPreview.svelte';
 	import { metadata } from '$lib/metadata';
 	import AnswerTypeTag from '$lib/components/AnswerTypeTag.svelte';
+	import LicenseNotice from '$lib/components/LicenseNotice.svelte';
 	import { t, locale } from '$lib/i18n';
 	import { localizeGroup, localizeVariable } from '$lib/translations';
 	import { questionView } from '$lib/questionView';
@@ -117,6 +118,10 @@
 		{/if}
 	</div>
 
+	{#if study}
+		<LicenseNotice attribution={study} />
+	{/if}
+
 	<div class="view-tabs" role="tablist" aria-label={$t('question.tabsLabel')}>
 		{#each TABS as tab (tab)}
 			<button
@@ -145,6 +150,9 @@
 				<p class="hint">{$t('question.loadingXlsform')}</p>
 			{:then xlsform}
 				{#if xlsform}
+					{#if study}
+						<LicenseNotice attribution={study} variant="credit" />
+					{/if}
 					<XlsFormDisplay worksheets={xlsformSheets(xlsform)} />
 				{:else}
 					<p class="hint">{$t('question.xlsformUnavailable')}</p>
@@ -155,6 +163,9 @@
 				<p class="hint">{$t('question.loadingDdi')}</p>
 			{:then xml}
 				{#if xml}
+					{#if study}
+						<LicenseNotice attribution={study} variant="credit" />
+					{/if}
 					<div class="tab-actions">
 						<button class="download-btn" onclick={() => downloadXml(xml)}
 							>{$t('question.downloadXml')}</button
