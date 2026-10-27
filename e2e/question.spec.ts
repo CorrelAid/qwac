@@ -12,8 +12,10 @@ test('every link on a question page leads to a working page (#14)', async ({ pag
 	const hrefs = await page
 		.locator('main a[href], article a[href]')
 		.evaluateAll((as) => as.map((a) => (a as HTMLAnchorElement).getAttribute('href')!));
-	expect(hrefs.length).toBeGreaterThan(0);
-	for (const href of new Set(hrefs)) {
+	// External links (license deed, source) are not ours to check.
+	const internal = hrefs.filter((href) => href.startsWith('/'));
+	expect(internal.length).toBeGreaterThan(0);
+	for (const href of new Set(internal)) {
 		await page.goto(href);
 		await expect(
 			page.getByRole('heading', { name: /nicht gefunden|schiefgelaufen/ }),
@@ -94,4 +96,23 @@ test('the preview shows the hint and the condition; XLSForm shows settings (#60)
 	await expect(page.getByText('settings', { exact: true })).toBeVisible();
 	await expect(page.getByText('English (en)')).toBeVisible();
 	await expect(page.getByText('no skip logic')).toHaveCount(0);
+});
+
+test("shows the study's license, citation and source (#66)", async ({ page }) => {
+	await page.goto(`/questions/${fixtures.grid.question.id}`);
+	await expect(page.getByRole('link', { name: 'CC BY-SA 4.0' })).toHaveAttribute(
+		'href',
+		'https://creativecommons.org/licenses/by-sa/4.0/'
+	);
+	await expect(page.getByText('Doe, J. (2024). Community Survey.')).toBeVisible();
+	await expect(page.getByRole('link', { name: 'https://doi.org/10.0000/example' })).toBeVisible();
+
+	await page.getByRole('tab', { name: 'XLSForm' }).click();
+	await expect(page.getByText('Bei Weiterverwendung angeben:')).toBeVisible();
+});
+
+test('a study without a license says so, with no button (#66)', async ({ page }) => {
+	await page.goto(`/questions/${fixtures.gender.question.id}`);
+	await expect(page.getByText('Lizenz nicht angegeben')).toBeVisible();
+	await expect(page.locator('.cc-button')).toHaveCount(0);
 });

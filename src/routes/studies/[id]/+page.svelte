@@ -2,6 +2,7 @@
 	import { resolve } from '$app/paths';
 	import { clearOnAuthError, fetchApiBlob } from '$lib/pocketbase';
 	import QuestionCard from '$lib/components/QuestionCard.svelte';
+	import LicenseNotice from '$lib/components/LicenseNotice.svelte';
 	import { metadata } from '$lib/metadata';
 	import { stripMarkup } from '$lib/text';
 	import { t } from '$lib/i18n';
@@ -95,6 +96,8 @@
 			</div>
 		{/if}
 	</div>
+
+	<LicenseNotice attribution={study} source={false} />
 
 	{#if study.topic_classifications?.length}
 		<div class="tags">

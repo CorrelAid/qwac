@@ -94,9 +94,25 @@ export interface Group {
 	translations?: Record<string, { description?: string }> | null;
 }
 
+/**
+ * How a study's questions may be reused and how to credit them (qwacback#54).
+ * Each field is empty when the codebook states nothing; an empty license
+ * means "not stated", not "free to use".
+ */
+export interface Attribution {
+	/** The terms of use as written in the codebook, e.g. "CC BY 4.0 (https://…)". */
+	license?: string;
+	/** SPDX ID of a Creative Commons license, e.g. "CC-BY-SA-4.0"; empty for other terms. */
+	license_id?: string;
+	copyright?: string;
+	citation?: string;
+	/** Where the instrument is published. */
+	source_uri?: string;
+}
+
 /** /api/questions/{id}: the question with its study, group and variables. */
 export interface QuestionDetail extends Omit<Question, 'study_id' | 'variable_ids'> {
-	study: { id: string; title: string; language?: string } | null;
+	study: ({ id: string; title: string; language?: string } & Attribution) | null;
 	group: Group | null;
 	variables: Variable[];
 }
@@ -120,6 +136,10 @@ export interface Study {
 	data_kind?: string;
 	holdings_uri?: string;
 	holdings_description?: string;
+	license?: string;
+	license_id?: string;
+	copyright?: string;
+	citation?: string;
 	keywords?: string[];
 	topic_classifications?: string[];
 	language?: string;
