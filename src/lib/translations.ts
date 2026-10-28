@@ -3,7 +3,7 @@
  * `language` plus `translations` keyed by language code.
  *
  * - question.translations: { "<lang>": "<question text>" }
- * - variable.translations: { "<lang>": { question, prequestion_text, ivu_instructions, hint, universe, categories: { "<value>": "<label>" } } }
+ * - variable.translations: { "<lang>": { question, prequestion_text, ivu_instructions, hint, universe, grid_note, categories: { "<value>": "<label>" } } }
  * - group.translations:    { "<lang>": { description } }
  */
 
@@ -13,6 +13,7 @@ type VariableTranslation = {
 	ivu_instructions?: string;
 	hint?: string;
 	universe?: string;
+	grid_note?: string;
 	description?: string;
 	categories?: Record<string, string>;
 };
@@ -72,6 +73,7 @@ interface LocalizableVariable {
 	ivu_instructions?: string;
 	hint?: string;
 	universe?: string;
+	grid_note?: string;
 	categories?: { value?: string; label?: string }[] | null;
 	translations?: unknown;
 }
@@ -101,6 +103,7 @@ export function localizeVariable<T extends LocalizableVariable>(
 		ivu_instructions: tr.ivu_instructions || variable.ivu_instructions,
 		hint: tr.hint || variable.hint,
 		universe: tr.universe || variable.universe,
+		grid_note: tr.grid_note || variable.grid_note,
 		categories
 	};
 }

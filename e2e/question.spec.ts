@@ -30,6 +30,19 @@ test('grid rows are plain text (#14)', async ({ page }) => {
 	await expect(page.locator('.grid-table input[type=radio]')).toHaveCount(6);
 });
 
+test('a grid of number rows is a table of number fields with notes (#70)', async ({ page }) => {
+	await page.goto(`/questions/${fixtures.numberGrid.question.id}`);
+	await expect(page.locator('.grid-question')).toHaveText(
+		'Wie viele Beschäftigte hatte Ihr Unternehmen am 31.12.2025?'
+	);
+	await expect(page.locator('.number-table input[type=number]')).toHaveCount(3);
+	await expect(page.locator('.number-table input[type=radio]')).toHaveCount(0);
+	await expect(page.getByRole('columnheader', { name: 'Anzahl' })).toBeVisible();
+	await expect(page.locator('.note-row')).toHaveText('davon: Geschlecht (nach Geburtenregister)');
+	// The grid label from qwacback's catalogue.
+	await expect(page.getByText('Matrix-Gruppe')).toBeVisible();
+});
+
 test('moving from one question to another shows no stale data (#15)', async ({ page }) => {
 	await page.goto(`/questions/${fixtures.grid.question.id}?tab=xlsform`);
 	await expect(page.locator('.view-tab.active')).toHaveText('XLSForm');

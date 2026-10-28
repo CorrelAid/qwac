@@ -8,6 +8,7 @@ import {
 	groupAnswerType,
 	isChoiceType,
 	isGridGroup,
+	isNumberType,
 	isTextType,
 	typeInfo
 } from '$lib/questionTypes';
@@ -16,6 +17,8 @@ import type { GridRow, Group, PreviewVariable, Variable } from '$lib/types';
 
 export type QuestionPreview =
 	| { kind: 'grid'; variables: GridRow[]; question: string }
+	/** A grid whose rows are number fields (integer, decimal, range), #70. */
+	| { kind: 'numberGrid'; variables: GridRow[]; question: string }
 	| { kind: 'survey'; variable: PreviewVariable }
 	| null;
 
@@ -48,6 +51,10 @@ export function questionView(
 	const variable = group ? null : (variables[0] ?? null);
 	const isMatrix = !!group && isGridGroup(group.type ?? '');
 	const isSelectGroup = !!group && !isMatrix;
+	// A grid's rows are choice rows (radio columns from shared categories) or,
+	// since formtransform 0.8.0, number rows (#70); each row's answer type says which.
+	const isNumberGrid =
+		isMatrix && variables.length > 0 && variables.every((v) => isNumberType(v.answer_type));
 
 	// In a choice group, a text variable is the "Other" field.
 	const isChoiceGroup = isSelectGroup && variables.some((v) => isChoiceType(v.answer_type));
@@ -76,7 +83,7 @@ export function questionView(
 	let preview: QuestionPreview = null;
 	if (isMatrix && variables.length > 0) {
 		preview = {
-			kind: 'grid',
+			kind: isNumberGrid ? 'numberGrid' : 'grid',
 			variables,
 			question: variables[0]?.prequestion_text || group?.description || group?.concept || ''
 		};

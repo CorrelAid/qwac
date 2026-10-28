@@ -6,6 +6,7 @@ import {
 	allowsMultiple,
 	baseType,
 	isChoiceType,
+	isNumberType,
 	isTextType,
 	typeInfo,
 	typeLabel,
@@ -133,5 +134,11 @@ describe('helpers', () => {
 		expect(allowsMultiple('multiple_choice')).toBe(true);
 		expect(allowsMultiple('single_choice')).toBe(false);
 		expect(isTextType('text')).toBe(true);
+	});
+
+	it('knows number types, the rows of a number grid (#70)', () => {
+		for (const type of ['integer', 'decimal', 'range']) expect(isNumberType(type)).toBe(true);
+		for (const type of ['grid', 'single_choice', 'text', ''])
+			expect(isNumberType(type)).toBe(false);
 	});
 });

@@ -30,6 +30,11 @@ describe('GridPreview', () => {
 		expect(container.querySelectorAll('input[type=radio]')).toHaveLength(6);
 	});
 
+	it("uses radios for qwacback's grid rows, though the grid type has no choice (#70)", async () => {
+		const { container } = await render(GridPreview, { variables: rows('grid') });
+		expect(container.querySelectorAll('input[type=radio]')).toHaveLength(6);
+	});
+
 	it('uses checkboxes for multiple choice rows', async () => {
 		const { container } = await render(GridPreview, { variables: rows('multiple_choice') });
 		expect(container.querySelectorAll('input[type=checkbox]')).toHaveLength(6);

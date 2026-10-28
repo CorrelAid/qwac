@@ -15,7 +15,7 @@
 		"registryType": "grid",
 		"label": { "de": "Matrix-Gruppe", "en": "Grid / Matrix Group" },
 		"kind": "question",
-		"presentation": { "choice": "one", "withOther": false, "longList": false, "grid": true }
+		"presentation": { "withOther": false, "longList": false, "grid": true }
 	},
 	"integer": {
 		"registryType": "integer",
