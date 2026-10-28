@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { mockBackend, fixtures } from './backend';
+import { mockBackend, fixtures, LONG_QUESTION } from './backend';
 
 test.beforeEach(async ({ page }) => {
 	await mockBackend(page);
@@ -101,6 +101,28 @@ test('question cards look the same on the explore and study pages (#30)', async 
 	const onExplore = await card();
 	await page.goto('/studies/study0000000001');
 	expect(await card()).toEqual(onExplore);
+});
+
+test('a long card title is clamped, and the type tag stays with the count (#72)', async ({
+	page
+}) => {
+	await page.setViewportSize({ width: 390, height: 844 });
+	await page.goto('/?topic=Education');
+	const card = page.locator('.question-card', { hasText: 'Wie viele in Deutschland' });
+	const title = card.locator('.title a');
+	// The full text stays in the DOM; CSS shows about three lines.
+	await expect(title).toHaveText(LONG_QUESTION);
+	const { height, lineHeight } = await title.evaluate((a) => ({
+		height: a.getBoundingClientRect().height,
+		lineHeight: parseFloat(getComputedStyle(a).lineHeight)
+	}));
+	expect(height).toBeLessThanOrEqual(lineHeight * 3 + 1);
+	// On one line: their vertical middles match.
+	const middle = async (selector: string) => {
+		const box = (await card.locator(selector).boundingBox())!;
+		return box.y + box.height / 2;
+	};
+	expect(Math.abs((await middle('.type-tag')) - (await middle('.variables')))).toBeLessThan(2);
 });
 
 test('the paginator shows the range and scrolls to the results (#30)', async ({ page }) => {

@@ -36,15 +36,16 @@
 		<p class="text">{text}</p>
 	{/if}
 
+	<!-- Short tags first, so they stay together; a long study title wraps below (#72). -->
 	<div class="tags">
 		{#if question.answer_type}
 			<AnswerTypeTag type={question.answer_type} />
 		{/if}
-		{#if study}
-			<a href={resolve('/studies/[id]', { id: study.id })} class="study-tag">{study.title}</a>
-		{/if}
 		{#if variableCount > 1}
 			<span class="variables">{variableCount} {$t('explore.variables')}</span>
+		{/if}
+		{#if study}
+			<a href={resolve('/studies/[id]', { id: study.id })} class="study-tag">{study.title}</a>
 		{/if}
 	</div>
 </div>
@@ -67,7 +68,14 @@
 		margin: 0 0 var(--spacing-2xs);
 	}
 
+	/* A card titled by its question can be a paragraph: about three lines,
+	   the full text stays in the DOM for screen readers (#72). */
 	.title a {
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		line-clamp: 3;
+		overflow: hidden;
 		color: var(--color-secondary);
 		text-decoration: none;
 	}
@@ -84,9 +92,9 @@
 
 	.tags {
 		display: flex;
-		align-items: baseline;
-		gap: var(--spacing-sm);
 		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--spacing-xs) var(--spacing-sm);
 	}
 
 	.study-tag {
@@ -98,6 +106,7 @@
 		text-decoration: none;
 		white-space: normal;
 		word-break: break-word;
+		max-width: 100%;
 	}
 
 	.study-tag:hover {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { distinctConcept, stripMarkup } from './text';
+import { distinctConcept, firstSentence, stripMarkup } from './text';
 
 describe('stripMarkup', () => {
 	it('removes XHTML tags and collapses whitespace', () => {
@@ -32,5 +32,29 @@ describe('distinctConcept', () => {
 	it('hides a concept that repeats one of the texts, ignoring surrounding whitespace', () => {
 		expect(distinctConcept('Themen der Weiterbildung ', 'Themen der Weiterbildung')).toBe('');
 		expect(distinctConcept('How old are you?', '', null, ' How old are you?\n')).toBe('');
+	});
+});
+
+describe('firstSentence', () => {
+	it('cuts a long statement after its first sentence', () => {
+		expect(
+			firstSentence(
+				'Creative Commons Attribution 4.0 International (CC BY 4.0). Reuse is authorised, provided the source is acknowledged. Changes: none.'
+			)
+		).toBe('Creative Commons Attribution 4.0 International (CC BY 4.0).');
+	});
+
+	it('does not cut at a dot inside a URL or before a lowercase word', () => {
+		expect(firstSentence('CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/).')).toBe(
+			'CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/).'
+		);
+		expect(firstSentence('Weitergabe z. B. mit Quellenangabe. Sonst nicht.')).toBe(
+			'Weitergabe z. B. mit Quellenangabe.'
+		);
+	});
+
+	it('keeps a text without a sentence end, and handles missing values', () => {
+		expect(firstSentence(' Free to use ')).toBe('Free to use');
+		expect(firstSentence(undefined)).toBe('');
 	});
 });
