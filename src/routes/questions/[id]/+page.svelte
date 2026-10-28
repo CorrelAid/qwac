@@ -9,7 +9,7 @@
 	import AnswerTypeTag from '$lib/components/AnswerTypeTag.svelte';
 	import LicenseNotice from '$lib/components/LicenseNotice.svelte';
 	import { t, locale } from '$lib/i18n';
-	import { localizeGroup, localizeVariable } from '$lib/translations';
+	import { localizeGroup, localizeVariable, questionText } from '$lib/translations';
 	import { questionView } from '$lib/questionView';
 	import { xlsformSheets } from '$lib/xlsform';
 	import { downloadBlob, safeFilename } from '$lib/download';
@@ -69,10 +69,21 @@
 	let tags = $derived<{ lang?: string; text: string }[]>(questionData?.tags ?? []);
 
 	let view = $derived(
-		questionView(group, variables, questionData?.answer_type, $t('preview.other'))
+		questionView(
+			group,
+			variables,
+			questionData?.answer_type,
+			$t('preview.other'),
+			questionData?.question_text
+		)
 	);
 	let variable = $derived(view.variable);
+	// The concept is '' when it is empty or only repeats the question (#68);
+	// the page is then titled by the question itself.
 	let displayConcept = $derived(view.concept);
+	let title = $derived(
+		displayConcept || questionText(questionData, $locale) || questionData?.name || ''
+	);
 
 	function downloadXml(xml: string) {
 		const name = safeFilename(displayConcept || questionData?.name || '', `question-${data.id}`);
@@ -80,17 +91,22 @@
 	}
 
 	$effect(() => {
-		$metadata.title = displayConcept;
+		$metadata.title = title;
 	});
 </script>
 
 <article class="question-detail">
 	<a href={resolve('/')} class="back-link">&larr; {$t('question.back')}</a>
 
-	<h1 class="concept-line">
-		<span class="field-label">{$t('question.concept')}</span>
-		{displayConcept}
-	</h1>
+	{#if displayConcept}
+		<h1 class="concept-line">
+			<span class="field-label">{$t('question.concept')}</span>
+			{displayConcept}
+		</h1>
+	{:else}
+		<!-- The preview shows the question; the heading is for screen readers. -->
+		<h1 class="sr-only">{title}</h1>
+	{/if}
 	{#if view.longListStandard}
 		<p class="concept-line">
 			<span class="field-label">{$t('question.standard')}</span>

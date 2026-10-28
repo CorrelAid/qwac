@@ -131,4 +131,33 @@ describe('questionView', () => {
 	it('has no preview for an empty group', () => {
 		expect(questionView(mkGroup({ type: 'grid' }), [], undefined, '').preview).toBeNull();
 	});
+
+	it('hides a concept that only repeats the question', () => {
+		const text = 'Themen der Weiterbildung';
+		const variable = mkVar({ answer_type: 'single_choice', concept: text, question: text });
+		expect(questionView(null, [variable], undefined, '').concept).toBe('');
+		expect(questionView(null, [mkVar({ question: text })], undefined, '').concept).toBe('');
+	});
+
+	it('hides a group concept that repeats the question in the study language', () => {
+		// The page localizes the group; the concept stays in the study's language.
+		const group = mkGroup({
+			type: 'grid',
+			concept: 'Was ist Ihr Geschlecht?',
+			description: 'What is your gender?'
+		});
+		const variables = [mkVar({ answer_type: 'single_choice', question: 'female' })];
+		expect(questionView(group, variables, undefined, '').concept).toBe('Was ist Ihr Geschlecht?');
+		expect(questionView(group, variables, undefined, '', 'Was ist Ihr Geschlecht?').concept).toBe(
+			''
+		);
+	});
+
+	it("hides a group's fallback concept that repeats its first variable", () => {
+		const group = mkGroup({ type: 'grid' });
+		const variables = [
+			mkVar({ answer_type: 'single_choice', concept: 'Local groups', question: 'Local groups' })
+		];
+		expect(questionView(group, variables, undefined, '').concept).toBe('');
+	});
 });
