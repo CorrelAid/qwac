@@ -53,4 +53,26 @@ describe('QuestionCard', () => {
 		});
 		await expect.element(page.getByRole('link', { name: 'Wie alt sind Sie?' })).toBeInTheDocument();
 	});
+
+	it('tags the study by its short title, with the full title as tooltip', async () => {
+		const title =
+			'Europäische Erhebung über die berufliche Weiterbildung in Unternehmen (CVTS7): Fragebogen';
+		await render(QuestionCard, {
+			question: mkQuestion({ question_text: 'Wie alt sind Sie?' }),
+			study: { id: 's1', title, short_title: 'CVTS7' }
+		});
+		await expect
+			.element(page.getByRole('link', { name: 'CVTS7', exact: true }))
+			.toHaveAttribute('title', title);
+	});
+
+	it('tags the study by its title when it has no short title', async () => {
+		await render(QuestionCard, {
+			question: mkQuestion({ question_text: 'Wie alt sind Sie?' }),
+			study: { id: 's1', title: 'Ausgewählte CDL Instrumente', short_title: '' }
+		});
+		await expect
+			.element(page.getByRole('link', { name: 'Ausgewählte CDL Instrumente' }))
+			.toBeInTheDocument();
+	});
 });
