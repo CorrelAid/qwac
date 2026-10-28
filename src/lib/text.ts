@@ -8,3 +8,16 @@ export function stripMarkup(s: string | null | undefined): string {
 		.replace(/\s+/g, ' ')
 		.trim();
 }
+
+/**
+ * The concept to show next to a question, or '' when there is none worth
+ * showing: empty, or the same as one of the question's texts. formtransform
+ * copied the question label into the concept when an XLSForm had none (#68).
+ */
+export function distinctConcept(
+	concept: string | null | undefined,
+	...texts: (string | null | undefined)[]
+): string {
+	const c = (concept ?? '').trim();
+	return c && !texts.some((text) => (text ?? '').trim() === c) ? c : '';
+}

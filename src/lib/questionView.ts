@@ -11,6 +11,7 @@ import {
 	isTextType,
 	typeInfo
 } from '$lib/questionTypes';
+import { distinctConcept } from '$lib/text';
 import type { GridRow, Group, PreviewVariable, Variable } from '$lib/types';
 
 export type QuestionPreview =
@@ -23,6 +24,7 @@ export interface QuestionView {
 	variable: Variable | null;
 	/** Answer type for the tag. */
 	answerType: string;
+	/** The concept, or '' when it is empty or repeats the question (see distinctConcept). */
 	concept: string;
 	longListStandard: string;
 	preview: QuestionPreview;
@@ -33,12 +35,15 @@ export interface QuestionView {
  * @param variables the group's variables, or the standalone variable
  * @param answerType the answer type the API assembled for the question, if any
  * @param otherLabel label for an "Other" option whose variable has none
+ * @param questionText the API's question_text, in the study's language; the
+ *   group and variables may be localized, the concept is not
  */
 export function questionView(
 	group: Group | null,
 	variables: Variable[],
 	answerType: string | undefined,
-	otherLabel: string
+	otherLabel: string,
+	questionText = ''
 ): QuestionView {
 	const variable = group ? null : (variables[0] ?? null);
 	const isMatrix = !!group && isGridGroup(group.type ?? '');
@@ -59,7 +64,14 @@ export function questionView(
 			? variable?.answer_type || ''
 			: groupAnswerType(group.type ?? '') || choiceVariables[0]?.answer_type || group.type || '');
 
-	const concept = group ? group.concept || variables[0]?.concept || '' : variable?.concept || '';
+	const firstVariable = variables[0];
+	const concept = distinctConcept(
+		group ? group.concept || firstVariable?.concept : variable?.concept,
+		questionText,
+		group?.description,
+		firstVariable?.prequestion_text,
+		firstVariable?.question
+	);
 
 	let preview: QuestionPreview = null;
 	if (isMatrix && variables.length > 0) {
