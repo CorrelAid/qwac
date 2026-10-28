@@ -50,12 +50,6 @@
 		"base": "select_multiple",
 		"presentation": { "choice": "multiple", "withOther": true, "longList": false, "grid": false }
 	},
-	"range": {
-		"registryType": "range",
-		"label": { "de": "Schieberegler", "en": "Range" },
-		"kind": "question",
-		"presentation": { "withOther": false, "longList": false, "grid": false }
-	},
 	"single_choice": {
 		"registryType": "select_one",
 		"label": { "de": "Einfachauswahl", "en": "Select One" },

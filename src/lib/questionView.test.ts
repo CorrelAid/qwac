@@ -166,7 +166,7 @@ describe('questionView', () => {
 		const variables = [
 			mkVar({ id: 'v1', answer_type: 'integer', question: 'Insgesamt' }),
 			mkVar({ id: 'v2', answer_type: 'decimal', question: 'Männlich', grid_note: 'davon:' }),
-			mkVar({ id: 'v3', answer_type: 'range', question: 'Weiblich' })
+			mkVar({ id: 'v3', answer_type: 'integer', question: 'Weiblich' })
 		];
 		const view = questionView(group, variables, 'grid', 'Other');
 		expect(view.answerType).toBe('grid');
@@ -175,13 +175,6 @@ describe('questionView', () => {
 			question: 'Wie viele Beschäftigte?',
 			variables
 		});
-	});
-
-	it("passes a standalone range's bounds to the preview (qwacback#65)", () => {
-		const range = { min: 0, max: 5, step: 0.5 };
-		const variable = mkVar({ id: 'r', answer_type: 'range', range });
-		const preview = questionView(null, [variable], 'range', '').preview;
-		expect(preview?.kind === 'survey' && preview.variable.range).toEqual(range);
 	});
 
 	it('keeps a grid of choice rows a choice matrix', () => {

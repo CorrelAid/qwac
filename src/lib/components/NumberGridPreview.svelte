@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { baseType, rangeAttrs } from '$lib/questionTypes';
+	import { baseType } from '$lib/questionTypes';
 	import type { GridRow } from '$lib/types';
 	let { variables = [], question = '' }: { variables?: GridRow[]; question?: string } = $props();
 
@@ -27,9 +27,6 @@
 		switch (baseType(row.answer_type)) {
 			case 'decimal':
 				return { step: 'any', placeholder: '0.00' };
-			case 'range':
-				// The bounds qwacback delivers; without a step, XLSForm's default of 1.
-				return { step: 1, ...rangeAttrs(row.range) };
 			default:
 				return { step: 1, placeholder: '0' };
 		}

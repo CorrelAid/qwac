@@ -17,7 +17,7 @@ import type { GridRow, Group, PreviewVariable, Variable } from '$lib/types';
 
 export type QuestionPreview =
 	| { kind: 'grid'; variables: GridRow[]; question: string }
-	/** A grid whose rows are number fields (integer, decimal, range), #70. */
+	/** A grid whose rows are number fields (integer, decimal), #70. */
 	| { kind: 'numberGrid'; variables: GridRow[]; question: string }
 	| { kind: 'survey'; variable: PreviewVariable }
 	| null;
