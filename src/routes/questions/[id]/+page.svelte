@@ -130,7 +130,8 @@
 		{#if study}
 			<a
 				href="{resolve('/studies/[id]', { id: study.id })}#q-{group?.id || variable?.id}"
-				class="study-tag">{study.title}</a
+				class="study-tag"
+				title={study.title}>{study.short_title || study.title}</a
 			>
 		{/if}
 	</div>

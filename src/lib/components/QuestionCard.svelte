@@ -14,7 +14,7 @@
 		/** An entry of /api/questions or /api/studies/{id}/questions. */
 		question: Question;
 		/** The question's study, to link to; left out on the study's own page. */
-		study?: { id: string; title: string } | null;
+		study?: { id: string; title: string; short_title?: string } | null;
 		/** Level of the card title, below the page's headings. */
 		headingLevel?: 2 | 3 | 4;
 	} = $props();
@@ -46,7 +46,7 @@
 		{/if}
 		{#if study}
 			<a href={resolve('/studies/[id]', { id: study.id })} class="study-tag" title={study.title}
-				>{study.title}</a
+				>{study.short_title || study.title}</a
 			>
 		{/if}
 	</div>
@@ -92,7 +92,14 @@
 		text-decoration: underline;
 	}
 
+	/* Under a short name, a question or a grid's introduction can still run to
+	   a paragraph: three lines, the rest on the question page. */
 	.text {
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		line-clamp: 3;
+		overflow: hidden;
 		font-size: var(--font-size-small-min);
 		line-height: var(--line-height-relaxed);
 		margin: 0 0 var(--spacing-xs);

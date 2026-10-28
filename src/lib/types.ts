@@ -132,7 +132,9 @@ export interface Attribution {
 
 /** /api/questions/{id}: the question with its study, group and variables. */
 export interface QuestionDetail extends Omit<Question, 'study_id' | 'variable_ids'> {
-	study: ({ id: string; title: string; language?: string } & Attribution) | null;
+	study:
+		| ({ id: string; title: string; short_title?: string; language?: string } & Attribution)
+		| null;
 	group: Group | null;
 	variables: Variable[];
 }
@@ -142,6 +144,8 @@ export interface Study {
 	id: string;
 	collectionName?: string;
 	title: string;
+	/** Short name for lists and tags, e.g. "CVTS7" (qwacback#64); empty when the codebook has none. */
+	short_title?: string;
 	id_no?: string;
 	/** May contain the codebook's XHTML markup. */
 	abstract?: string;
