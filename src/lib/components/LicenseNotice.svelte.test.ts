@@ -15,14 +15,14 @@ const tei = {
 describe('LicenseNotice', () => {
 	it('shows the official button linked to the deed, the terms and the citation', async () => {
 		locale.set('de');
-		await render(LicenseNotice, { attribution: tei });
+		const { container } = await render(LicenseNotice, { attribution: tei });
 		const button = page.getByRole('link', { name: 'CC BY-SA 4.0' });
 		await expect
 			.element(button)
 			.toHaveAttribute('href', 'https://creativecommons.org/licenses/by-sa/4.0/');
-		await expect
-			.element(page.getByRole('img', { name: 'CC BY-SA 4.0' }))
-			.toHaveAttribute('src', expect.stringMatching(/\/licenses\/by-sa\.svg$/));
+		expect(container.querySelector('.cc-button img')?.getAttribute('src')).toMatch(
+			/\/licenses\/by-sa\.svg$/
+		);
 		await expect.element(page.getByText(tei.citation)).toBeInTheDocument();
 		await expect.element(page.getByText(tei.copyright)).toBeInTheDocument();
 		await expect.element(page.getByRole('link', { name: tei.source_uri })).toBeInTheDocument();
@@ -46,6 +46,32 @@ describe('LicenseNotice', () => {
 			.element(page.getByText('© Statistikamt Nord: Weitergabe mit Quellenangabe.'))
 			.toBeInTheDocument();
 		expect(container.querySelector('img')).toBeNull();
+	});
+
+	it('shows a long license as its name, with the full terms collapsed (#72)', async () => {
+		locale.set('de');
+		const license =
+			'Creative Commons Attribution 4.0 International (CC BY 4.0). Reuse is authorised, provided the source is acknowledged. Changes: translated into German. Disclaimer: no liability.';
+		const { container } = await render(LicenseNotice, {
+			attribution: { ...tei, license, license_id: 'CC-BY-4.0' }
+		});
+		await expect.element(page.getByRole('link', { name: 'CC BY 4.0' })).toBeInTheDocument();
+		const details = container.querySelector('details.full-terms') as HTMLDetailsElement;
+		expect(details.open).toBe(false);
+		expect(details.querySelector('summary')?.textContent).toBe('Vollständige Nutzungsbedingungen');
+		expect(details.querySelector('p')?.textContent).toBe(license);
+		await expect.element(page.getByText(tei.citation)).toBeVisible();
+		await expect.element(page.getByText(tei.copyright)).toBeVisible();
+	});
+
+	it('names other long terms by their first sentence', async () => {
+		const { container } = await render(LicenseNotice, {
+			attribution: { license: 'Free to reuse with credit. Changes must be marked.' }
+		});
+		expect(container.querySelector('.terms')?.textContent).toBe('Free to reuse with credit.');
+		expect(container.querySelector('details p')?.textContent).toBe(
+			'Free to reuse with credit. Changes must be marked.'
+		);
 	});
 
 	it('leaves out the source when asked', async () => {

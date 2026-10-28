@@ -2,6 +2,7 @@
 	import { asset } from '$app/paths';
 	import { t } from '$lib/i18n';
 	import { ccLicense } from '$lib/license';
+	import { firstSentence } from '$lib/text';
 	import type { Attribution } from '$lib/types';
 
 	// `full` lists the terms with the license's button; `credit` is one line to
@@ -18,6 +19,11 @@
 	} = $props();
 
 	let cc = $derived(ccLicense(attribution.license_id));
+	// The license can be a long statement (terms, changes, disclaimer): one
+	// short line, the full text behind a disclosure (#72).
+	let terms = $derived(attribution.license?.trim() ?? '');
+	let shortName = $derived(cc?.name ?? firstSentence(terms));
+	let hasMore = $derived(!!terms && terms !== shortName);
 </script>
 
 {#if variant === 'credit'}
@@ -31,7 +37,7 @@
 		{:else if !attribution.license}
 			{$t('license.notStated')}.
 		{:else if !attribution.citation}
-			{attribution.copyright || attribution.license}
+			{attribution.copyright || shortName}
 		{/if}
 	</p>
 {:else}
@@ -41,15 +47,26 @@
 			<div>
 				<dt>{$t('license.license')}</dt>
 				<dd>
-					{#if cc}
-						<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- external license deed -->
-						<a class="cc-button" href={cc.deed} target="_blank" rel="license noopener">
-							<img src={asset(cc.button)} alt={cc.name} width="88" height="31" />
-						</a>
-					{/if}
-					<span class="terms">{attribution.license || $t('license.notStated')}</span>
+					<p class="license-line">
+						{#if cc}
+							<!-- One link: the official button and the name, to the deed. -->
+							<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- external license deed -->
+							<a class="cc-button" href={cc.deed} target="_blank" rel="license noopener">
+								<img src={asset(cc.button)} alt="" width="88" height="31" />
+								<span>{cc.name}</span>
+							</a>
+						{:else}
+							<span class="terms">{shortName || $t('license.notStated')}</span>
+						{/if}
+					</p>
 					{#if cc?.shareAlike}
 						<span class="share-alike">{$t('license.shareAlike')}</span>
+					{/if}
+					{#if hasMore}
+						<details class="full-terms">
+							<summary>{$t('license.fullTerms')}</summary>
+							<p>{terms}</p>
+						</details>
 					{/if}
 				</dd>
 			</div>
@@ -109,14 +126,36 @@
 		margin: 0;
 	}
 
+	.license-line {
+		margin: 0;
+	}
+
 	.cc-button {
-		display: inline-block;
-		vertical-align: middle;
-		margin-right: var(--spacing-xs);
+		display: inline-flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: var(--spacing-xs);
+		color: var(--color-secondary);
 	}
 
 	.cc-button img {
 		display: block;
+	}
+
+	.full-terms {
+		margin-top: var(--spacing-2xs);
+	}
+
+	.full-terms summary {
+		cursor: pointer;
+		color: var(--color-secondary);
+		width: fit-content;
+	}
+
+	.full-terms p {
+		margin: var(--spacing-2xs) 0 0;
+		white-space: pre-line;
+		color: var(--color-text-muted);
 	}
 
 	.share-alike {

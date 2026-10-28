@@ -16,6 +16,20 @@ const categories = [
 	{ label: 'No', value: '3', is_missing: false }
 ];
 
+/** A license with reuse terms, changes and a disclaimer, as one text (#72). */
+export const LONG_LICENSE =
+	'Creative Commons Attribution 4.0 International (CC BY 4.0). ' +
+	'Die Weiterverwendung ist gestattet, sofern die Quelle angegeben wird: „Quelle: Statistisches Testamt, Erhebung über die Weiterbildung“. ' +
+	'Änderungen: Der Fragebogen wurde in ein XLSForm übertragen; Fragen ohne Antwortfeld wurden als Hinweise übernommen. ' +
+	'Haftungsausschluss: Das Testamt übernimmt keine Verantwortung für die Weiterverwendung der Daten und für Schlussfolgerungen daraus.';
+
+/** A card title that runs over several lines (#72). */
+export const LONG_QUESTION =
+	'Wie viele in Deutschland Beschäftigte hatte Ihr Unternehmen am 31.12.2025 insgesamt? ' +
+	'Bitte zählen Sie alle Personen mit Arbeitsvertrag, einschließlich Teilzeitbeschäftigter, ' +
+	'Auszubildender und Beschäftigter in Elternzeit, aber ohne freie Mitarbeitende und Leiharbeitskräfte. ' +
+	'Hat Ihr Unternehmen mehrere Standorte in Deutschland, zählen Sie die Beschäftigten aller Standorte zusammen.';
+
 export const studies: Json[] = [
 	{
 		id: 'study0000000001',
@@ -36,6 +50,21 @@ export const studies: Json[] = [
 		title: 'Demografie',
 		abstract: 'Demografische Standards.',
 		topic_classifications: ['Demographics'],
+		language: 'de'
+	},
+	{
+		// A long title and a long statement of terms, as some official
+		// statistics questionnaires have (#72).
+		id: 'study0000000003',
+		collectionName: 'studies',
+		title:
+			'Europäische Erhebung über die berufliche Weiterbildung in Unternehmen (Testfassung): Fragebogen',
+		abstract: 'Ein Fragebogen mit Zahlentabellen.',
+		license: LONG_LICENSE,
+		license_id: 'CC-BY-4.0',
+		copyright: '© Statistisches Testamt 2026',
+		citation: 'Statistisches Testamt (2026). Erhebung über die Weiterbildung: Fragebogen.',
+		topic_classifications: ['Education'],
 		language: 'de'
 	}
 ];
@@ -179,10 +208,10 @@ const gender: Fixture = {
 const numberGrid: Fixture = {
 	question: {
 		id: 'numgrid00000001',
-		study_id: 'study0000000002',
+		study_id: 'study0000000003',
 		name: 'beschaeftigte',
 		concept: '',
-		question_text: 'Wie viele Beschäftigte hatte Ihr Unternehmen am 31.12.2025?',
+		question_text: LONG_QUESTION,
 		answer_type: 'grid',
 		variable_ids: ['numgridrow00001', 'numgridrow00002', 'numgridrow00003'],
 		group_id: 'numgrid00000001',
@@ -194,7 +223,7 @@ const numberGrid: Fixture = {
 			id: 'numgrid00000001',
 			type: 'grid',
 			concept: '',
-			description: 'Wie viele Beschäftigte hatte Ihr Unternehmen am 31.12.2025?'
+			description: LONG_QUESTION
 		},
 		variables: [
 			{

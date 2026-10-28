@@ -131,6 +131,7 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'license.source': 'Source',
 		'license.shareAlike': 'Adapted versions must be shared under the same license.',
 		'license.credit': 'When reusing, credit:',
+		'license.fullTerms': 'Full terms of use',
 
 		// Upload
 		'upload.title': 'Upload DDI Codebook',
@@ -286,6 +287,7 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'license.shareAlike':
 			'Bearbeitete Fassungen müssen unter derselben Lizenz weitergegeben werden.',
 		'license.credit': 'Bei Weiterverwendung angeben:',
+		'license.fullTerms': 'Vollständige Nutzungsbedingungen',
 
 		// Upload
 		'upload.title': 'DDI Codebook hochladen',

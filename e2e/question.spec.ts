@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { mockBackend, fixtures } from './backend';
+import { mockBackend, fixtures, LONG_LICENSE, LONG_QUESTION } from './backend';
 
 test.beforeEach(async ({ page }) => {
 	await mockBackend(page);
@@ -32,9 +32,7 @@ test('grid rows are plain text (#14)', async ({ page }) => {
 
 test('a grid of number rows is a table of number fields with notes (#70)', async ({ page }) => {
 	await page.goto(`/questions/${fixtures.numberGrid.question.id}`);
-	await expect(page.locator('.grid-question')).toHaveText(
-		'Wie viele Beschäftigte hatte Ihr Unternehmen am 31.12.2025?'
-	);
+	await expect(page.locator('.grid-question')).toHaveText(LONG_QUESTION);
 	await expect(page.locator('.number-table input[type=number]')).toHaveCount(3);
 	await expect(page.locator('.number-table input[type=radio]')).toHaveCount(0);
 	await expect(page.getByRole('columnheader', { name: 'Anzahl' })).toBeVisible();
@@ -122,6 +120,19 @@ test("shows the study's license, citation and source (#66)", async ({ page }) =>
 
 	await page.getByRole('tab', { name: 'XLSForm' }).click();
 	await expect(page.getByText('Bei Weiterverwendung angeben:')).toBeVisible();
+});
+
+test('a long license shows its name, with the full terms collapsed (#72)', async ({ page }) => {
+	await page.goto(`/questions/${fixtures.numberGrid.question.id}`);
+	const license = page.locator('section.license');
+	await expect(license.getByRole('link', { name: 'CC BY 4.0' })).toHaveAttribute(
+		'href',
+		'https://creativecommons.org/licenses/by/4.0/'
+	);
+	await expect(license.getByText('Haftungsausschluss')).toBeHidden();
+	await expect(license.getByText('Statistisches Testamt (2026)')).toBeVisible();
+	await license.getByText('Vollständige Nutzungsbedingungen').click();
+	await expect(license.getByText(LONG_LICENSE)).toBeVisible();
 });
 
 test('a study without a license says so, with no button (#66)', async ({ page }) => {
