@@ -61,6 +61,22 @@ describe('SurveyPreview', () => {
 		expect(found[0].matches(selector)).toBe(true);
 	});
 
+	it('gives a range the bounds qwacback delivers (qwacback#65)', async () => {
+		const { container } = await render(SurveyPreview, {
+			variable: { answer_type: 'range', range: { min: 0, max: 5, step: 0.5 } }
+		});
+		const [slider] = inputs(container);
+		expect([slider.min, slider.max, slider.step]).toEqual(['0', '5', '0.5']);
+		expect(container.querySelector('.bounds')?.textContent?.replace(/\s+/g, '')).toBe('05');
+	});
+
+	it('renders a range without bounds as a plain slider', async () => {
+		const { container } = await render(SurveyPreview, { variable: { answer_type: 'range' } });
+		const [slider] = inputs(container);
+		expect(['min', 'max', 'step'].map((a) => slider.getAttribute(a))).toEqual([null, null, null]);
+		expect(container.querySelector('.bounds')).toBeNull();
+	});
+
 	it('renders single choice as radio buttons', async () => {
 		const { container } = await render(SurveyPreview, {
 			variable: { answer_type: 'single_choice', categories }

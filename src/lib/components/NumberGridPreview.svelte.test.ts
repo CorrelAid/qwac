@@ -53,6 +53,23 @@ describe('NumberGridPreview', () => {
 		expect(container.querySelectorAll('tbody tr')).toHaveLength(3);
 	});
 
+	it('gives range rows the bounds qwacback delivers (qwacback#65)', async () => {
+		const ranges: GridRow[] = [
+			{ id: 'a', answer_type: 'range', question: 'Mo', range: { min: 0, max: 24, step: 2 } },
+			{ id: 'b', answer_type: 'range', question: 'Di', range: { min: 1, max: 10 } },
+			{ id: 'c', answer_type: 'range', question: 'Mi' }
+		];
+		const { container } = await render(NumberGridPreview, { variables: ranges });
+		const attrs = [...container.querySelectorAll('input')].map((i) =>
+			['min', 'max', 'step'].map((a) => i.getAttribute(a))
+		);
+		expect(attrs).toEqual([
+			['0', '24', '2'],
+			['1', '10', '1'],
+			[null, null, '1']
+		]);
+	});
+
 	it('heads the column with a hint all rows share, otherwise shows it per row', async () => {
 		const shared = rows.map((row) => ({ ...row, hint: 'Anzahl' }));
 		const a = await render(NumberGridPreview, { variables: shared });

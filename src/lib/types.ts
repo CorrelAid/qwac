@@ -46,6 +46,17 @@ export interface VariableTranslation {
 	categories?: Record<string, string>;
 }
 
+/**
+ * A range variable's bounds, as its codebook states them (qwacback#65): the
+ * XLSForm start (min), end (max) and step. A bound the codebook doesn't state
+ * is absent; min is the start, so it exceeds max for a descending range.
+ */
+export interface RangeBounds {
+	min?: number;
+	max?: number;
+	step?: number;
+}
+
 /** A variable in /api/questions/{id}. */
 export interface Variable {
 	id: string;
@@ -64,6 +75,8 @@ export interface Variable {
 	 */
 	grid_note?: string;
 	answer_type: string;
+	/** A range variable's bounds; absent for other types and before qwacback#65. */
+	range?: RangeBounds;
 	has_other: boolean;
 	has_long_list: boolean;
 	long_list_standard: string;
@@ -85,11 +98,12 @@ export interface PreviewVariable {
 	other_label?: string;
 	has_long_list?: boolean;
 	long_list_standard?: string;
+	range?: RangeBounds;
 }
 
 /** A row of a grid preview. */
 export type GridRow = Pick<Variable, 'id' | 'answer_type'> &
-	Partial<Pick<Variable, 'question' | 'concept' | 'categories' | 'hint' | 'grid_note'>>;
+	Partial<Pick<Variable, 'question' | 'concept' | 'categories' | 'hint' | 'grid_note' | 'range'>>;
 
 /** A variable group in /api/questions/{id}; `type` is the DDI varGrp type. */
 export interface Group {

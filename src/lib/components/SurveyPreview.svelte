@@ -47,7 +47,12 @@
 
 	<div class="response-area">
 		{#if showInput && Input}
-			<Input {categories} concept={variable.concept || ''} standard={variable.long_list_standard} />
+			<Input
+				{categories}
+				concept={variable.concept || ''}
+				standard={variable.long_list_standard}
+				range={variable.range}
+			/>
 			{#if hasOther && info?.choice && info.needsCategories}
 				<div class="other-option">
 					<label class="option">

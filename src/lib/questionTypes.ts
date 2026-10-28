@@ -8,6 +8,7 @@
  * registry type (PREVIEWS).
  */
 import type { Component } from 'svelte';
+import type { RangeBounds } from './types';
 import GridPreview from './components/GridPreview.svelte';
 import DateInput from './components/question-types/DateInput.svelte';
 import DateTimeInput from './components/question-types/DateTimeInput.svelte';
@@ -168,6 +169,33 @@ const NUMBER_TYPES = new Set(['integer', 'decimal', 'range']);
 /** Whether a variable of this type is answered with a number: integer, decimal or range. */
 export function isNumberType(type: string): boolean {
 	return NUMBER_TYPES.has(baseType(type));
+}
+
+export interface RangeAttrs {
+	min?: number;
+	max?: number;
+	step?: number;
+}
+
+/**
+ * The min, max and step attributes of an input for a range variable, from the
+ * bounds qwacback delivers; only those it states. An input's min is its lower
+ * bound, so a descending range (start above end) is given low to high.
+ */
+export function rangeAttrs(range: RangeBounds | null | undefined): RangeAttrs {
+	const isNum = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n);
+	const { min, max, step } = range ?? {};
+	const attrs: RangeAttrs = {};
+	if (isNum(min) && isNum(max)) {
+		attrs.min = Math.min(min, max);
+		attrs.max = Math.max(min, max);
+	} else if (isNum(min)) {
+		attrs.min = min;
+	} else if (isNum(max)) {
+		attrs.max = max;
+	}
+	if (isNum(step) && step !== 0) attrs.step = Math.abs(step);
+	return attrs;
 }
 
 /** Whether a variable of this type holds free text (e.g. the "Other" field of a choice group). */

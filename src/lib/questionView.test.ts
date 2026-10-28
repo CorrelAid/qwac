@@ -177,6 +177,13 @@ describe('questionView', () => {
 		});
 	});
 
+	it("passes a standalone range's bounds to the preview (qwacback#65)", () => {
+		const range = { min: 0, max: 5, step: 0.5 };
+		const variable = mkVar({ id: 'r', answer_type: 'range', range });
+		const preview = questionView(null, [variable], 'range', '').preview;
+		expect(preview?.kind === 'survey' && preview.variable.range).toEqual(range);
+	});
+
 	it('keeps a grid of choice rows a choice matrix', () => {
 		const group = mkGroup({ type: 'grid' });
 		const variables = [mkVar({ id: 'v1', answer_type: 'grid', categories: cats })];
