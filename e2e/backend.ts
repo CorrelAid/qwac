@@ -175,6 +175,58 @@ const gender: Fixture = {
 	}
 };
 
+/** A grid of number rows, as formtransform 0.8.0 writes CVTS7's tables (#70). */
+const numberGrid: Fixture = {
+	question: {
+		id: 'numgrid00000001',
+		study_id: 'study0000000002',
+		name: 'beschaeftigte',
+		concept: '',
+		question_text: 'Wie viele Beschäftigte hatte Ihr Unternehmen am 31.12.2025?',
+		answer_type: 'grid',
+		variable_ids: ['numgridrow00001', 'numgridrow00002', 'numgridrow00003'],
+		group_id: 'numgrid00000001',
+		order: 1,
+		language: 'de'
+	},
+	detail: {
+		group: {
+			id: 'numgrid00000001',
+			type: 'grid',
+			concept: '',
+			description: 'Wie viele Beschäftigte hatte Ihr Unternehmen am 31.12.2025?'
+		},
+		variables: [
+			{
+				id: 'numgridrow00001',
+				name: 'insgesamt',
+				question: 'Beschäftigte insgesamt',
+				hint: 'Anzahl',
+				answer_type: 'integer',
+				categories: []
+			},
+			{
+				id: 'numgridrow00002',
+				name: 'maennlich',
+				question: 'Männlich',
+				hint: 'Anzahl',
+				grid_note: 'davon: Geschlecht (nach Geburtenregister)',
+				answer_type: 'integer',
+				categories: [],
+				translations: { en: { question: 'Male', grid_note: 'of which: sex (birth register)' } }
+			},
+			{
+				id: 'numgridrow00003',
+				name: 'weiblich',
+				question: 'Weiblich',
+				hint: 'Anzahl',
+				answer_type: 'integer',
+				categories: []
+			}
+		]
+	}
+};
+
 /** Enough integer questions in the first study for a second page of results. */
 const fillers: Fixture[] = Array.from({ length: 21 }, (_, i) => {
 	const n = String(i + 1).padStart(3, '0');
@@ -199,8 +251,8 @@ const fillers: Fixture[] = Array.from({ length: 21 }, (_, i) => {
 	};
 });
 
-export const fixtures = { grid, age, gender };
-const all: Fixture[] = [grid, age, gender, ...fillers];
+export const fixtures = { grid, age, gender, numberGrid };
+const all: Fixture[] = [grid, age, gender, numberGrid, ...fillers];
 export let questions = all.map((f) => f.question);
 
 /** What a successful /api/import adds. */

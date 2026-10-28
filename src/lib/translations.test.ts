@@ -57,6 +57,7 @@ describe('localizeVariable', () => {
 		ivu_instructions: 'Vorlesen',
 		hint: 'Eine Antwort',
 		universe: 'Nur wenn erwerbstätig',
+		grid_note: 'davon: Geschlecht',
 		categories: [
 			{ value: '1', label: 'Sehr zufrieden' },
 			{ value: '2', label: 'Unzufrieden' }
@@ -67,6 +68,7 @@ describe('localizeVariable', () => {
 				ivu_instructions: 'Read out',
 				hint: 'One answer',
 				universe: 'Only if employed',
+				grid_note: 'of which: sex',
 				categories: { '1': 'Very satisfied' }
 			}
 		}
@@ -78,6 +80,7 @@ describe('localizeVariable', () => {
 		expect(v.ivu_instructions).toBe('Read out');
 		expect(v.hint).toBe('One answer');
 		expect(v.universe).toBe('Only if employed');
+		expect(v.grid_note).toBe('of which: sex');
 		expect(v.categories.map((c) => c.label)).toEqual(['Very satisfied', 'Unzufrieden']);
 	});
 

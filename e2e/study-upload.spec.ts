@@ -57,7 +57,7 @@ test('uploading a valid and an invalid codebook', async ({ page }) => {
 	await page.getByRole('link', { name: 'Importierte Studie ansehen' }).click();
 	await expect(page.getByRole('heading', { name: 'Imported Study' })).toBeVisible();
 	await page.getByRole('link', { name: 'Zurück zu Fragen' }).click();
-	await expect(page.locator('.count')).toContainText('25 Fragen');
+	await expect(page.locator('.count')).toContainText('26 Fragen');
 	await page.getByRole('searchbox').fill('trust');
 	await expect(page.getByText('How much do you trust the council?')).toBeVisible();
 	await page.getByRole('link', { name: 'Hochladen' }).click();

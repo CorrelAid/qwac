@@ -5,6 +5,7 @@
 	import { XlsFormDisplay, DdiDisplay } from '@correlaid/cdl-design';
 	import SurveyPreview from '$lib/components/SurveyPreview.svelte';
 	import GridPreview from '$lib/components/GridPreview.svelte';
+	import NumberGridPreview from '$lib/components/NumberGridPreview.svelte';
 	import { metadata } from '$lib/metadata';
 	import AnswerTypeTag from '$lib/components/AnswerTypeTag.svelte';
 	import LicenseNotice from '$lib/components/LicenseNotice.svelte';
@@ -158,6 +159,8 @@
 		{#if activeTab === 'preview'}
 			{#if view.preview?.kind === 'grid'}
 				<GridPreview variables={view.preview.variables} question={view.preview.question} />
+			{:else if view.preview?.kind === 'numberGrid'}
+				<NumberGridPreview variables={view.preview.variables} question={view.preview.question} />
 			{:else if view.preview?.kind === 'survey'}
 				<SurveyPreview variable={view.preview.variable} />
 			{/if}

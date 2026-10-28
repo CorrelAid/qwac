@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
 test('lists all questions in German by default', async ({ page }) => {
 	await page.goto('/');
 	await expect(page.locator('html')).toHaveAttribute('lang', 'de');
-	await expect(page.locator('.count')).toContainText('24 Fragen');
+	await expect(page.locator('.count')).toContainText('25 Fragen');
 	await expect(page).toHaveTitle('Fragen durchsuchen | QWAC');
 	// QWAC's expansion stays English; no online-surveys note any more.
 	await expect(page.locator('.site-subtitle')).toHaveText('- questions worth asking continuously');
@@ -60,7 +60,7 @@ test('the search box updates the URL', async ({ page }) => {
 	await expect(page.locator('.count')).toContainText('1 Frage');
 	await page.getByRole('button', { name: 'Zurücksetzen' }).click();
 	await expect(page).toHaveURL(/\/$/);
-	await expect(page.locator('.count')).toContainText('24 Fragen');
+	await expect(page.locator('.count')).toContainText('25 Fragen');
 });
 
 test('the language switch translates the UI and question texts, and is remembered', async ({
@@ -86,7 +86,7 @@ test('a backend outage shows the error page, and "Try again" recovers', async ({
 	await page.unrouteAll();
 	await mockBackend(page);
 	await page.getByRole('button', { name: 'Erneut versuchen' }).click();
-	await expect(page.locator('.count')).toContainText('24 Fragen');
+	await expect(page.locator('.count')).toContainText('25 Fragen');
 });
 
 test('question cards look the same on the explore and study pages (#30)', async ({ page }) => {
@@ -105,10 +105,10 @@ test('question cards look the same on the explore and study pages (#30)', async 
 
 test('the paginator shows the range and scrolls to the results (#30)', async ({ page }) => {
 	await page.goto('/');
-	await expect(page.locator('.range')).toHaveText('1–20 von 24');
+	await expect(page.locator('.range')).toHaveText('1–20 von 25');
 	await page.mouse.wheel(0, 5000);
 	await page.getByRole('button', { name: 'Nächste Seite' }).click();
-	await expect(page.locator('.range')).toHaveText('21–24 von 24');
+	await expect(page.locator('.range')).toHaveText('21–25 von 25');
 	await expect(page.locator('#results')).toBeInViewport();
 });
 

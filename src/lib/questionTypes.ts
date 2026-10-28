@@ -163,6 +163,13 @@ export function allowsMultiple(type: string): boolean {
 	return typeInfo(type)?.choice === 'multiple';
 }
 
+const NUMBER_TYPES = new Set(['integer', 'decimal', 'range']);
+
+/** Whether a variable of this type is answered with a number: integer, decimal or range. */
+export function isNumberType(type: string): boolean {
+	return NUMBER_TYPES.has(baseType(type));
+}
+
 /** Whether a variable of this type holds free text (e.g. the "Other" field of a choice group). */
 export function isTextType(type: string): boolean {
 	return typeInfo(type)?.id === 'text';

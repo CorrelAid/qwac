@@ -160,4 +160,26 @@ describe('questionView', () => {
 		];
 		expect(questionView(group, variables, undefined, '').concept).toBe('');
 	});
+
+	it('shows a grid of number rows as a table of number fields (#70)', () => {
+		const group = mkGroup({ type: 'grid', description: 'Wie viele Beschäftigte?' });
+		const variables = [
+			mkVar({ id: 'v1', answer_type: 'integer', question: 'Insgesamt' }),
+			mkVar({ id: 'v2', answer_type: 'decimal', question: 'Männlich', grid_note: 'davon:' }),
+			mkVar({ id: 'v3', answer_type: 'range', question: 'Weiblich' })
+		];
+		const view = questionView(group, variables, 'grid', 'Other');
+		expect(view.answerType).toBe('grid');
+		expect(view.preview).toMatchObject({
+			kind: 'numberGrid',
+			question: 'Wie viele Beschäftigte?',
+			variables
+		});
+	});
+
+	it('keeps a grid of choice rows a choice matrix', () => {
+		const group = mkGroup({ type: 'grid' });
+		const variables = [mkVar({ id: 'v1', answer_type: 'grid', categories: cats })];
+		expect(questionView(group, variables, 'grid', '').preview?.kind).toBe('grid');
+	});
 });

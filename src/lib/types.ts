@@ -41,6 +41,7 @@ export interface VariableTranslation {
 	ivu_instructions?: string;
 	hint?: string;
 	universe?: string;
+	grid_note?: string;
 	/** Category value → label. */
 	categories?: Record<string, string>;
 }
@@ -57,6 +58,11 @@ export interface Variable {
 	hint?: string;
 	/** The skip logic as a sentence, e.g. "Only if “Wie alt sind Sie?” > 60". */
 	universe?: string;
+	/**
+	 * A note shown before this row of a grid, e.g. "davon: Geschlecht" (the
+	 * DDI's cdl:grid_note, #70); absent until qwacback delivers it.
+	 */
+	grid_note?: string;
 	answer_type: string;
 	has_other: boolean;
 	has_long_list: boolean;
@@ -83,7 +89,7 @@ export interface PreviewVariable {
 
 /** A row of a grid preview. */
 export type GridRow = Pick<Variable, 'id' | 'answer_type'> &
-	Partial<Pick<Variable, 'question' | 'concept' | 'categories'>>;
+	Partial<Pick<Variable, 'question' | 'concept' | 'categories' | 'hint' | 'grid_note'>>;
 
 /** A variable group in /api/questions/{id}; `type` is the DDI varGrp type. */
 export interface Group {

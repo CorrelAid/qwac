@@ -6,6 +6,7 @@ const pages: Record<string, string> = {
 	explore: '/',
 	grid: `/questions/${fixtures.grid.question.id}`,
 	choice: `/questions/${fixtures.gender.question.id}`,
+	'number grid': `/questions/${fixtures.numberGrid.question.id}`,
 	study: '/studies/study0000000001',
 	upload: '/upload',
 	about: '/about',
