@@ -28,7 +28,7 @@
 </script>
 
 <div class="question-card">
-	<svelte:element this={`h${headingLevel}`} class="title">
+	<svelte:element this={`h${headingLevel}`} class="title" class:question-title={!concept}>
 		<a href={resolve('/questions/[id]', { id: question.id })}>{title}</a>
 	</svelte:element>
 
@@ -45,7 +45,9 @@
 			<span class="variables">{variableCount} {$t('explore.variables')}</span>
 		{/if}
 		{#if study}
-			<a href={resolve('/studies/[id]', { id: study.id })} class="study-tag">{study.title}</a>
+			<a href={resolve('/studies/[id]', { id: study.id })} class="study-tag" title={study.title}
+				>{study.title}</a
+			>
 		{/if}
 	</div>
 </div>
@@ -68,16 +70,22 @@
 		margin: 0 0 var(--spacing-2xs);
 	}
 
-	/* A card titled by its question can be a paragraph: about three lines,
-	   the full text stays in the DOM for screen readers (#72). */
+	/* A card titled by its question can be a paragraph: two lines, the full
+	   text stays in the DOM for screen readers (#72). */
 	.title a {
 		display: -webkit-box;
 		-webkit-box-orient: vertical;
-		-webkit-line-clamp: 3;
-		line-clamp: 3;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
 		overflow: hidden;
 		color: var(--color-secondary);
 		text-decoration: none;
+	}
+
+	/* A paragraph-long question as title reads better unbolded; the colour
+	   still marks it as the link. */
+	.question-title {
+		font-weight: var(--font-weight-normal);
 	}
 
 	.title a:hover {
@@ -104,8 +112,10 @@
 		background-color: var(--color-tag-bg);
 		color: var(--color-white);
 		text-decoration: none;
-		white-space: normal;
-		word-break: break-word;
+		/* One line; the full title is in the tooltip and on the study page. */
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 		max-width: 100%;
 	}
 

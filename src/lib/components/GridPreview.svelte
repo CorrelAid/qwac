@@ -65,7 +65,7 @@
 
 	.grid-question {
 		font-size: var(--font-size-body-min);
-		font-weight: var(--font-weight-semibold);
+		line-height: var(--line-height-relaxed);
 		margin-bottom: var(--spacing-sm);
 	}
 
@@ -99,15 +99,8 @@
 		min-width: 80px;
 	}
 
-	.item-cell {
+	.grid-table .item-cell {
 		text-align: left;
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-	}
-
-	.item-name {
-		font-weight: var(--font-weight-semibold);
 		font-size: var(--font-size-body-min);
 	}
 

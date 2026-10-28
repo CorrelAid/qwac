@@ -135,7 +135,6 @@
 		max-width: 900px;
 		margin: var(--spacing-base) auto;
 		overflow-wrap: break-word;
-		word-break: break-word;
 	}
 
 	.back-link {

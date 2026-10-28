@@ -135,10 +135,6 @@
 		{/if}
 	</div>
 
-	{#if study}
-		<LicenseNotice attribution={study} />
-	{/if}
-
 	<div class="view-tabs" role="tablist" aria-label={$t('question.tabsLabel')}>
 		{#each TABS as tab (tab)}
 			<button
@@ -201,6 +197,13 @@
 			{/await}
 		{/if}
 	</div>
+
+	<!-- After the question: what to credit when reusing it (#66). -->
+	{#if study}
+		<div class="license-section">
+			<LicenseNotice attribution={study} />
+		</div>
+	{/if}
 </article>
 
 <style>
@@ -208,7 +211,6 @@
 		max-width: 900px;
 		margin: var(--spacing-base) auto;
 		overflow-wrap: break-word;
-		word-break: break-word;
 	}
 
 	.back-link {
@@ -321,6 +323,12 @@
 
 	.tab-content {
 		min-height: 200px;
+	}
+
+	.license-section {
+		margin-top: var(--spacing-lg);
+		padding-top: var(--spacing-base);
+		border-top: 1px solid var(--color-tertiary);
 	}
 
 	.hint {

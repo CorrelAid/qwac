@@ -90,7 +90,7 @@
 
 	.grid-question {
 		font-size: var(--font-size-body-min);
-		font-weight: var(--font-weight-semibold);
+		line-height: var(--line-height-relaxed);
 		margin-bottom: var(--spacing-sm);
 	}
 
@@ -119,7 +119,7 @@
 	}
 
 	.item-cell {
-		font-weight: var(--font-weight-semibold);
+		font-weight: var(--font-weight-normal);
 		font-size: var(--font-size-body-min);
 		min-width: 200px;
 	}
