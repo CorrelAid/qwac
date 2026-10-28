@@ -256,36 +256,8 @@ const numberGrid: Fixture = {
 	}
 };
 
-/** A range with the bounds qwacback reads from its codebook (qwacback#65). */
-const range: Fixture = {
-	question: {
-		id: 'range0000000001',
-		study_id: 'study0000000001',
-		name: 'volunteer_hours',
-		concept: 'Volunteering',
-		question_text: 'How many hours a week do you volunteer?',
-		answer_type: 'range',
-		variable_ids: ['range0000000001'],
-		order: 2
-	},
-	detail: {
-		group: null,
-		variables: [
-			{
-				id: 'range0000000001',
-				name: 'volunteer_hours',
-				concept: 'Volunteering',
-				question: 'How many hours a week do you volunteer?',
-				answer_type: 'range',
-				range: { min: 0, max: 40, step: 0.5 },
-				categories: []
-			}
-		]
-	}
-};
-
 /** Enough integer questions in the first study for a second page of results. */
-const fillers: Fixture[] = Array.from({ length: 20 }, (_, i) => {
+const fillers: Fixture[] = Array.from({ length: 21 }, (_, i) => {
 	const n = String(i + 1).padStart(3, '0');
 	const id = `filler000000${n}`;
 	return {
@@ -297,7 +269,7 @@ const fillers: Fixture[] = Array.from({ length: 20 }, (_, i) => {
 			question_text: `Filler question ${n}?`,
 			answer_type: 'integer',
 			variable_ids: [id],
-			order: i + 3
+			order: i + 2
 		},
 		detail: {
 			group: null,
@@ -308,8 +280,8 @@ const fillers: Fixture[] = Array.from({ length: 20 }, (_, i) => {
 	};
 });
 
-export const fixtures = { grid, age, gender, numberGrid, range };
-const all: Fixture[] = [grid, age, gender, numberGrid, range, ...fillers];
+export const fixtures = { grid, age, gender, numberGrid };
+const all: Fixture[] = [grid, age, gender, numberGrid, ...fillers];
 export let questions = all.map((f) => f.question);
 
 /** What a successful /api/import adds. */

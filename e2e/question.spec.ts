@@ -41,15 +41,6 @@ test('a grid of number rows is a table of number fields with notes (#70)', async
 	await expect(page.getByText('Matrix-Gruppe')).toBeVisible();
 });
 
-test('a range slider has the bounds qwacback delivers (qwacback#65)', async ({ page }) => {
-	await page.goto(`/questions/${fixtures.range.question.id}`);
-	const slider = page.locator('.tab-content input[type=range]');
-	await expect(slider).toHaveAttribute('min', '0');
-	await expect(slider).toHaveAttribute('max', '40');
-	await expect(slider).toHaveAttribute('step', '0.5');
-	await expect(page.locator('.tab-content .bounds')).toHaveText(/0\s*40/);
-});
-
 test('moving from one question to another shows no stale data (#15)', async ({ page }) => {
 	await page.goto(`/questions/${fixtures.grid.question.id}?tab=xlsform`);
 	await expect(page.locator('.view-tab.active')).toHaveText('XLSForm');

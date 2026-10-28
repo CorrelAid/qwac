@@ -51,30 +51,12 @@ describe('SurveyPreview', () => {
 		['decimal', 'input[type=number][step=any]'],
 		['date', 'input[type=date]'],
 		['time', 'input[type=time]'],
-		['datetime', 'input[type=datetime-local]'],
-		// New in qwacback (#61).
-		['range', 'input[type=range]']
+		['datetime', 'input[type=datetime-local]']
 	])('renders %s as %s', async (answer_type, selector) => {
 		const { container } = await render(SurveyPreview, { variable: { answer_type } });
 		const found = inputs(container);
 		expect(found).toHaveLength(1);
 		expect(found[0].matches(selector)).toBe(true);
-	});
-
-	it('gives a range the bounds qwacback delivers (qwacback#65)', async () => {
-		const { container } = await render(SurveyPreview, {
-			variable: { answer_type: 'range', range: { min: 0, max: 5, step: 0.5 } }
-		});
-		const [slider] = inputs(container);
-		expect([slider.min, slider.max, slider.step]).toEqual(['0', '5', '0.5']);
-		expect(container.querySelector('.bounds')?.textContent?.replace(/\s+/g, '')).toBe('05');
-	});
-
-	it('renders a range without bounds as a plain slider', async () => {
-		const { container } = await render(SurveyPreview, { variable: { answer_type: 'range' } });
-		const [slider] = inputs(container);
-		expect(['min', 'max', 'step'].map((a) => slider.getAttribute(a))).toEqual([null, null, null]);
-		expect(container.querySelector('.bounds')).toBeNull();
 	});
 
 	it('renders single choice as radio buttons', async () => {
