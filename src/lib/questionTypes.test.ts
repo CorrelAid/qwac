@@ -8,6 +8,7 @@ import {
 	isChoiceType,
 	isNumberType,
 	isTextType,
+	rangeAttrs,
 	typeInfo,
 	typeLabel,
 	type Catalogue
@@ -140,5 +141,17 @@ describe('helpers', () => {
 		for (const type of ['integer', 'decimal', 'range']) expect(isNumberType(type)).toBe(true);
 		for (const type of ['grid', 'single_choice', 'text', ''])
 			expect(isNumberType(type)).toBe(false);
+	});
+
+	it('gives a range input only the bounds qwacback delivers', () => {
+		expect(rangeAttrs({ min: 0, max: 5, step: 0.5 })).toEqual({ min: 0, max: 5, step: 0.5 });
+		expect(rangeAttrs({ min: 1, max: 10 })).toEqual({ min: 1, max: 10 });
+		expect(rangeAttrs({ max: 100 })).toEqual({ max: 100 });
+		expect(rangeAttrs({})).toEqual({});
+		expect(rangeAttrs(undefined)).toEqual({});
+	});
+
+	it('gives a descending range low to high', () => {
+		expect(rangeAttrs({ min: 10, max: 0, step: -1 })).toEqual({ min: 0, max: 10, step: 1 });
 	});
 });
