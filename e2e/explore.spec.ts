@@ -103,6 +103,15 @@ test('question cards look the same on the explore and study pages (#30)', async 
 	expect(await card()).toEqual(onExplore);
 });
 
+test('a group with a printed name is titled by it, the question below (qwacback#74)', async ({
+	page
+}) => {
+	await page.goto('/');
+	const card = page.locator('.question-card', { hasText: 'Do you know whom to contact' });
+	await expect(card.locator('.title a')).toHaveText('Q7');
+	await expect(card.locator('.text')).toHaveText('Do you know whom to contact in these groups?');
+});
+
 test('a long card title is clamped, and the type tag stays with the count (#72)', async ({
 	page
 }) => {

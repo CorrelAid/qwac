@@ -26,6 +26,14 @@ export interface Question {
 	language?: string;
 	/** question_text in the study's other languages: lang → text. */
 	translations?: Record<string, string>;
+	/**
+	 * The group's short printed name, e.g. a scale's name ("ATTARI-12") or a
+	 * question number ("E1"): the DDI's varGrp/labl (qwacback#74). Absent when
+	 * the source prints none and for standalone variables.
+	 */
+	label?: string;
+	/** label in the study's other languages: lang → text. */
+	label_translations?: Record<string, string>;
 }
 
 export interface Category {
@@ -95,9 +103,11 @@ export type GridRow = Pick<Variable, 'id' | 'answer_type'> &
 export interface Group {
 	id: string;
 	type: string;
+	/** The group's short printed name (varGrp/labl); empty when there is none. */
+	label?: string;
 	concept: string;
 	description: string;
-	translations?: Record<string, { description?: string }> | null;
+	translations?: Record<string, { description?: string; label?: string }> | null;
 }
 
 /**
