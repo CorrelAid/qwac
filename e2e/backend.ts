@@ -94,6 +94,8 @@ const grid: Fixture = {
 		id: 'grid00000000001',
 		study_id: 'study0000000001',
 		name: 'contact',
+		// The number the source prints with the question (qwacback#74).
+		label: 'Q7',
 		concept: 'Civic network awareness',
 		question_text: 'Do you know whom to contact in these groups?',
 		answer_type: 'grid',
@@ -105,6 +107,7 @@ const grid: Fixture = {
 		group: {
 			id: 'grid00000000001',
 			type: 'grid',
+			label: 'Q7',
 			concept: 'Civic network awareness',
 			description: 'Do you know whom to contact in these groups?'
 		},

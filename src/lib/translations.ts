@@ -4,7 +4,8 @@
  *
  * - question.translations: { "<lang>": "<question text>" }
  * - variable.translations: { "<lang>": { question, prequestion_text, ivu_instructions, hint, universe, grid_note, categories: { "<value>": "<label>" } } }
- * - group.translations:    { "<lang>": { description } }
+ * - group.translations:    { "<lang>": { description, label } }
+ * - question.label_translations: { "<lang>": "<group label>" }
  */
 
 type VariableTranslation = {
@@ -15,6 +16,7 @@ type VariableTranslation = {
 	universe?: string;
 	grid_note?: string;
 	description?: string;
+	label?: string;
 	categories?: Record<string, string>;
 };
 
@@ -66,6 +68,25 @@ export function questionText(
 	);
 }
 
+/**
+ * A question's label in the UI locale: its group's short printed name, e.g.
+ * "ATTARI-12" (qwacback#74), or '' when it has none.
+ */
+export function questionLabel(
+	question:
+		| { label?: string; language?: string; label_translations?: Record<string, string> | null }
+		| null
+		| undefined,
+	locale: string
+): string {
+	return localizedText(
+		question?.label ?? '',
+		question?.language,
+		question?.label_translations,
+		locale
+	);
+}
+
 /** What localizeVariable needs of a variable. */
 interface LocalizableVariable {
 	question?: string;
@@ -108,16 +129,19 @@ export function localizeVariable<T extends LocalizableVariable>(
 	};
 }
 
-/** A variable group with its description in the UI locale. */
-export function localizeGroup<T extends { description?: string; translations?: unknown }>(
-	group: T,
-	language: string | undefined,
-	locale: string
-): T {
+/** A variable group with its description and label in the UI locale. */
+export function localizeGroup<
+	T extends { description?: string; label?: string; translations?: unknown }
+>(group: T, language: string | undefined, locale: string): T {
 	if (!group || (language && primary(language) === primary(locale))) return group;
 	const tr = pickLang(
 		group.translations as Record<string, VariableTranslation> | undefined,
 		locale
 	);
-	return tr?.description ? { ...group, description: tr.description } : group;
+	if (!tr?.description && !tr?.label) return group;
+	return {
+		...group,
+		description: tr.description || group.description,
+		label: tr.label || group.label
+	};
 }

@@ -140,3 +140,11 @@ test('a study without a license says so, with no button (#66)', async ({ page })
 	await expect(page.getByText('Lizenz nicht angegeben')).toBeVisible();
 	await expect(page.locator('.cc-button')).toHaveCount(0);
 });
+
+test('a group with a printed name is headed by it (qwacback#74)', async ({ page }) => {
+	await page.goto(`/questions/${fixtures.grid.question.id}`);
+	await expect(page.getByRole('heading', { level: 1 })).toHaveText('Q7');
+	await expect(page.getByText('Civic network awareness')).toBeVisible();
+	await expect(page.getByText('Do you know whom to contact in these groups?')).toBeVisible();
+	await expect(page).toHaveTitle(/^Q7 \|/);
+});

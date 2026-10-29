@@ -3,6 +3,7 @@ import {
 	pickLang,
 	localizedText,
 	questionText,
+	questionLabel,
 	localizeVariable,
 	localizeGroup
 } from './translations';
@@ -94,5 +95,28 @@ describe('localizeGroup', () => {
 		const g = { description: 'Vertrauen', translations: { en: { description: 'Trust' } } };
 		expect(localizeGroup(g, 'de', 'en').description).toBe('Trust');
 		expect(localizeGroup(g, 'de', 'de').description).toBe('Vertrauen');
+	});
+
+	it('translates the label, keeping the description without one', () => {
+		const g = {
+			label: 'Modul E',
+			description: 'Nutzung von KI',
+			translations: { en: { label: 'Module E' } }
+		};
+		expect(localizeGroup(g, 'de', 'en')).toMatchObject({
+			label: 'Module E',
+			description: 'Nutzung von KI'
+		});
+		expect(localizeGroup(g, 'de', 'de').label).toBe('Modul E');
+	});
+});
+
+describe('questionLabel', () => {
+	it("returns the group label in the UI language, '' without one", () => {
+		const q = { label: 'Modul E', language: 'de', label_translations: { en: 'Module E' } };
+		expect(questionLabel(q, 'en')).toBe('Module E');
+		expect(questionLabel(q, 'de')).toBe('Modul E');
+		expect(questionLabel({ label: 'ATTARI-12', language: 'de' }, 'en')).toBe('ATTARI-12');
+		expect(questionLabel({ language: 'de' }, 'de')).toBe('');
 	});
 });

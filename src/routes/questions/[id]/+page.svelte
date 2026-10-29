@@ -10,7 +10,7 @@
 	import AnswerTypeTag from '$lib/components/AnswerTypeTag.svelte';
 	import LicenseNotice from '$lib/components/LicenseNotice.svelte';
 	import { t, locale } from '$lib/i18n';
-	import { localizeGroup, localizeVariable, questionText } from '$lib/translations';
+	import { localizeGroup, localizeVariable, questionLabel, questionText } from '$lib/translations';
 	import { questionView } from '$lib/questionView';
 	import { xlsformSheets } from '$lib/xlsform';
 	import { downloadBlob, safeFilename } from '$lib/download';
@@ -82,8 +82,11 @@
 	// The concept is '' when it is empty or only repeats the question (#68);
 	// the page is then titled by the question itself.
 	let displayConcept = $derived(view.concept);
+	// The name the source prints for the question's group, e.g. "ATTARI-12",
+	// heads the page; the question follows in the preview (qwacback#74).
+	let label = $derived(group?.label || questionLabel(questionData, $locale));
 	let title = $derived(
-		displayConcept || questionText(questionData, $locale) || questionData?.name || ''
+		label || displayConcept || questionText(questionData, $locale) || questionData?.name || ''
 	);
 
 	function downloadXml(xml: string) {
@@ -99,7 +102,15 @@
 <article class="question-detail">
 	<a href={resolve('/')} class="back-link">&larr; {$t('question.back')}</a>
 
-	{#if displayConcept}
+	{#if label}
+		<h1 class="label-heading">{label}</h1>
+		{#if displayConcept}
+			<p class="concept-line">
+				<span class="field-label">{$t('question.concept')}</span>
+				{displayConcept}
+			</p>
+		{/if}
+	{:else if displayConcept}
 		<h1 class="concept-line">
 			<span class="field-label">{$t('question.concept')}</span>
 			{displayConcept}
@@ -222,6 +233,10 @@
 
 	.back-link:hover {
 		text-decoration: underline;
+	}
+
+	.label-heading {
+		margin: 0 0 var(--spacing-xs);
 	}
 
 	.concept-line {

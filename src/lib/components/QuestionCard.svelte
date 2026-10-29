@@ -2,7 +2,7 @@
 	import { resolve } from '$app/paths';
 	import AnswerTypeTag from '$lib/components/AnswerTypeTag.svelte';
 	import { t, locale } from '$lib/i18n';
-	import { questionText } from '$lib/translations';
+	import { questionLabel, questionText } from '$lib/translations';
 	import { distinctConcept } from '$lib/text';
 	import type { Question } from '$lib/types';
 
@@ -20,15 +20,18 @@
 	} = $props();
 
 	let text = $derived(questionText(question, $locale));
+	// The name the source prints for the question's group, e.g. "ATTARI-12",
+	// titles the card, with the question below (qwacback#74).
+	let label = $derived(questionLabel(question, $locale));
 	// A concept that only repeats the question is left out (#68); the card is
 	// then titled by the question, shown once.
 	let concept = $derived(distinctConcept(question.concept, question.question_text, text));
-	let title = $derived(concept || text || question.name);
+	let title = $derived(label || concept || text || question.name);
 	let variableCount = $derived(question.variable_ids?.length ?? 0);
 </script>
 
 <div class="question-card">
-	<svelte:element this={`h${headingLevel}`} class="title" class:question-title={!concept}>
+	<svelte:element this={`h${headingLevel}`} class="title" class:question-title={!label && !concept}>
 		<a href={resolve('/questions/[id]', { id: question.id })}>{title}</a>
 	</svelte:element>
 

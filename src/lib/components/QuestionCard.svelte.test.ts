@@ -47,6 +47,36 @@ describe('QuestionCard', () => {
 		expect(container.querySelector('.text')).toBeNull();
 	});
 
+	it('titles the card by its group label, with the question below', async () => {
+		locale.set('de');
+		const { container } = await render(QuestionCard, {
+			question: mkQuestion({
+				label: 'ATTARI-12',
+				concept: 'Einstellungen gegenüber KI',
+				question_text: 'Im Folgenden interessieren wir uns für Ihre Einstellungen.'
+			})
+		});
+		await expect.element(page.getByRole('link', { name: 'ATTARI-12' })).toBeInTheDocument();
+		expect(container.querySelector('.title')?.classList.contains('question-title')).toBe(false);
+		expect(container.querySelector('.text')?.textContent).toBe(
+			'Im Folgenden interessieren wir uns für Ihre Einstellungen.'
+		);
+	});
+
+	it('shows the group label in the UI language', async () => {
+		locale.set('en');
+		await render(QuestionCard, {
+			question: mkQuestion({
+				label: 'Modul E',
+				label_translations: { en: 'Module E' },
+				language: 'de',
+				question_text: 'Nutzt Ihr Unternehmen KI?'
+			})
+		});
+		await expect.element(page.getByRole('link', { name: 'Module E' })).toBeInTheDocument();
+		locale.set('de');
+	});
+
 	it('titles the card by the question when it has no concept', async () => {
 		await render(QuestionCard, {
 			question: mkQuestion({ question_text: 'Wie alt sind Sie?' })
